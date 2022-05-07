@@ -5,24 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {hasOwnProperty} from "../../../utils";
-import {LoaderFilterFn} from "./type";
+import { hasOwnProperty } from '../../../utils';
+import { LoaderFilterFn, ScriptFileExportItem } from './type';
 
-export function getRecordItem(
+export function getExportItem(
     data: Record<string, any>,
-    filterFn: LoaderFilterFn
-) : unknown | undefined {
+    filterFn: LoaderFilterFn,
+) : ScriptFileExportItem | undefined {
     if (filterFn) {
         const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
             if (filterFn(keys[i], data[keys[i]])) {
-                return data[keys[i]];
+                return {
+                    key: keys[i],
+                    value: data[keys[i]],
+                };
             }
         }
     } else {
-        return hasOwnProperty(data, 'default') ?
-            data.default :
-            data;
+        return {
+            key: 'default',
+            value: hasOwnProperty(data, 'default') ? data.default : data,
+        };
     }
 
     /* istanbul ignore next */

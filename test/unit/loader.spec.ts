@@ -22,7 +22,8 @@ describe('src/loader/**', () => {
 
         loaderContent = await loadScriptFileExport(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({foo: 'bar'});
 
         // --------------------------------------------------------------------
 
@@ -34,8 +35,8 @@ describe('src/loader/**', () => {
 
         loaderContent = loadScriptFileExportSync(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.default).toBeUndefined();
-        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({foo: 'bar'});
     });
 
     it('should load .ts file', async () => {
@@ -47,7 +48,8 @@ describe('src/loader/**', () => {
 
         loaderContent = await loadScriptFileExport(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.bar).toEqual('baz');
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({bar: 'baz'});
 
         // --------------------------------------------------------------------
 
@@ -58,7 +60,8 @@ describe('src/loader/**', () => {
 
         loaderContent = loadScriptFileExportSync(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.bar).toEqual('baz');
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({bar: 'baz'});
     });
 
     it('should filter .ts file', async () => {
@@ -67,14 +70,16 @@ describe('src/loader/**', () => {
             return key === 'bar';
         });
         expect(loaderContent).toBeDefined();
-        expect(loaderContent).toEqual('baz');
+        expect(loaderContent.key).toEqual('bar');
+        expect(loaderContent.value).toEqual('baz');
 
         locatorInfo = locateFileSync( 'file-many-ts', {paths: [basePath], extensions: ['.ts']});
         loaderContent = loadScriptFileExportSync(locatorInfo, (key, value) => {
             return key === 'bar';
         });
         expect(loaderContent).toBeDefined();
-        expect(loaderContent).toEqual('baz');
+        expect(loaderContent.key).toEqual('bar');
+        expect(loaderContent.value).toEqual('baz');
     })
 
     it('should load .json file',  async () => {

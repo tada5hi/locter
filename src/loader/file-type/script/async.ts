@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {getRecordItem} from "./utils";
-import {LoaderFilterFn} from "./type";
-import {isLocatorInfo, LocatorInfo} from "../../../locator";
-import {buildLoaderFilePath} from "../../utils";
+import { getExportItem } from './utils';
+import { LoaderFilterFn, ScriptFileExportItem } from './type';
+import { LocatorInfo, isLocatorInfo } from '../../../locator';
+import { buildLoaderFilePath } from '../../utils';
 
-export async function loadScriptFile(data: LocatorInfo |string) : Promise<unknown | undefined> {
+export async function loadScriptFile(data: LocatorInfo | string) : Promise<unknown | undefined> {
     const filePath = isLocatorInfo(data) ?
         buildLoaderFilePath(data) :
         data;
@@ -26,7 +26,7 @@ export async function loadScriptFile(data: LocatorInfo |string) : Promise<unknow
 export async function loadScriptFileExport(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
-) : Promise<unknown | undefined> {
+) : Promise<ScriptFileExportItem | undefined> {
     const filePath = isLocatorInfo(data) ?
         buildLoaderFilePath(data) :
         data;
@@ -34,9 +34,9 @@ export async function loadScriptFileExport(
     try {
         const data = await loadScriptFile(filePath);
 
-        return getRecordItem(data, filterFn);
+        return getExportItem(data, filterFn);
     } catch (e) {
         /* istanbul ignore next */
-        return undefined
+        return undefined;
     }
 }

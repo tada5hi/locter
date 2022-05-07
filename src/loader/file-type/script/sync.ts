@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {LoaderFilterFn} from "./type";
-import {getRecordItem} from "./utils";
-import {isLocatorInfo, LocatorInfo} from "../../../locator";
-import {buildLoaderFilePath} from "../../utils";
+import { LoaderFilterFn, ScriptFileExportItem } from './type';
+import { getExportItem } from './utils';
+import { LocatorInfo, isLocatorInfo } from '../../../locator';
+import { buildLoaderFilePath } from '../../utils';
 
 export function loadScriptFileSync(data: LocatorInfo | string) : unknown | undefined {
     const filePath = isLocatorInfo(data) ?
@@ -27,7 +27,7 @@ export function loadScriptFileSync(data: LocatorInfo | string) : unknown | undef
 export function loadScriptFileExportSync(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
-) : unknown | undefined {
+) : ScriptFileExportItem | undefined {
     const filePath = isLocatorInfo(data) ?
         buildLoaderFilePath(data) :
         data;
@@ -35,9 +35,9 @@ export function loadScriptFileExportSync(
     try {
         const data = loadScriptFileSync(filePath);
 
-        return getRecordItem(data, filterFn);
+        return getExportItem(data, filterFn);
     } catch (e) {
         /* istanbul ignore next */
-        return undefined
+        return undefined;
     }
 }

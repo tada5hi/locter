@@ -6,3 +6,7 @@
  */
 
 export type LoaderFilterFn = (key: string, value: unknown) => boolean;
+export type ScriptFileExportItem = {
+    key: string,
+    value: unknown
+};
