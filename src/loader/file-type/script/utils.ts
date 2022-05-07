@@ -12,26 +12,19 @@ export function getRecordItem(
     data: Record<string, any>,
     filterFn: LoaderFilterFn
 ) : unknown | undefined {
-    if (
-        !filterFn &&
-        hasOwnProperty(data, 'default')
-    ) {
-        return data.default;
-    }
-
-    const keys = Object.keys(data);
-    for (let i = 0; i < keys.length; i++) {
-        if (
-            filterFn &&
-            filterFn(keys[i], data[keys[i]])
-        ) {
-            return data[keys[i]];
+    if (filterFn) {
+        const keys = Object.keys(data);
+        for (let i = 0; i < keys.length; i++) {
+            if (filterFn(keys[i], data[keys[i]])) {
+                return data[keys[i]];
+            }
         }
+    } else {
+        return hasOwnProperty(data, 'default') ?
+            data.default :
+            data;
     }
 
-    if (keys.length > 0) {
-        return data[keys[0]];
-    }
-
+    /* istanbul ignore next */
     return undefined;
 }

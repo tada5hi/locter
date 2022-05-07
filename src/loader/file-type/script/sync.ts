@@ -19,11 +19,12 @@ export function loadScriptFileSync(data: LocatorInfo | string) : unknown | undef
         // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require,import/no-dynamic-require
         return require(filePath);
     } catch (e) {
+        /* istanbul ignore next */
         return undefined;
     }
 }
 
-export function loadScriptFileSingleExportSync(
+export function loadScriptFileExportSync(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
 ) : unknown | undefined {
@@ -36,6 +37,7 @@ export function loadScriptFileSingleExportSync(
 
         return getRecordItem(data, filterFn);
     } catch (e) {
+        /* istanbul ignore next */
         return undefined
     }
 }

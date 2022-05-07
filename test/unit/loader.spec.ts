@@ -7,7 +7,7 @@
 
 
 import path from "path";
-import {loadScriptFileSingleExport, loadScriptFileSingleExportSync, locateFile, locateFileSync} from "../../src";
+import {loadScriptFileExport, loadScriptFileExportSync, locateFile, locateFileSync} from "../../src";
 import {loadFile, loadFileSync} from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
@@ -20,7 +20,7 @@ describe('src/loader/**', () => {
         expect(loaderContent.default).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
 
-        loaderContent = await loadScriptFileSingleExport(locatorInfo);
+        loaderContent = await loadScriptFileExport(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
 
@@ -29,35 +29,53 @@ describe('src/loader/**', () => {
         locatorInfo = locateFileSync( 'file', {paths: [basePath], extensions: ['.js']});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeDefined();
+        expect(loaderContent.default).toBeUndefined();
         expect(loaderContent.foo).toEqual('bar');
 
-        loaderContent = loadScriptFileSingleExportSync(locatorInfo);
+        loaderContent = loadScriptFileExportSync(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent).toEqual('bar');
+        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.foo).toEqual('bar');
     });
 
     it('should load .ts file', async () => {
-        let locatorInfo = await locateFile( 'file', {paths: [basePath], extensions: ['.ts']});
+        let locatorInfo = await locateFile( 'file-ts', {paths: [basePath], extensions: ['.ts']});
         let loaderContent : Record<string, any> = await loadFile(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.default).toBeDefined();
-        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.bar).toEqual('baz');
 
-        loaderContent = await loadScriptFileSingleExport(locatorInfo);
+        loaderContent = await loadScriptFileExport(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.bar).toEqual('baz');
 
         // --------------------------------------------------------------------
 
-        locatorInfo = locateFileSync( 'file', {paths: [basePath], extensions: ['.ts']});
+        locatorInfo = locateFileSync( 'file-ts', {paths: [basePath], extensions: ['.ts']});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.bar).toEqual('baz');
 
-        loaderContent = loadScriptFileSingleExportSync(locatorInfo);
+        loaderContent = loadScriptFileExportSync(locatorInfo);
         expect(loaderContent).toBeDefined();
-        expect(loaderContent).toEqual('bar');
+        expect(loaderContent.bar).toEqual('baz');
     });
+
+    it('should filter .ts file', async () => {
+        let locatorInfo = await locateFile( 'file-many-ts', {paths: [basePath], extensions: ['.ts']});
+        let loaderContent : Record<string, any> = await loadScriptFileExport(locatorInfo, (key, value) => {
+            return key === 'bar';
+        });
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent).toEqual('baz');
+
+        locatorInfo = locateFileSync( 'file-many-ts', {paths: [basePath], extensions: ['.ts']});
+        loaderContent = loadScriptFileExportSync(locatorInfo, (key, value) => {
+            return key === 'bar';
+        });
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent).toEqual('baz');
+    })
 
     it('should load .json file',  async () => {
         let locatorInfo = await locateFile( 'file', {paths: [basePath], extensions: ['.json']});

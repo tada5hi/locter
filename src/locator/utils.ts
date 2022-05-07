@@ -19,7 +19,7 @@ export function buildLocatorOptions(options?: Partial<LocatorOptions>) : Locator
     return options as LocatorOptions;
 }
 
-
+/* istanbul ignore next */
 export function isLocatorInfo(data: unknown) : data is LocatorInfo {
     if(typeof data !== 'object') {
         return false;

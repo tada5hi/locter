@@ -18,11 +18,12 @@ export async function loadScriptFile(data: LocatorInfo |string) : Promise<unknow
     try {
         return await import(filePath);
     } catch (e) {
+        /* istanbul ignore next */
         return undefined;
     }
 }
 
-export async function loadScriptFileSingleExport(
+export async function loadScriptFileExport(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
 ) : Promise<unknown | undefined> {
@@ -35,6 +36,7 @@ export async function loadScriptFileSingleExport(
 
         return getRecordItem(data, filterFn);
     } catch (e) {
+        /* istanbul ignore next */
         return undefined
     }
 }

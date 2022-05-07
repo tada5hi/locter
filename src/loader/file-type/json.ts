@@ -12,6 +12,7 @@ export async function loadJsonFile(filePath: string) : Promise<unknown | undefin
         const file = await fs.promises.readFile(filePath);
         return JSON.parse(file.toString('utf-8'));
     } catch (e) {
+        /* istanbul ignore next */
         return undefined;
     }
 }
@@ -21,6 +22,7 @@ export function loadJsonFileSync(filePath: string) : unknown | undefined {
         const file = fs.readFileSync(filePath);
         return JSON.parse(file.toString('utf-8'));
     } catch (e) {
+        /* istanbul ignore next */
         return undefined;
     }
 }

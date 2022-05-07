@@ -32,19 +32,19 @@ describe('src/locator.ts', () => {
     });
 
     it('should locate .ts file', async () => {
-        let locatorInfo = await locateFile( 'file', {paths: [basePath], extensions: ['.ts']});
+        let locatorInfo = await locateFile( 'file-ts', {paths: [basePath], extensions: ['.ts']});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
+            fileName: 'file-ts',
             fileExtension: '.ts'
         } as LocatorInfo);
 
-        locatorInfo = locateFileSync( 'file', {paths: [basePath], extensions: ['.ts']});
+        locatorInfo = locateFileSync( 'file-ts', {paths: [basePath], extensions: ['.ts']});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
+            fileName: 'file-ts',
             fileExtension: '.ts'
         } as LocatorInfo);
     });
