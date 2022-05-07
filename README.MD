@@ -4,7 +4,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json)
 
 # Locter 🔥
-Locter is a library to locate a file by criteria and load it.
+Locter is a library to locate and load a file regarding specific criteria.
 
 **Table of Contents**
 
@@ -17,4 +17,14 @@ Locter is a library to locate a file by criteria and load it.
 npm install locter --save
 ```
 
+---
+**Important NOTE**
+
+The public API is still in progress and in development ☂ and can still can change therefore until the v1.0.0 release.
+So please stay patient, till it is fully available ⭐.
+
+---
+
 ## Usage
+
+coming soon...
