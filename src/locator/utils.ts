@@ -5,41 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {LocatorInfo, LocatorOptions} from './type';
-import {hasOwnProperty, toArray} from '../utils';
+import { LocatorInfo, LocatorOptions } from './type';
+import { hasOwnProperty, toArray } from '../utils';
 
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
     options = options || {};
     options.paths = options.paths || [];
     options.paths = toArray(options.paths);
 
-    options.extensions = options.extensions ?
-        toArray(options.extensions) : ['.ts', '.js', '.json'];
-
     return options as LocatorOptions;
 }
 
 /* istanbul ignore next */
 export function isLocatorInfo(data: unknown) : data is LocatorInfo {
-    if(typeof data !== 'object') {
+    if (typeof data !== 'object') {
         return false;
     }
 
-    if(
+    if (
         !hasOwnProperty(data, 'path') ||
         typeof data.path !== 'string'
     ) {
         return false;
     }
 
-    if(
+    if (
         !hasOwnProperty(data, 'fileName') ||
         typeof data.fileName !== 'string'
     ) {
         return false;
     }
 
-    if(
+    if (
         !hasOwnProperty(data, 'fileExtension') ||
         typeof data.fileExtension !== 'string'
     ) {

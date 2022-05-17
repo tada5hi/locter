@@ -5,34 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { glob, sync as globSync } from 'glob';
 import path from 'path';
-import fs from 'fs';
+import { promisify } from 'util';
 import { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions } from './utils';
 
+const globAsync = promisify(glob);
+
 export async function locateFile(
-    fileName: string,
+    pattern: string,
     options?: Partial<LocatorOptions>,
 ) : Promise<LocatorInfo | undefined> {
     options = buildLocatorOptions(options);
 
     for (let i = 0; i < options.paths.length; i++) {
-        const filePath = path.join(options.paths[i], fileName);
+        const files = await globAsync(pattern, {
+            absolute: true,
+            cwd: options.paths[i],
+            nodir: true,
+        });
 
-        for (let j = 0; j < options.extensions.length; j++) {
-            const filePathWithExtension = filePath + options.extensions[j];
+        const element = files.shift();
+        if (element) {
+            const fileInfo = path.parse(element);
 
-            try {
-                await fs.promises.access(filePathWithExtension, fs.constants.R_OK | fs.constants.F_OK);
-
-                return {
-                    path: options.paths[i],
-                    fileName,
-                    fileExtension: options.extensions[j],
-                };
-            } catch (e) {
-                // do nothing ;)
-            }
+            return {
+                path: fileInfo.dir.split('/').join(path.sep),
+                fileName: fileInfo.name,
+                fileExtension: fileInfo.ext,
+            };
         }
     }
 
@@ -40,28 +42,27 @@ export async function locateFile(
 }
 
 export function locateFileSync(
-    fileName: string,
+    pattern: string,
     options?: Partial<LocatorOptions>,
 ) : LocatorInfo | undefined {
     options = buildLocatorOptions(options);
 
     for (let i = 0; i < options.paths.length; i++) {
-        const filePath = path.join(options.paths[i], fileName);
+        const files = globSync(pattern, {
+            absolute: true,
+            cwd: options.paths[i],
+            nodir: true,
+        });
 
-        for (let j = 0; j < options.extensions.length; j++) {
-            const filePathWithExtension = filePath + options.extensions[j];
+        const element = files.shift();
+        if (element) {
+            const fileInfo = path.parse(element);
 
-            try {
-                fs.accessSync(filePathWithExtension, fs.constants.R_OK | fs.constants.F_OK);
-
-                return {
-                    path: options.paths[i],
-                    fileName,
-                    fileExtension: options.extensions[j],
-                };
-            } catch (e) {
-                // do nothing ;)
-            }
+            return {
+                path: fileInfo.dir.split('/').join(path.sep),
+                fileName: fileInfo.name,
+                fileExtension: fileInfo.ext,
+            };
         }
     }
 
