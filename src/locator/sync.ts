@@ -25,9 +25,8 @@ export function locateFilesSync(
             nodir: true,
         });
 
-        const element = files.shift();
-        if (element) {
-            const fileInfo = path.parse(element);
+        for (let j = 0; j < files.length; j++) {
+            const fileInfo = path.parse(files[j]);
 
             items.push({
                 path: fileInfo.dir.split('/').join(path.sep),
