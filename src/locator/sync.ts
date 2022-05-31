@@ -46,7 +46,7 @@ export function locateFilesSync(
 }
 
 export function locateFileSync(
-    pattern: string,
+    pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : LocatorInfo | undefined {
     options = buildLocatorOptions(options);
