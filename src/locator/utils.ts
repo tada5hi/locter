@@ -10,8 +10,12 @@ import { hasOwnProperty, toArray } from '../utils';
 
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
     options = options || {};
+
     options.paths = options.paths || [];
     options.paths = toArray(options.paths);
+    if (options.paths.length === 0) {
+        options.paths.push(process.cwd());
+    }
 
     return options as LocatorOptions;
 }
@@ -36,12 +40,6 @@ export function isLocatorInfo(data: unknown) : data is LocatorInfo {
         return false;
     }
 
-    if (
-        !hasOwnProperty(data, 'fileExtension') ||
-        typeof data.fileExtension !== 'string'
-    ) {
-        return false;
-    }
-
-    return true;
+    return !(!hasOwnProperty(data, 'fileExtension') ||
+        typeof data.fileExtension !== 'string');
 }
