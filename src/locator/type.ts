@@ -12,5 +12,5 @@ export type LocatorInfo = {
 };
 
 export type LocatorOptions = {
-    paths: string | string[],
+    path: string | string[],
 };

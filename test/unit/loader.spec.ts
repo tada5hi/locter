@@ -14,7 +14,7 @@ const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/loader/**', () => {
     it('should load .js file', async () => {
-        let locatorInfo = await locateFile( 'file.js', {paths: [basePath]});
+        let locatorInfo = await locateFile( 'file.js', {path: [basePath]});
         let loaderContent : Record<string, any> = await loadFile(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.default).toBeDefined();
@@ -27,7 +27,7 @@ describe('src/loader/**', () => {
 
         // --------------------------------------------------------------------
 
-        locatorInfo = locateFileSync( 'file.js', {paths: [basePath]});
+        locatorInfo = locateFileSync( 'file.js', {path: [basePath]});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.default).toBeUndefined();
@@ -40,7 +40,7 @@ describe('src/loader/**', () => {
     });
 
     it('should load .ts file', async () => {
-        let locatorInfo = await locateFile( 'file-ts.ts', {paths: [basePath]});
+        let locatorInfo = await locateFile( 'file-ts.ts', {path: [basePath]});
         let loaderContent : Record<string, any> = await loadFile(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.default).toBeDefined();
@@ -53,7 +53,7 @@ describe('src/loader/**', () => {
 
         // --------------------------------------------------------------------
 
-        locatorInfo = locateFileSync( 'file-ts.ts', {paths: [basePath]});
+        locatorInfo = locateFileSync( 'file-ts.ts', {path: [basePath]});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
@@ -65,7 +65,7 @@ describe('src/loader/**', () => {
     });
 
     it('should filter .ts file', async () => {
-        let locatorInfo = await locateFile( 'file-many-ts.ts', {paths: [basePath]});
+        let locatorInfo = await locateFile( 'file-many-ts.ts', {path: [basePath]});
         let loaderContent : Record<string, any> = await loadScriptFileExport(locatorInfo, (key, value) => {
             return key === 'bar';
         });
@@ -73,7 +73,7 @@ describe('src/loader/**', () => {
         expect(loaderContent.key).toEqual('bar');
         expect(loaderContent.value).toEqual('baz');
 
-        locatorInfo = locateFileSync( 'file-many-ts.ts', {paths: [basePath]});
+        locatorInfo = locateFileSync( 'file-many-ts.ts', {path: [basePath]});
         loaderContent = loadScriptFileExportSync(locatorInfo, (key, value) => {
             return key === 'bar';
         });
@@ -83,23 +83,23 @@ describe('src/loader/**', () => {
     })
 
     it('should load .json file',  async () => {
-        let locatorInfo = await locateFile( 'file.json', {paths: [basePath]});
+        let locatorInfo = await locateFile( 'file.json', {path: [basePath]});
         let loaderContent : Record<string, any> = await loadFile(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
 
-        locatorInfo = locateFileSync( 'file.json', {paths: [basePath]});
+        locatorInfo = locateFileSync( 'file.json', {path: [basePath]});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
     });
 
     it('should not load file', async () => {
-        let locatorInfo = await locateFile( 'file.foo', {paths: [basePath]});
+        let locatorInfo = await locateFile( 'file.foo', {path: [basePath]});
         let loaderContent : Record<string, any>  = await loadFile(locatorInfo);
         expect(loaderContent).toBeUndefined();
 
-        locatorInfo = locateFileSync( 'file.foo', {paths: [basePath]});
+        locatorInfo = locateFileSync( 'file.foo', {path: [basePath]});
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeUndefined();
     });

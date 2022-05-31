@@ -14,28 +14,34 @@ import { buildLocatorOptions } from './utils';
 const globAsync = promisify(glob);
 
 export async function locateFiles(
-    pattern: string,
+    pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : Promise<LocatorInfo[]> {
     options = buildLocatorOptions(options);
 
+    const patterns = Array.isArray(pattern) ?
+        pattern :
+        [pattern];
+
     const items = [];
 
-    for (let i = 0; i < options.paths.length; i++) {
-        const files = await globAsync(pattern, {
-            absolute: true,
-            cwd: options.paths[i],
-            nodir: true,
-        });
-
-        for (let j = 0; j < files.length; j++) {
-            const fileInfo = path.parse(files[j]);
-
-            items.push({
-                path: fileInfo.dir.split('/').join(path.sep),
-                fileName: fileInfo.name,
-                fileExtension: fileInfo.ext,
+    for (let i = 0; i < patterns.length; i++) {
+        for (let j = 0; j < options.path.length; j++) {
+            const files = await globAsync(patterns[i], {
+                absolute: true,
+                cwd: options.path[j],
+                nodir: true,
             });
+
+            for (let k = 0; k < files.length; k++) {
+                const fileInfo = path.parse(files[k]);
+
+                items.push({
+                    path: fileInfo.dir.split('/').join(path.sep),
+                    fileName: fileInfo.name,
+                    fileExtension: fileInfo.ext,
+                });
+            }
         }
     }
 
@@ -43,27 +49,33 @@ export async function locateFiles(
 }
 
 export async function locateFile(
-    pattern: string,
+    pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : Promise<LocatorInfo | undefined> {
     options = buildLocatorOptions(options);
 
-    for (let i = 0; i < options.paths.length; i++) {
-        const files = await globAsync(pattern, {
-            absolute: true,
-            cwd: options.paths[i],
-            nodir: true,
-        });
+    const patterns = Array.isArray(pattern) ?
+        pattern :
+        [pattern];
 
-        const element = files.shift();
-        if (element) {
-            const fileInfo = path.parse(element);
+    for (let i = 0; i < patterns.length; i++) {
+        for (let j = 0; j < options.path.length; j++) {
+            const files = await globAsync(patterns[i], {
+                absolute: true,
+                cwd: options.path[j],
+                nodir: true,
+            });
 
-            return {
-                path: fileInfo.dir.split('/').join(path.sep),
-                fileName: fileInfo.name,
-                fileExtension: fileInfo.ext,
-            };
+            const element = files.shift();
+            if (element) {
+                const fileInfo = path.parse(element);
+
+                return {
+                    path: fileInfo.dir.split('/').join(path.sep),
+                    fileName: fileInfo.name,
+                    fileExtension: fileInfo.ext,
+                };
+            }
         }
     }
 

@@ -11,10 +11,10 @@ import { hasOwnProperty, toArray } from '../utils';
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
     options = options || {};
 
-    options.paths = options.paths || [];
-    options.paths = toArray(options.paths);
-    if (options.paths.length === 0) {
-        options.paths.push(process.cwd());
+    options.path = options.path || [];
+    options.path = toArray(options.path);
+    if (options.path.length === 0) {
+        options.path.push(process.cwd());
     }
 
     return options as LocatorOptions;
