@@ -9,6 +9,7 @@ import { LoaderFilterFn, ScriptFileExportItem } from './type';
 import { getExportItem } from './utils';
 import { LocatorInfo, isLocatorInfo } from '../../../locator';
 import { buildLoaderFilePath } from '../../utils';
+import { handleFileLoadError } from '../../../utils';
 
 export function loadScriptFileSync(data: LocatorInfo | string) : unknown | undefined {
     const filePath = isLocatorInfo(data) ?
@@ -19,8 +20,7 @@ export function loadScriptFileSync(data: LocatorInfo | string) : unknown | undef
         // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require,import/no-dynamic-require
         return require(filePath);
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }
 
@@ -37,7 +37,6 @@ export function loadScriptFileExportSync(
 
         return getExportItem(data, filterFn);
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }

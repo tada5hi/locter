@@ -6,14 +6,14 @@
  */
 
 import fs from 'fs';
+import { handleFileLoadError } from '../../utils';
 
 export async function loadJsonFile(filePath: string) : Promise<unknown | undefined> {
     try {
         const file = await fs.promises.readFile(filePath);
         return JSON.parse(file.toString('utf-8'));
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }
 
@@ -22,7 +22,6 @@ export function loadJsonFileSync(filePath: string) : unknown | undefined {
         const file = fs.readFileSync(filePath);
         return JSON.parse(file.toString('utf-8'));
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }

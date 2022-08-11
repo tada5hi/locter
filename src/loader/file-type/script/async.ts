@@ -9,6 +9,7 @@ import { getExportItem } from './utils';
 import { LoaderFilterFn, ScriptFileExportItem } from './type';
 import { LocatorInfo, isLocatorInfo } from '../../../locator';
 import { buildLoaderFilePath } from '../../utils';
+import { handleFileLoadError } from '../../../utils';
 
 export async function loadScriptFile(data: LocatorInfo | string) : Promise<unknown | undefined> {
     const filePath = isLocatorInfo(data) ?
@@ -18,8 +19,7 @@ export async function loadScriptFile(data: LocatorInfo | string) : Promise<unkno
     try {
         return await import(filePath);
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }
 
@@ -36,7 +36,6 @@ export async function loadScriptFileExport(
 
         return getExportItem(data, filterFn);
     } catch (e) {
-        /* istanbul ignore next */
-        return undefined;
+        return handleFileLoadError(e);
     }
 }
