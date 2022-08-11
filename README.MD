@@ -9,6 +9,8 @@ Locter is a library to locate and load a file regarding specific criteria.
 
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Locator](#locator)
+  - [Loader](#loader)
 
 ## Installation
 
@@ -26,4 +28,106 @@ So please stay patient, till it is fully available ⭐.
 
 ## Usage
 
-coming soon...
+The following examples are based on some shared assumptions:
+- A folder named `files` exists in the root directory.
+- The folder `files` contains the following files:
+  - example.js
+  - example.json
+  - example.ts
+  - example-long.ts
+
+
+### Locator
+
+**Multiple**
+
+Locating multiple files will return information about all files matching the pattern.
+
+```typescript
+import { locateFiles } from 'locter';
+
+(async () => {
+    let files = await locateFiles(
+        'files/example.{js,.ts}',
+        {
+            path: process.cwd()
+        }
+    );
+
+    console.log(files);
+    /*
+    [
+        { path: 'files', name: 'example', extension: '.js'},
+        { path: 'files', name: 'example', extension: '.ts'}
+    ]
+     */
+
+    files = await locateFiles(
+        'files/*.{js,ts}',
+        {
+            path: process.cwd()
+        }
+    );
+
+    console.log(files);
+    /*
+    [
+        { path: 'files', name: 'example', extension: '.js'},
+        { path: 'files', name: 'example', extension: '.ts'},
+        { path: 'files', name: 'example-long', extension: '.ts'},
+    ]
+     */
+})
+```
+
+A synchronous variant is also available: `locateFilesSync`
+
+**Single**
+
+Locating a single file will return information about the first file matching the pattern.
+
+```typescript
+import { locateFile } from 'locter';
+
+(async () => {
+    let file = await locateFile(
+        'files/example.{js,.ts}',
+        {
+            path: process.cwd()
+        }
+    );
+
+    console.log(file);
+    /*
+    { path: 'files', name: 'example', extension: '.js'}
+     */
+})
+```
+
+A synchronous variant is also available: `locateFileSync`
+
+### Loader
+
+The method will load the located file.
+
+```typescript
+import { loadFile, locateFile } from 'locter';
+
+(async () => {
+    const file = await locateFile(
+        'files/example.{js,.ts}',
+        {
+            path: process.cwd()
+        }
+    );
+
+    const content = loadFile(file);
+
+    console.log(content);
+
+    // ...
+})
+```
+
+A synchronous variant is also available: `loadFileSync`
+

@@ -9,5 +9,6 @@ import path from 'path';
 import { LocatorInfo } from '../locator';
 
 export function buildLoaderFilePath(info: LocatorInfo) {
-    return path.join(info.path, info.fileName) + info.fileExtension;
+    return path.join(info.path, info.name) +
+        (info.extension === '.json' ? '.json' : '');
 }

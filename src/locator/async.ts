@@ -23,7 +23,7 @@ export async function locateFiles(
         pattern :
         [pattern];
 
-    const items = [];
+    const items : LocatorInfo[] = [];
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < options.path.length; j++) {
@@ -38,8 +38,8 @@ export async function locateFiles(
 
                 items.push({
                     path: fileInfo.dir.split('/').join(path.sep),
-                    fileName: fileInfo.name,
-                    fileExtension: fileInfo.ext,
+                    name: fileInfo.name,
+                    extension: fileInfo.ext,
                 });
             }
         }
@@ -72,8 +72,8 @@ export async function locateFile(
 
                 return {
                     path: fileInfo.dir.split('/').join(path.sep),
-                    fileName: fileInfo.name,
-                    fileExtension: fileInfo.ext,
+                    name: fileInfo.name,
+                    extension: fileInfo.ext,
                 };
             }
         }

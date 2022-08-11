@@ -33,8 +33,11 @@ export async function loadScriptFileExport(
 
     try {
         const data = await loadScriptFile(filePath);
+        if (typeof data === 'object') {
+            return getExportItem(data, filterFn);
+        }
 
-        return getExportItem(data, filterFn);
+        return undefined;
     } catch (e) {
         return handleFileLoadError(e);
     }

@@ -12,13 +12,13 @@ import {
 import { buildLoaderFilePath } from './utils';
 
 export async function loadFile(info: LocatorInfo) : Promise<unknown | undefined> {
-    if(!info) {
-        return undefined
+    if (!info) {
+        return undefined;
     }
 
     const filePath = buildLoaderFilePath(info);
 
-    if (info.fileExtension === '.json') {
+    if (info.extension === '.json') {
         return loadJsonFile(filePath);
     }
 
@@ -26,13 +26,13 @@ export async function loadFile(info: LocatorInfo) : Promise<unknown | undefined>
 }
 
 export function loadFileSync(info: LocatorInfo) : unknown | undefined {
-    if(!info) {
+    if (!info) {
         return undefined;
     }
 
     const filePath = buildLoaderFilePath(info);
 
-    if (info.fileExtension === '.json') {
+    if (info.extension === '.json') {
         return loadJsonFileSync(filePath);
     }
 

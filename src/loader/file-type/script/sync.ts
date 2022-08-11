@@ -35,7 +35,11 @@ export function loadScriptFileExportSync(
     try {
         const data = loadScriptFileSync(filePath);
 
-        return getExportItem(data, filterFn);
+        if (typeof data === 'object') {
+            return getExportItem(data, filterFn);
+        }
+
+        return undefined;
     } catch (e) {
         return handleFileLoadError(e);
     }

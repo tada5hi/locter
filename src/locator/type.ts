@@ -7,8 +7,8 @@
 
 export type LocatorInfo = {
     path: string,
-    fileName: string,
-    fileExtension: '.js' | '.ts' | '.json' | string
+    name: string,
+    extension: '.js' | '.ts' | '.json' | string
 };
 
 export type LocatorOptions = {

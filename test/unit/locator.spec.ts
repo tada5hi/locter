@@ -18,16 +18,16 @@ describe('src/locator.ts', () => {
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.js'
+            name: 'file',
+            extension: '.js'
         } as LocatorInfo);
 
         locatorInfo = locateFileSync( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.js'
+            name: 'file',
+            extension: '.js'
         } as LocatorInfo);
     });
 
@@ -36,16 +36,16 @@ describe('src/locator.ts', () => {
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual([{
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.js'
+            name: 'file',
+            extension: '.js'
         }] as LocatorInfo[]);
 
         locatorInfo = locateFilesSync( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual([{
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.js'
+            name: 'file',
+            extension: '.js'
         }] as LocatorInfo[]);
     });
 
@@ -54,16 +54,16 @@ describe('src/locator.ts', () => {
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file-ts',
-            fileExtension: '.ts'
+            name: 'file-ts',
+            extension: '.ts'
         } as LocatorInfo);
 
         locatorInfo = locateFileSync( 'file-ts.{js,ts}', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file-ts',
-            fileExtension: '.ts'
+            name: 'file-ts',
+            extension: '.ts'
         } as LocatorInfo);
     });
 
@@ -72,16 +72,16 @@ describe('src/locator.ts', () => {
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.json'
+            name: 'file',
+            extension: '.json'
         } as LocatorInfo);
 
         locatorInfo = locateFileSync('file.json', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
-            fileName: 'file',
-            fileExtension: '.json'
+            name: 'file',
+            extension: '.json'
         } as LocatorInfo);
     });
 

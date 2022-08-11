@@ -34,12 +34,12 @@ export function isLocatorInfo(data: unknown) : data is LocatorInfo {
     }
 
     if (
-        !hasOwnProperty(data, 'fileName') ||
-        typeof data.fileName !== 'string'
+        !hasOwnProperty(data, 'name') ||
+        typeof data.name !== 'string'
     ) {
         return false;
     }
 
-    return !(!hasOwnProperty(data, 'fileExtension') ||
-        typeof data.fileExtension !== 'string');
+    return !(!hasOwnProperty(data, 'extension') ||
+        typeof data.extension !== 'string');
 }
