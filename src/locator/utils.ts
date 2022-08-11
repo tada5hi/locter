@@ -17,6 +17,8 @@ export function buildLocatorOptions(options?: Partial<LocatorOptions>) : Locator
         options.path.push(process.cwd());
     }
 
+    options.ignore ??= [];
+
     return options as LocatorOptions;
 }
 

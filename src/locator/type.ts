@@ -13,4 +13,5 @@ export type LocatorInfo = {
 
 export type LocatorOptions = {
     path: string | string[],
+    ignore: string | string[]
 };

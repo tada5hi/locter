@@ -28,6 +28,7 @@ export function locateFilesSync(
                 absolute: true,
                 cwd: options.path[j],
                 nodir: true,
+                ignore: options.ignore,
             });
 
             for (let k = 0; k < files.length; k++) {
@@ -61,6 +62,7 @@ export function locateFileSync(
                 absolute: true,
                 cwd: options.path[j],
                 nodir: true,
+                ignore: options.ignore,
             });
 
             const element = files.shift();

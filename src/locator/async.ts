@@ -31,6 +31,7 @@ export async function locateFiles(
                 absolute: true,
                 cwd: options.path[j],
                 nodir: true,
+                ignore: options.ignore,
             });
 
             for (let k = 0; k < files.length; k++) {
@@ -64,6 +65,7 @@ export async function locateFile(
                 absolute: true,
                 cwd: options.path[j],
                 nodir: true,
+                ignore: options.ignore,
             });
 
             const element = files.shift();
