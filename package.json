@@ -1,7 +1,7 @@
 {
     "name": "locter",
     "version": "0.3.0",
-    "description": "Locter is a library to locate a file by criteria and load it",
+    "description": "A library to locate a file by criteria and load it",
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
@@ -12,6 +12,7 @@
         "url": "https://github.com/tada5hi/locter.git"
     },
     "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "files": [
         "dist/"
     ],
@@ -41,6 +42,7 @@
         "@semantic-release/changelog": "^6.0.1",
         "@semantic-release/commit-analyzer": "^9.0.2",
         "@semantic-release/git": "^10.0.1",
+        "@semantic-release/github": "^8.0.6",
         "@semantic-release/npm": "^9.0.1",
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@tada5hi/eslint-config-typescript": "^1.0.7",
@@ -53,7 +55,6 @@
         "eslint": "^8.24.0",
         "husky": "^8.0.1",
         "jest": "^27.5.1",
-        "np": "^7.6.2",
         "rimraf": "^3.0.2",
         "semantic-release": "^19.0.5",
         "ts-jest": "^27.1.4",
