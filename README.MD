@@ -11,6 +11,7 @@ Locter is a library to locate and load a file regarding specific criteria.
 - [Usage](#usage)
   - [Locator](#locator)
   - [Loader](#loader)
+- [License](#license)
 
 ## Installation
 
@@ -131,3 +132,8 @@ import { loadFile, locateFile } from 'locter';
 
 A synchronous variant is also available: `loadFileSync`
 
+## License
+
+Made with 💚
+
+Published under [MIT License](./LICENSE).
