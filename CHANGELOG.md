@@ -1,3 +1,10 @@
+## [0.3.2](https://github.com/tada5hi/locter/compare/v0.3.1...v0.3.2) (2022-10-11)
+
+
+### Bug Fixes
+
+* export utils directory ([8dde358](https://github.com/tada5hi/locter/commit/8dde358192e47176674f34f435006b757f920380))
+
 ## [0.3.1](https://github.com/tada5hi/locter/compare/v0.3.0...v0.3.1) (2022-10-03)
 
 
