@@ -7,3 +7,4 @@
 
 export * from './loader';
 export * from './locator';
+export * from './utils';
