@@ -3,13 +3,15 @@
         "strict": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
+        "declarationDir": "dist/types",
         "declaration": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "lib": [
             "ESNext"
         ],
-        "module": "commonjs",
+        "module": "ESNext",
+        "moduleResolution": "Node",
         "newLine": "LF",
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
@@ -20,7 +22,7 @@
         "outDir": "dist",
         "sourceMap": true,
         "strictNullChecks": false,
-        "target": "es6"
+        "target": "ESNext"
     },
     "include": [
         "src/**/*.ts"
