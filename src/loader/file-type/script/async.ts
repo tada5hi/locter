@@ -5,37 +5,58 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import isFileEsm from 'is-file-esm';
 import { pathToFileURL } from 'url';
-import { getExportItem } from './utils';
-import { LoaderFilterFn, ScriptFileExportItem } from './type';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
+import { handleFileLoadError, hasOwnProperty } from '../../../utils';
 import { buildLoaderFilePath } from '../../utils';
-import { handleFileLoadError } from '../../../utils';
+import { LoaderFilterFn, ScriptFileExportItem } from './type';
+import { getExportItem } from './utils';
 
-export async function loadScriptFile(data: LocatorInfo | string) : Promise<unknown | undefined> {
+type ScriptFileLoadOptions = {
+    withExtension?: boolean,
+    withFilePrefix?: boolean
+};
+export async function loadScriptFile(
+    data: LocatorInfo | string,
+    options?: ScriptFileLoadOptions,
+) : Promise<unknown | undefined> {
     let locatorInfo : LocatorInfo;
-    let filePath : string;
 
     if (typeof data === 'string') {
-        filePath = data;
         locatorInfo = pathToLocatorInfo(data);
     } else {
-        filePath = buildLoaderFilePath(data, true);
         locatorInfo = data;
     }
 
+    options = options || {};
+
+    let filePath = buildLoaderFilePath(locatorInfo, options.withExtension);
+    if (options.withFilePrefix) {
+        filePath = pathToFileURL(filePath).href;
+    }
+
     try {
-        if (['.js', '.mjs', '.cjs'].indexOf(locatorInfo.extension) !== -1) {
-            const check = await isFileEsm(filePath);
-            /* istanbul ignore next */
-            if (check.esm) {
-                return await import(pathToFileURL(filePath).href);
+        return await import(filePath);
+    } catch (e) {
+        if (
+            e instanceof Error &&
+            hasOwnProperty(e, 'code')
+        ) {
+            if (e.code === 'ERR_MODULE_NOT_FOUND') {
+                return loadScriptFile(locatorInfo, {
+                    ...options,
+                    withExtension: true,
+                });
+            }
+
+            if (e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME') {
+                return loadScriptFile(locatorInfo, {
+                    ...options,
+                    withFilePrefix: true,
+                });
             }
         }
 
-        return await import(filePath);
-    } catch (e) {
         /* istanbul ignore next */
         return handleFileLoadError(e);
     }
