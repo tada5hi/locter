@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/tada5hi/locter/compare/v0.3.2...v0.4.0) (2022-11-28)
+
+
+### Features
+
+* added esm modules support ([e201769](https://github.com/tada5hi/locter/commit/e2017690b4487f7821dacc0874b6fcc58ca518e7))
+
 ## [0.3.2](https://github.com/tada5hi/locter/compare/v0.3.1...v0.3.2) (2022-10-11)
 
 
