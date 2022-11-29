@@ -1,3 +1,10 @@
+## [0.5.2](https://github.com/tada5hi/locter/compare/v0.5.1...v0.5.2) (2022-11-29)
+
+
+### Bug Fixes
+
+* sync script loading with fallback for appending extension ([b988e0f](https://github.com/tada5hi/locter/commit/b988e0ff8e55d501f0c08a89616116d3706d8053))
+
 ## [0.5.1](https://github.com/tada5hi/locter/compare/v0.5.0...v0.5.1) (2022-11-29)
 
 
