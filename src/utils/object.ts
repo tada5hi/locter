@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './error';
-export * from './file-name';
-export * from './has-own-property';
-export * from './object';
-export * from './to-array';
+export function isObject(item: unknown) : item is Record<string, any> {
+    return (
+        !!item &&
+        typeof item === 'object' &&
+        !Array.isArray(item)
+    );
+}

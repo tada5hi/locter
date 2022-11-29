@@ -6,7 +6,13 @@
  */
 
 export type LoaderFilterFn = (key: string, value: unknown) => boolean;
+
 export type ScriptFileExportItem = {
     key: string,
     value: unknown
+};
+
+export type ScriptFileLoadOptions = {
+    withExtension?: boolean,
+    withFilePrefix?: boolean
 };

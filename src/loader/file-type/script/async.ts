@@ -7,15 +7,11 @@
 
 import { pathToFileURL } from 'url';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
-import { handleFileLoadError, hasOwnProperty } from '../../../utils';
+import { handleFileLoadError, hasOwnProperty, isObject } from '../../../utils';
 import { buildLoaderFilePath } from '../../utils';
-import { LoaderFilterFn, ScriptFileExportItem } from './type';
+import { LoaderFilterFn, ScriptFileExportItem, ScriptFileLoadOptions } from './type';
 import { getExportItem } from './utils';
 
-type ScriptFileLoadOptions = {
-    withExtension?: boolean,
-    withFilePrefix?: boolean
-};
 export async function loadScriptFile(
     data: LocatorInfo | string,
     options?: ScriptFileLoadOptions,
@@ -39,17 +35,17 @@ export async function loadScriptFile(
         return await import(filePath);
     } catch (e) {
         if (
-            e instanceof Error &&
+            isObject(e) &&
             hasOwnProperty(e, 'code')
         ) {
-            if (e.code === 'ERR_MODULE_NOT_FOUND') {
+            if (e.code === 'ERR_MODULE_NOT_FOUND' || e.code === 'MODULE_NOT_FOUND') {
                 return loadScriptFile(locatorInfo, {
                     ...options,
                     withExtension: true,
                 });
             }
 
-            if (e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME') {
+            if (e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' || e.code === 'UNSUPPORTED_ESM_URL_SCHEME') {
                 return loadScriptFile(locatorInfo, {
                     ...options,
                     withFilePrefix: true,
