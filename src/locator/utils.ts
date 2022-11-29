@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'path';
 import { LocatorInfo, LocatorOptions } from './type';
 import { hasOwnProperty, toArray } from '../utils';
 
@@ -44,4 +45,21 @@ export function isLocatorInfo(data: unknown) : data is LocatorInfo {
 
     return !(!hasOwnProperty(data, 'extension') ||
         typeof data.extension !== 'string');
+}
+
+export function pathToLocatorInfo(
+    input: string,
+    skipResolve?: boolean,
+) : LocatorInfo {
+    if (!skipResolve && !path.isAbsolute(input)) {
+        input = path.resolve(process.cwd(), input);
+    }
+
+    const info = path.parse(input);
+
+    return {
+        path: info.dir.split('/').join(path.sep),
+        name: info.name,
+        extension: info.ext,
+    };
 }

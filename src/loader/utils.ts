@@ -8,7 +8,10 @@
 import path from 'path';
 import { LocatorInfo } from '../locator';
 
-export function buildLoaderFilePath(info: LocatorInfo) {
-    return path.join(info.path, info.name) +
-        (info.extension === '.json' ? '.json' : '');
+export function buildLoaderFilePath(info: LocatorInfo, withExtension?: boolean) {
+    if (withExtension) {
+        return path.join(info.path, info.name) + info.extension;
+    }
+
+    return path.join(info.path, info.name);
 }

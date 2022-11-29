@@ -6,9 +6,13 @@
  */
 
 import fs from 'fs';
+import { LocatorInfo } from '../../locator';
 import { handleFileLoadError } from '../../utils';
+import { buildLoaderFilePath } from '../utils';
 
-export async function loadJsonFile(filePath: string) : Promise<unknown | undefined> {
+export async function loadJsonFile(info: LocatorInfo) : Promise<unknown | undefined> {
+    const filePath = buildLoaderFilePath(info, true);
+
     try {
         const file = await fs.promises.readFile(filePath);
         return JSON.parse(file.toString('utf-8'));
@@ -17,7 +21,9 @@ export async function loadJsonFile(filePath: string) : Promise<unknown | undefin
     }
 }
 
-export function loadJsonFileSync(filePath: string) : unknown | undefined {
+export function loadJsonFileSync(info: LocatorInfo) : unknown | undefined {
+    const filePath = buildLoaderFilePath(info, true);
+
     try {
         const file = fs.readFileSync(filePath);
         return JSON.parse(file.toString('utf-8'));

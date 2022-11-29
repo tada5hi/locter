@@ -5,36 +5,48 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocatorInfo } from '../locator';
+import { LocatorInfo, pathToLocatorInfo } from '../locator';
 import {
-    loadJsonFile, loadJsonFileSync, loadScriptFile, loadScriptFileSync,
+    loadJsonFile,
+    loadJsonFileSync,
+    loadScriptFile,
+    loadScriptFileSync,
 } from './file-type';
-import { buildLoaderFilePath } from './utils';
 
-export async function loadFile(info: LocatorInfo) : Promise<unknown | undefined> {
-    if (!info) {
+export async function loadFile(input: LocatorInfo | string) : Promise<unknown | undefined> {
+    if (!input) {
         return undefined;
     }
 
-    const filePath = buildLoaderFilePath(info);
-
-    if (info.extension === '.json') {
-        return loadJsonFile(filePath);
+    let info : LocatorInfo;
+    if (typeof input === 'string') {
+        info = pathToLocatorInfo(input);
+    } else {
+        info = input;
     }
 
-    return loadScriptFile(filePath);
+    if (info.extension === '.json') {
+        return loadJsonFile(info);
+    }
+
+    return loadScriptFile(info);
 }
 
-export function loadFileSync(info: LocatorInfo) : unknown | undefined {
-    if (!info) {
+export function loadFileSync(input: LocatorInfo | string) : unknown | undefined {
+    if (!input) {
         return undefined;
     }
 
-    const filePath = buildLoaderFilePath(info);
-
-    if (info.extension === '.json') {
-        return loadJsonFileSync(filePath);
+    let info : LocatorInfo;
+    if (typeof input === 'string') {
+        info = pathToLocatorInfo(input);
+    } else {
+        info = input;
     }
 
-    return loadScriptFileSync(filePath);
+    if (info.extension === '.json') {
+        return loadJsonFileSync(info);
+    }
+
+    return loadScriptFileSync(info);
 }

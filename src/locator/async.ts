@@ -6,10 +6,9 @@
  */
 
 import { glob } from 'glob';
-import path from 'path';
 import { promisify } from 'util';
 import { LocatorInfo, LocatorOptions } from './type';
-import { buildLocatorOptions } from './utils';
+import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
 const globAsync = promisify(glob);
 
@@ -35,13 +34,7 @@ export async function locateFiles(
             });
 
             for (let k = 0; k < files.length; k++) {
-                const fileInfo = path.parse(files[k]);
-
-                items.push({
-                    path: fileInfo.dir.split('/').join(path.sep),
-                    name: fileInfo.name,
-                    extension: fileInfo.ext,
-                });
+                items.push(pathToLocatorInfo(files[k], true));
             }
         }
     }
@@ -70,13 +63,7 @@ export async function locateFile(
 
             const element = files.shift();
             if (element) {
-                const fileInfo = path.parse(element);
-
-                return {
-                    path: fileInfo.dir.split('/').join(path.sep),
-                    name: fileInfo.name,
-                    extension: fileInfo.ext,
-                };
+                return pathToLocatorInfo(element, true);
             }
         }
     }

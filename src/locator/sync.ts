@@ -6,9 +6,8 @@
  */
 
 import { sync as globSync } from 'glob';
-import path from 'path';
 import { LocatorInfo, LocatorOptions } from './type';
-import { buildLocatorOptions } from './utils';
+import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
 export function locateFilesSync(
     pattern: string | string[],
@@ -32,13 +31,7 @@ export function locateFilesSync(
             });
 
             for (let k = 0; k < files.length; k++) {
-                const fileInfo = path.parse(files[k]);
-
-                items.push({
-                    path: fileInfo.dir.split('/').join(path.sep),
-                    name: fileInfo.name,
-                    extension: fileInfo.ext,
-                });
+                items.push(pathToLocatorInfo(files[k], true));
             }
         }
     }
@@ -67,13 +60,7 @@ export function locateFileSync(
 
             const element = files.shift();
             if (element) {
-                const fileInfo = path.parse(element);
-
-                return {
-                    path: fileInfo.dir.split('/').join(path.sep),
-                    name: fileInfo.name,
-                    extension: fileInfo.ext,
-                };
+                return pathToLocatorInfo(element, true);
             }
         }
     }

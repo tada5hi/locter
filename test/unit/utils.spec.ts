@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeFileNameExtension } from "../../src/utils";
+import { removeFileNameExtension } from "../../src";
 
 describe('src/utils/*.ts', function () {
     it('should remove file name extension', () => {

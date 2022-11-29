@@ -7,7 +7,13 @@
 
 
 import path from "path";
-import {loadScriptFileExport, loadScriptFileExportSync, locateFile, locateFileSync} from "../../src";
+import {
+    buildLoaderFilePath, loadScriptFile,
+    loadScriptFileExport,
+    loadScriptFileExportSync, loadScriptFileSync,
+    locateFile,
+    locateFileSync
+} from "../../src";
 import {loadFile, loadFileSync} from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
@@ -20,10 +26,16 @@ describe('src/loader/**', () => {
         expect(loaderContent.default).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
 
+        loaderContent = await loadFile(buildLoaderFilePath(locatorInfo));
+        expect(loaderContent).toBeDefined();
+
         loaderContent = await loadScriptFileExport(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({foo: 'bar'});
+
+        loaderContent = await loadScriptFile(buildLoaderFilePath(locatorInfo));
+        expect(loaderContent).toBeDefined();
 
         // --------------------------------------------------------------------
 
@@ -33,10 +45,16 @@ describe('src/loader/**', () => {
         expect(loaderContent.default).toBeUndefined();
         expect(loaderContent.foo).toEqual('bar');
 
+        loaderContent = loadFileSync(buildLoaderFilePath(locatorInfo));
+        expect(loaderContent).toBeDefined();
+
         loaderContent = loadScriptFileExportSync(locatorInfo);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({foo: 'bar'});
+
+        loaderContent = loadScriptFileSync(buildLoaderFilePath(locatorInfo));
+        expect(loaderContent).toBeDefined();
     });
 
     it('should load .ts file', async () => {
