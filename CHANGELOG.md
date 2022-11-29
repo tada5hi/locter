@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/tada5hi/locter/compare/v0.4.0...v0.5.0) (2022-11-29)
+
+
+### Features
+
+* enhance loader api + fix esm build ([253ea59](https://github.com/tada5hi/locter/commit/253ea59d7461dc2c8dd24e78f63be08a0bafaad2))
+
 # [0.4.0](https://github.com/tada5hi/locter/compare/v0.3.2...v0.4.0) (2022-11-28)
 
 
