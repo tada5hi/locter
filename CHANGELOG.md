@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/tada5hi/locter/compare/v0.5.0...v0.5.1) (2022-11-29)
+
+
+### Bug Fixes
+
+* enhance async script loader ([f6091fa](https://github.com/tada5hi/locter/commit/f6091fa9a1c4882c66af751585ef19ae4d79bfc4))
+
 # [0.5.0](https://github.com/tada5hi/locter/compare/v0.4.0...v0.5.0) (2022-11-29)
 
 

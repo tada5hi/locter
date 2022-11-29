@@ -1,6 +1,6 @@
 {
     "name": "locter",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "description": "A library to locate a file by criteria and load it",
     "author": {
         "name": "Peter Placzek",
@@ -58,7 +58,7 @@
         "@types/is-file-esm": "^1.0.0",
         "@types/jest": "^27.5.0",
         "@types/node": "^18.11.9",
-        "@types/yargs": "^17.0.14",
+        "@types/yargs": "^17.0.15",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
         "eslint": "^8.28.0",
