@@ -34,6 +34,7 @@ export async function loadScriptFile(
     try {
         return await import(filePath);
     } catch (e) {
+        /* istanbul ignore next */
         if (
             isObject(e) &&
             hasOwnProperty(e, 'code')
