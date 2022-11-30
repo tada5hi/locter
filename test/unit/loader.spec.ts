@@ -8,13 +8,16 @@
 
 import path from "path";
 import {
-    buildLoaderFilePath, loadScriptFile,
+    buildLoaderFilePath,
+    loadFile,
+    loadFileSync,
+    loadScriptFile,
     loadScriptFileExport,
-    loadScriptFileExportSync, loadScriptFileSync,
+    loadScriptFileExportSync,
+    loadScriptFileSync,
     locateFile,
     locateFileSync
 } from "../../src";
-import {loadFile, loadFileSync} from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
 
@@ -119,6 +122,12 @@ describe('src/loader/**', () => {
 
         locatorInfo = locateFileSync( 'file.foo', {path: [basePath]});
         loaderContent = loadFileSync(locatorInfo);
+        expect(loaderContent).toBeUndefined();
+
+        loaderContent = await loadFile('file.foo');
+        expect(loaderContent).toBeUndefined();
+
+        loaderContent = loadFileSync('file.foo');
         expect(loaderContent).toBeUndefined();
     });
 });

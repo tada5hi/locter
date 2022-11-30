@@ -39,14 +39,26 @@ export async function loadScriptFile(
             isObject(e) &&
             hasOwnProperty(e, 'code')
         ) {
-            if (e.code === 'ERR_MODULE_NOT_FOUND' || e.code === 'MODULE_NOT_FOUND') {
+            if (
+                !options.withExtension &&
+                (
+                    e.code === 'ERR_MODULE_NOT_FOUND' ||
+                    e.code === 'MODULE_NOT_FOUND'
+                )
+            ) {
                 return loadScriptFile(locatorInfo, {
                     ...options,
                     withExtension: true,
                 });
             }
 
-            if (e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' || e.code === 'UNSUPPORTED_ESM_URL_SCHEME') {
+            if (
+                !options.withFilePrefix &&
+                (
+                    e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                    e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                )
+            ) {
                 return loadScriptFile(locatorInfo, {
                     ...options,
                     withFilePrefix: true,

@@ -36,7 +36,13 @@ export function loadScriptFileSync(
             isObject(e) &&
             hasOwnProperty(e, 'code')
         ) {
-            if (e.code === 'ERR_MODULE_NOT_FOUND' || e.code === 'MODULE_NOT_FOUND') {
+            if (
+                !options.withExtension &&
+                (
+                    e.code === 'ERR_MODULE_NOT_FOUND' ||
+                    e.code === 'MODULE_NOT_FOUND'
+                )
+            ) {
                 return loadScriptFileSync(locatorInfo, {
                     ...options,
                     withExtension: true,
