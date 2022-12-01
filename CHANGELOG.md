@@ -1,3 +1,10 @@
+## [0.5.3](https://github.com/tada5hi/locter/compare/v0.5.2...v0.5.3) (2022-11-30)
+
+
+### Bug Fixes
+
+* guarantee that option is not already set on load error ([b1736dd](https://github.com/tada5hi/locter/commit/b1736dd00211f1c85351f384f3df3195a3abeb01))
+
 ## [0.5.2](https://github.com/tada5hi/locter/compare/v0.5.1...v0.5.2) (2022-11-29)
 
 
