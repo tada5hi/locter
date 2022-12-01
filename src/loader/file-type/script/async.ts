@@ -5,9 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BaseError } from 'ebec';
 import { pathToFileURL } from 'url';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
-import { handleFileLoadError, hasOwnProperty, isObject } from '../../../utils';
+import {
+    handleFileLoadError, hasStringProperty, isObject,
+} from '../../../utils';
 import { buildLoaderFilePath } from '../../utils';
 import { LoaderFilterFn, ScriptFileExportItem, ScriptFileLoadOptions } from './type';
 import { getExportItem } from './utils';
@@ -37,7 +40,7 @@ export async function loadScriptFile(
         /* istanbul ignore next */
         if (
             isObject(e) &&
-            hasOwnProperty(e, 'code')
+            hasStringProperty(e, 'code')
         ) {
             if (
                 !options.withExtension &&
@@ -64,6 +67,12 @@ export async function loadScriptFile(
                     withFilePrefix: true,
                 });
             }
+
+            throw new BaseError({
+                code: e.code,
+                message: hasStringProperty(e, 'message') ? e.message : undefined,
+                stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
+            });
         }
 
         /* istanbul ignore next */

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-
 import path from "path";
 import {
     buildLoaderFilePath,
@@ -124,10 +123,13 @@ describe('src/loader/**', () => {
         loaderContent = loadFileSync(locatorInfo);
         expect(loaderContent).toBeUndefined();
 
-        loaderContent = await loadFile('file.foo');
-        expect(loaderContent).toBeUndefined();
+        await expect(loadFile('file.foo')).rejects.toThrow();
 
-        loaderContent = loadFileSync('file.foo');
-        expect(loaderContent).toBeUndefined();
+        try {
+            loadFileSync('file.foo');
+            expect(true).toBe(false);
+        } catch (e) {
+            expect(e).toBeDefined();
+        }
     });
 });

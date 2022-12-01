@@ -7,6 +7,6 @@
 
 export * from './error';
 export * from './file-name';
-export * from './has-own-property';
+export * from './has-property';
 export * from './object';
 export * from './to-array';

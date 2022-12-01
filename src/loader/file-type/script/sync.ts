@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BaseError } from 'ebec';
 import { LoaderFilterFn, ScriptFileExportItem, ScriptFileLoadOptions } from './type';
 import { getExportItem } from './utils';
 import { LocatorInfo, isLocatorInfo, pathToLocatorInfo } from '../../../locator';
 import { buildLoaderFilePath } from '../../utils';
-import { handleFileLoadError, hasOwnProperty, isObject } from '../../../utils';
+import {
+    handleFileLoadError, hasStringProperty, isObject,
+} from '../../../utils';
 
 export function loadScriptFileSync(
     data: LocatorInfo | string,
@@ -34,7 +37,7 @@ export function loadScriptFileSync(
         /* istanbul ignore next */
         if (
             isObject(e) &&
-            hasOwnProperty(e, 'code')
+            hasStringProperty(e, 'code')
         ) {
             if (
                 !options.withExtension &&
@@ -48,6 +51,12 @@ export function loadScriptFileSync(
                     withExtension: true,
                 });
             }
+
+            throw new BaseError({
+                code: e.code,
+                message: hasStringProperty(e, 'message') ? e.message : undefined,
+                stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
+            });
         }
 
         return handleFileLoadError(e);
