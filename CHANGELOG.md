@@ -1,3 +1,11 @@
+# [0.6.0](https://github.com/tada5hi/locter/compare/v0.5.3...v0.6.0) (2022-12-01)
+
+
+### Features
+
+* accept multiple inputs for loading json ([7a81c7a](https://github.com/tada5hi/locter/commit/7a81c7a6af6f08f1dd77ea83f32365436425dbaa))
+* better error handling for script loading ([8f18261](https://github.com/tada5hi/locter/commit/8f182613ea67e01725f19ecc45b32d0dfed093d2))
+
 ## [0.5.3](https://github.com/tada5hi/locter/compare/v0.5.2...v0.5.3) (2022-11-30)
 
 
