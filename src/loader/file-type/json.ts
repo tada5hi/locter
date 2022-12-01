@@ -6,12 +6,19 @@
  */
 
 import fs from 'fs';
+import path from 'path';
 import { LocatorInfo } from '../../locator';
 import { handleFileLoadError } from '../../utils';
 import { buildLoaderFilePath } from '../utils';
 
-export async function loadJsonFile(info: LocatorInfo) : Promise<unknown | undefined> {
-    const filePath = buildLoaderFilePath(info, true);
+export async function loadJsonFile(input: LocatorInfo | string) : Promise<unknown | undefined> {
+    let filePath : string;
+
+    if (typeof input === 'string') {
+        filePath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
+    } else {
+        filePath = buildLoaderFilePath(input, true);
+    }
 
     try {
         const file = await fs.promises.readFile(filePath);
@@ -21,8 +28,14 @@ export async function loadJsonFile(info: LocatorInfo) : Promise<unknown | undefi
     }
 }
 
-export function loadJsonFileSync(info: LocatorInfo) : unknown | undefined {
-    const filePath = buildLoaderFilePath(info, true);
+export function loadJsonFileSync(input: LocatorInfo | string) : unknown | undefined {
+    let filePath : string;
+
+    if (typeof input === 'string') {
+        filePath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
+    } else {
+        filePath = buildLoaderFilePath(input, true);
+    }
 
     try {
         const file = fs.readFileSync(filePath);
