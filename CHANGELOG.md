@@ -1,3 +1,10 @@
+## [0.6.1](https://github.com/tada5hi/locter/compare/v0.6.0...v0.6.1) (2022-12-19)
+
+
+### Bug Fixes
+
+* transpile dynamic imports for cjs to require ([5a62235](https://github.com/tada5hi/locter/commit/5a62235c0b3dba59e773154f7f352edeef8e2807))
+
 # [0.6.0](https://github.com/tada5hi/locter/compare/v0.5.3...v0.6.0) (2022-12-01)
 
 
