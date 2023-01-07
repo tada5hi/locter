@@ -1,3 +1,10 @@
+## [0.6.2](https://github.com/tada5hi/locter/compare/v0.6.1...v0.6.2) (2023-01-07)
+
+
+### Bug Fixes
+
+* **deps:** bump json5 from 1.0.1 to 1.0.2 ([118696d](https://github.com/tada5hi/locter/commit/118696d308fd4a04dfe0ba1a8ec7290ad8497dfa))
+
 ## [0.6.1](https://github.com/tada5hi/locter/compare/v0.6.0...v0.6.1) (2022-12-19)
 
 
