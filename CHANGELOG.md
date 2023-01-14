@@ -1,3 +1,10 @@
+# [0.7.0](https://github.com/tada5hi/locter/compare/v0.6.2...v0.7.0) (2023-01-14)
+
+
+### Features
+
+* stricter file loader + enhanced cjs/esm build ([85b7e70](https://github.com/tada5hi/locter/commit/85b7e70c2c30af4418dacf64d1fc4e32c8ad3e8e))
+
 ## [0.6.2](https://github.com/tada5hi/locter/compare/v0.6.1...v0.6.2) (2023-01-07)
 
 
