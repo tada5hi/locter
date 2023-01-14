@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 import { LocatorInfo, LocatorOptions } from './type';
-import { hasOwnProperty, toArray } from '../utils';
+import { toArray } from '../utils';
 
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
     options = options || {};
@@ -21,30 +21,6 @@ export function buildLocatorOptions(options?: Partial<LocatorOptions>) : Locator
     options.ignore ??= [];
 
     return options as LocatorOptions;
-}
-
-/* istanbul ignore next */
-export function isLocatorInfo(data: unknown) : data is LocatorInfo {
-    if (typeof data !== 'object') {
-        return false;
-    }
-
-    if (
-        !hasOwnProperty(data, 'path') ||
-        typeof data.path !== 'string'
-    ) {
-        return false;
-    }
-
-    if (
-        !hasOwnProperty(data, 'name') ||
-        typeof data.name !== 'string'
-    ) {
-        return false;
-    }
-
-    return !(!hasOwnProperty(data, 'extension') ||
-        typeof data.extension !== 'string');
 }
 
 export function pathToLocatorInfo(

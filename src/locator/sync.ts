@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { sync as globSync } from 'glob';
+import glob from 'glob';
 import { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
@@ -22,16 +22,16 @@ export function locateFilesSync(
     const items : LocatorInfo[] = [];
 
     for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < options.path.length; j++) {
-            const files = globSync(patterns[i], {
+        for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
+            const files = glob.sync(patterns[i] as string, {
                 absolute: true,
-                cwd: options.path[j],
+                cwd: (options as LocatorOptions).path[j],
                 nodir: true,
                 ignore: options.ignore,
             });
 
             for (let k = 0; k < files.length; k++) {
-                items.push(pathToLocatorInfo(files[k], true));
+                items.push(pathToLocatorInfo(files[k] as string, true));
             }
         }
     }
@@ -50,10 +50,10 @@ export function locateFileSync(
         [pattern];
 
     for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < options.path.length; j++) {
-            const files = globSync(patterns[i], {
+        for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
+            const files = glob.sync(patterns[i] as string, {
                 absolute: true,
-                cwd: options.path[j],
+                cwd: (options as LocatorOptions).path[j],
                 nodir: true,
                 ignore: options.ignore,
             });

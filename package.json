@@ -11,9 +11,16 @@
         "type": "git",
         "url": "https://github.com/tada5hi/locter.git"
     },
-    "main": "dist/index.cjs.js",
-    "module": "dist/index.esm.js",
-    "types": "dist/types/index.d.ts",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "require": "./dist/index.cjs",
+            "import": "./dist/index.mjs"
+        }
+    },
     "files": [
         "dist/"
     ],
@@ -46,6 +53,7 @@
         "@commitlint/cz-commitlint": "^17.4.2",
         "@rollup/plugin-babel": "^6.0.3",
         "@rollup/plugin-node-resolve": "^15.0.0",
+        "@rollup/plugin-terser": "^0.3.0",
         "@semantic-release/changelog": "^6.0.2",
         "@semantic-release/commit-analyzer": "^9.0.2",
         "@semantic-release/git": "^10.0.1",
@@ -53,6 +61,7 @@
         "@semantic-release/npm": "^9.0.1",
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@tada5hi/eslint-config-typescript": "^1.1.0",
+        "@tada5hi/tsconfig": "^0.1.0",
         "@types/glob": "^8.0.0",
         "@types/is-file-esm": "^1.0.0",
         "@types/jest": "^27.5.0",
@@ -64,6 +73,8 @@
         "eslint": "^8.31.0",
         "husky": "^8.0.3",
         "jest": "^27.5.1",
+        "magic-string": "^0.27.0",
+        "mlly": "^1.1.0",
         "rimraf": "^3.0.2",
         "rollup": "^3.10.0",
         "semantic-release": "^19.0.5",

@@ -8,7 +8,7 @@
 import { BaseError } from 'ebec';
 import { LoaderFilterFn, ScriptFileExportItem, ScriptFileLoadOptions } from './type';
 import { getExportItem } from './utils';
-import { LocatorInfo, isLocatorInfo, pathToLocatorInfo } from '../../../locator';
+import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
 import { buildLoaderFilePath } from '../../utils';
 import {
     handleFileLoadError, hasStringProperty, isObject,
@@ -17,7 +17,7 @@ import {
 export function loadScriptFileSync(
     data: LocatorInfo | string,
     options?: ScriptFileLoadOptions,
-) : unknown | undefined {
+) : unknown {
     let locatorInfo : LocatorInfo;
 
     if (typeof data === 'string') {
@@ -31,7 +31,7 @@ export function loadScriptFileSync(
     const filePath = buildLoaderFilePath(locatorInfo, options.withExtension);
 
     try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require,import/no-dynamic-require
+        // eslint-disable-next-line global-require,import/no-dynamic-require
         return require(filePath);
     } catch (e) {
         /* istanbul ignore next */
@@ -66,20 +66,12 @@ export function loadScriptFileSync(
 export function loadScriptFileExportSync(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
-) : ScriptFileExportItem | undefined {
-    const filePath = isLocatorInfo(data) ?
-        buildLoaderFilePath(data) :
-        data;
+) : ScriptFileExportItem {
+    const output = loadScriptFileSync(data);
 
-    try {
-        const data = loadScriptFileSync(filePath);
-
-        if (typeof data === 'object') {
-            return getExportItem(data, filterFn);
-        }
-
-        return undefined;
-    } catch (e) {
-        return handleFileLoadError(e);
+    if (typeof output === 'object' && !!output) {
+        return getExportItem(output, filterFn);
     }
+
+    throw new BaseError('Cannot extract specific module export');
 }

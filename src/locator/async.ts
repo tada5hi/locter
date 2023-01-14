@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { glob } from 'glob';
-import { promisify } from 'util';
+import glob from 'glob';
+import { promisify } from 'node:util';
 import { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
@@ -25,16 +25,16 @@ export async function locateFiles(
     const items : LocatorInfo[] = [];
 
     for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < options.path.length; j++) {
-            const files = await globAsync(patterns[i], {
+        for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
+            const files = await globAsync(patterns[i] as string, {
                 absolute: true,
-                cwd: options.path[j],
+                cwd: (options as LocatorOptions).path[j],
                 nodir: true,
                 ignore: options.ignore,
             });
 
             for (let k = 0; k < files.length; k++) {
-                items.push(pathToLocatorInfo(files[k], true));
+                items.push(pathToLocatorInfo(files[k] as string, true));
             }
         }
     }
@@ -53,10 +53,10 @@ export async function locateFile(
         [pattern];
 
     for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < options.path.length; j++) {
-            const files = await globAsync(patterns[i], {
+        for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
+            const files = await globAsync(patterns[i] as string, {
                 absolute: true,
-                cwd: options.path[j],
+                cwd: (options as LocatorOptions).path[j],
                 nodir: true,
                 ignore: options.ignore,
             });

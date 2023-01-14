@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { LocatorInfo } from '../../locator';
 import { handleFileLoadError } from '../../utils';
 import { buildLoaderFilePath } from '../utils';
 
-export async function loadJsonFile(input: LocatorInfo | string) : Promise<unknown | undefined> {
+export async function loadJsonFile(input: LocatorInfo | string) : Promise<unknown> {
     let filePath : string;
 
     if (typeof input === 'string') {
@@ -28,7 +28,7 @@ export async function loadJsonFile(input: LocatorInfo | string) : Promise<unknow
     }
 }
 
-export function loadJsonFileSync(input: LocatorInfo | string) : unknown | undefined {
+export function loadJsonFileSync(input: LocatorInfo | string) : unknown {
     let filePath : string;
 
     if (typeof input === 'string') {

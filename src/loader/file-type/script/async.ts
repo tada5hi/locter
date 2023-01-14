@@ -6,7 +6,7 @@
  */
 
 import { BaseError } from 'ebec';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
 import {
     handleFileLoadError, hasStringProperty, isObject,
@@ -18,7 +18,7 @@ import { getExportItem } from './utils';
 export async function loadScriptFile(
     data: LocatorInfo | string,
     options?: ScriptFileLoadOptions,
-) : Promise<unknown | undefined> {
+) : Promise<unknown> {
     let locatorInfo : LocatorInfo;
 
     if (typeof data === 'string') {
@@ -83,16 +83,12 @@ export async function loadScriptFile(
 export async function loadScriptFileExport(
     data: LocatorInfo | string,
     filterFn?: LoaderFilterFn,
-) : Promise<ScriptFileExportItem | undefined> {
-    try {
-        const output = await loadScriptFile(data);
-        if (typeof output === 'object') {
-            return getExportItem(output, filterFn);
-        }
+) : Promise<ScriptFileExportItem> {
+    const output = await loadScriptFile(data);
 
-        return undefined;
-    } catch (e) {
-        /* istanbul ignore next */
-        return handleFileLoadError(e);
+    if (typeof output === 'object' && !!output) {
+        return getExportItem(output, filterFn);
     }
+
+    throw new BaseError('Cannot extract specific module export');
 }

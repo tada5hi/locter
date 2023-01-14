@@ -13,11 +13,7 @@ import {
     loadScriptFileSync,
 } from './file-type';
 
-export async function loadFile(input: LocatorInfo | string) : Promise<unknown | undefined> {
-    if (!input) {
-        return undefined;
-    }
-
+export async function loadFile(input: LocatorInfo | string) : Promise<unknown> {
     let info : LocatorInfo;
     if (typeof input === 'string') {
         info = pathToLocatorInfo(input);
@@ -32,11 +28,7 @@ export async function loadFile(input: LocatorInfo | string) : Promise<unknown | 
     return loadScriptFile(info);
 }
 
-export function loadFileSync(input: LocatorInfo | string) : unknown | undefined {
-    if (!input) {
-        return undefined;
-    }
-
+export function loadFileSync(input: LocatorInfo | string) : unknown {
     let info : LocatorInfo;
     if (typeof input === 'string') {
         info = pathToLocatorInfo(input);

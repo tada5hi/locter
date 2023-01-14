@@ -5,30 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BaseError } from 'ebec';
 import { hasOwnProperty } from '../../../utils';
 import { LoaderFilterFn, ScriptFileExportItem } from './type';
 
 export function getExportItem(
     data: Record<string, any>,
-    filterFn: LoaderFilterFn,
-) : ScriptFileExportItem | undefined {
+    filterFn?: LoaderFilterFn,
+) : ScriptFileExportItem {
     if (filterFn) {
         const keys = Object.keys(data);
         for (let i = 0; i < keys.length; i++) {
-            if (filterFn(keys[i], data[keys[i]])) {
+            if (filterFn(keys[i] as string, data[keys[i] as string])) {
                 return {
-                    key: keys[i],
-                    value: data[keys[i]],
+                    key: keys[i] as string,
+                    value: data[keys[i] as string],
                 };
             }
         }
-    } else {
-        return {
-            key: 'default',
-            value: hasOwnProperty(data, 'default') ? data.default : data,
-        };
+
+        throw new BaseError('Cannot find specific module export.');
     }
 
-    /* istanbul ignore next */
-    return undefined;
+    return {
+        key: 'default',
+        value: hasOwnProperty(data, 'default') ? data.default : data,
+    };
 }

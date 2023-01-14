@@ -6,7 +6,7 @@
  */
 
 /* istanbul ignore next */
-export function handleFileLoadError(e: unknown) : undefined {
+export function handleFileLoadError(e: unknown) : void {
     if (e instanceof Error) {
         throw e;
     }
@@ -15,5 +15,5 @@ export function handleFileLoadError(e: unknown) : undefined {
         throw new Error(e);
     }
 
-    return undefined;
+    throw new Error('Cannot determine file loading error.');
 }
