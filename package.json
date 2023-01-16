@@ -70,7 +70,7 @@
         "babel-plugin-dynamic-import-node": "^2.3.3",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
-        "eslint": "^8.31.0",
+        "eslint": "^8.32.0",
         "husky": "^8.0.3",
         "jest": "^27.5.1",
         "magic-string": "^0.27.0",
