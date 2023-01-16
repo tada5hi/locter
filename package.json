@@ -85,7 +85,7 @@
     },
     "dependencies": {
         "ebec": "^0.1.0",
-        "glob": "^8.0.3"
+        "glob": "^8.1.0"
     },
     "config": {
         "commitizen": {
