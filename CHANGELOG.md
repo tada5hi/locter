@@ -1,3 +1,10 @@
+## [0.7.1](https://github.com/tada5hi/locter/compare/v0.7.0...v0.7.1) (2023-01-17)
+
+
+### Bug Fixes
+
+* **deps:** bump glob from 8.0.3 to 8.1.0 ([403b309](https://github.com/tada5hi/locter/commit/403b30913dc6abc080f021f3234f7a48debc4cb4))
+
 # [0.7.0](https://github.com/tada5hi/locter/compare/v0.6.2...v0.7.0) (2023-01-14)
 
 
