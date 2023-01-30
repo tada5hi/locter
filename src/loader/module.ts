@@ -6,8 +6,7 @@
  */
 
 import { LocatorInfo } from '../locator';
-import { JSONLoader } from './built-in';
-import { ScriptLoader } from './built-in/script/module';
+import { JSONLoader, ScriptLoader } from './built-in';
 import { Loader, Rule } from './type';
 import { buildLoaderFilePath } from './utils';
 
@@ -41,7 +40,7 @@ export class LoaderManager {
     executeSync(info: LocatorInfo) : any {
         const rule = this.findRule(info);
         if (!rule) {
-            throw new Error(`No loader registered for extension: ${info.extension}`);
+            throw new Error(`No loader registered for extension: ${info.extension || 'unknown'}`);
         }
 
         const loader = this.resolve(rule.loader);

@@ -6,8 +6,7 @@
  */
 
 import resolve from '@rollup/plugin-node-resolve';
-import babel from '@rollup/plugin-babel';
-import terser from '@rollup/plugin-terser';
+import { transform } from '@swc/core';
 import pkg from './package.json' assert { type: 'json' };
 import { findStaticImports } from 'mlly';
 import MagicString from 'magic-string';
@@ -59,13 +58,21 @@ export default [
             resolve({ extensions }),
 
             // Compile TypeScript/JavaScript files
-            babel({
-                extensions,
-                babelHelpers: 'bundled',
-                include: [
-                    'src/**/*',
-                ],
-            }),
+            {
+                name: 'swc',
+                transform(code) {
+                    return transform(code, {
+                        jsc: {
+                            target: 'es2020',
+                            parser: {
+                                syntax: 'typescript'
+                            },
+                            loose: true
+                        },
+                        sourceMaps: true
+                    });
+                }
+            },
 
             {
                 renderChunk(code, _chunk, opts) {
@@ -75,9 +82,7 @@ export default [
 
                     return null;
                 }
-            },
-
-            terser()
+            }
         ],
         output: [
             {
@@ -88,6 +93,7 @@ export default [
             {
                 file: pkg.main,
                 format: 'cjs',
+                exports: 'named',
                 sourcemap: true
             }
         ],

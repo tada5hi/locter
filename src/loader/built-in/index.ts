@@ -6,4 +6,4 @@
  */
 
 export * from './script';
-export * from './json/module';
+export * from './json';
