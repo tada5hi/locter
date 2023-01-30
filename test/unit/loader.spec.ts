@@ -7,142 +7,156 @@
 
 import path from "path";
 import {
-    buildLoaderFilePath,
+    getExportItem,
     loadFile,
     loadFileSync,
-    loadScriptFile,
-    loadScriptFileExport,
-    loadScriptFileExportSync,
-    loadScriptFileSync,
-    locateFile,
-    locateFileSync,
-    LocatorInfo
 } from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/loader/**', () => {
+    it('should load .mjs file', async () => {
+        const filePath = path.join(basePath, 'file.mjs');
+
+        const loaderContent = await loadFile(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.foo).toEqual('bar');
+    });
+
+    it('should load .mjs file sync', () => {
+        const filePath = path.join(basePath, 'file.mjs');
+        const loaderContent = loadFileSync(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.foo).toEqual('bar');
+    })
+
+    it('should load .mjs file with default export', async () => {
+        const filePath = path.join(basePath, 'file-default.mjs');
+
+        const loaderContent = await loadFile(filePath) as Record<string, any>;
+        expect(loaderContent.default).toBeDefined();
+        expect(loaderContent.default.foo).toEqual('bar');
+    });
+
+    it('should load .mjs file with default export sync', async () => {
+        const filePath = path.join(basePath, 'file-default.mjs');
+
+        const loaderContent = loadFileSync(filePath) as Record<string, any>;
+        expect(loaderContent.default).toBeDefined();
+        expect(loaderContent.default.foo).toEqual('bar');
+    });
+
     it('should load .js file', async () => {
-        let locatorInfo = await locateFile( 'file.js', {path: [basePath]});
-        expect(locatorInfo).toBeDefined();
+        const filePath = path.join(basePath, 'file.js');
 
-        let loaderContent : Record<string, any>;
+        const loaderContent = await loadFile(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.foo).toEqual('bar');
+    });
 
-        if(locatorInfo) {
-            loaderContent = await loadFile(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.default).toBeDefined();
-            expect(loaderContent.foo).toEqual('bar');
+    it('should load .js file sync',  () => {
+        const filePath = path.join(basePath, 'file.js');
 
-            loaderContent = await loadFile(buildLoaderFilePath(locatorInfo)) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
+        const loaderContent = loadFileSync(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.foo).toEqual('bar');
+    });
 
-            loaderContent = await loadScriptFileExport(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('default');
-            expect(loaderContent.value).toEqual({foo: 'bar'});
 
-            loaderContent = await loadScriptFile(buildLoaderFilePath(locatorInfo)) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-        }
-            // --------------------------------------------------------------------
+    it('should load .js file with named export', async () => {
+        const filePath = path.join(basePath, 'file.js');
 
-        locatorInfo = locateFileSync('file.js', {path: [basePath]});
-        expect(locatorInfo).toBeDefined();
+        let loaderContent = await loadFile(filePath) as Record<string, any>;
+        loaderContent = getExportItem(loaderContent);
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({foo: 'bar'});
+    })
 
-        if(locatorInfo) {
-            loaderContent = loadFileSync(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.default).toBeUndefined();
-            expect(loaderContent.foo).toEqual('bar');
+    it('should load .js file with named export sync', () => {
+        const filePath = path.join(basePath, 'file.js');
 
-            loaderContent = loadFileSync(buildLoaderFilePath(locatorInfo)) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-
-            loaderContent = loadScriptFileExportSync(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('default');
-            expect(loaderContent.value).toEqual({foo: 'bar'});
-
-            loaderContent = loadScriptFileSync(buildLoaderFilePath(locatorInfo)) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-        }
+        let loaderContent = loadFileSync(filePath) as Record<string, any>;
+        loaderContent = getExportItem(loaderContent);
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({foo: 'bar'});
     });
 
     it('should load .ts file', async () => {
-        let locatorInfo = await locateFile( 'file-ts.ts', {path: [basePath]});
-        expect(locatorInfo).toBeDefined();
+        const filePath = path.join(basePath, 'file-ts.ts');
 
-        let loaderContent;
+        let loaderContent = await loadFile(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.bar).toEqual('baz');
+    });
 
-        if(locatorInfo) {
-            loaderContent = await loadFile(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.default).toBeDefined();
-            expect(loaderContent.bar).toEqual('baz');
+    it('should load .ts file', async () => {
+        const filePath = path.join(basePath, 'file-ts.ts');
 
-            loaderContent = await loadScriptFileExport(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('default');
-            expect(loaderContent.value).toEqual({bar: 'baz'});
-        }
+        let loaderContent = await loadFile(filePath) as Record<string, any>;
+        loaderContent = getExportItem(loaderContent);
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({bar: 'baz'});
+    });
 
-        // --------------------------------------------------------------------
+    it('should load .ts file sync',  () => {
+        const filePath = path.join(basePath, 'file-ts.ts');
 
-        locatorInfo = locateFileSync( 'file-ts.ts', {path: [basePath]});
-        expect(locatorInfo).toBeDefined();
+        let loaderContent = loadFileSync(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.bar).toEqual('baz');
+    });
 
-        if(locatorInfo) {
-            loaderContent = loadFileSync(locatorInfo) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.bar).toEqual('baz');
+    it('should load .ts file with named export sync',  () => {
+        const filePath = path.join(basePath, 'file-ts.ts');
 
-            loaderContent = loadScriptFileExportSync(locatorInfo) as Record<string, any>;;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('default');
-            expect(loaderContent.value).toEqual({bar: 'baz'});
-        }
+        let loaderContent = loadFileSync(filePath) as Record<string, any>;
+        loaderContent = getExportItem(loaderContent);
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('default');
+        expect(loaderContent.value).toEqual({bar: 'baz'});
     });
 
     it('should filter .ts file', async () => {
-        let locatorInfo = await locateFile( 'file-many-ts.ts', {path: [basePath]});
-        let loaderContent : Record<string, any>;
+        const filePath = path.join(basePath, 'file-many-ts.ts');
 
-        if(locatorInfo) {
-            loaderContent = await loadScriptFileExport(locatorInfo, (key) => {
-                return key === 'bar';
-            }) as Record<string, any>;
+        let loaderContent = await loadFile(filePath) as Record<string, any>;
+        loaderContent = await getExportItem(loaderContent, (key) => {
+            return key === 'bar';
+        }) as Record<string, any>;
 
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('bar');
-            expect(loaderContent.value).toEqual('baz');
-        }
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('bar');
+        expect(loaderContent.value).toEqual('baz');
+    });
 
-        locatorInfo = locateFileSync( 'file-many-ts.ts', {path: [basePath]});
-        expect(locatorInfo).toBeDefined();
+    it('should filter .ts file sync', () => {
+        const filePath = path.join(basePath, 'file-many-ts.ts');
 
-        if(locatorInfo) {
-            loaderContent = loadScriptFileExportSync(locatorInfo, (key) => {
-                return key === 'bar';
-            }) as Record<string, any>;
-            expect(loaderContent).toBeDefined();
-            expect(loaderContent.key).toEqual('bar');
-            expect(loaderContent.value).toEqual('baz');
-        }
+        let loaderContent = loadFileSync(filePath) as Record<string, any>;
+        loaderContent = getExportItem(loaderContent, (key) => {
+            return key === 'bar';
+        }) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.key).toEqual('bar');
+        expect(loaderContent.value).toEqual('baz');
     })
 
     it('should load .json file',  async () => {
-        let locatorInfo = await locateFile( 'file.json', {path: [basePath]}) as LocatorInfo;
-        expect(locatorInfo).toBeDefined();
+        const filePath = path.join(basePath, 'file.json');
 
-        let loaderContent : Record<string, any> = await loadFile(locatorInfo) as Record<string, any>;
+        let loaderContent : Record<string, any> = await loadFile(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
+    });
 
-        locatorInfo = locateFileSync( 'file.json', {path: [basePath]}) as LocatorInfo;
-        expect(locatorInfo).toBeDefined();
+    it('should load .json file sync',  () => {
+        const filePath = path.join(basePath, 'file.json');
 
-        loaderContent = loadFileSync(locatorInfo) as Record<string, any>;
+        let loaderContent = loadFileSync(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
     });

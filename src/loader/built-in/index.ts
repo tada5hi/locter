@@ -5,6 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './built-in';
-export * from './helpers';
-export * from './utils';
+export * from './script';
+export * from './json/module';

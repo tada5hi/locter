@@ -44,8 +44,16 @@ export async function locateFiles(
 
 export async function locateFile(
     pattern: string | string[],
+    options: Partial<LocatorOptions> & { soft: false }
+) : Promise<LocatorInfo>;
+export async function locateFile(
+    pattern: string | string[],
     options?: Partial<LocatorOptions>,
-) : Promise<LocatorInfo | undefined> {
+) : Promise<LocatorInfo | undefined>;
+export async function locateFile(
+    pattern: string | string[],
+    options?: Partial<LocatorOptions>,
+) : Promise<any> {
     options = buildLocatorOptions(options);
 
     const patterns = Array.isArray(pattern) ?
@@ -66,6 +74,10 @@ export async function locateFile(
                 return pathToLocatorInfo(element, true);
             }
         }
+    }
+
+    if (!options.soft) {
+        throw new Error('The file could not be located.');
     }
 
     return undefined;

@@ -8,10 +8,11 @@
 export type LocatorInfo = {
     path: string,
     name: string,
-    extension: '.js' | '.cjs' | '.mjs' | '.ts' | '.json' | string
+    extension: '.js' | '.cjs' | '.mjs' | '.ts' | '.json' | string,
 };
 
 export type LocatorOptions = {
     path: string | string[],
-    ignore: string | string[]
+    ignore: string | string[],
+    soft: boolean
 };
