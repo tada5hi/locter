@@ -1,7 +1,17 @@
 module.exports = {
     testEnvironment: 'node',
     transform: {
-        "^.+\\.tsx?$": "ts-jest"
+        "^.+\\.tsx?$": [
+            "@swc/jest",
+            {
+                jsc: {
+                    target: 'es2020',
+                    parser: {
+                        syntax: 'typescript'
+                    }
+                }
+            }
+        ]
     },
     moduleFileExtensions: [
         "ts",
