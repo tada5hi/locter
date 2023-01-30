@@ -1,3 +1,16 @@
+# [0.8.0](https://github.com/tada5hi/locter/compare/v0.7.1...v0.8.0) (2023-01-30)
+
+
+### Bug Fixes
+
+* added missing loader exports ([7bcc6fb](https://github.com/tada5hi/locter/commit/7bcc6fb23074bb5fb4f3f0fd65e174519882d1a8))
+* **deps:** bump dependencies ([cf93b11](https://github.com/tada5hi/locter/commit/cf93b11da042707d0d73b80b293acd1ab4c38657))
+
+
+### Features
+
+* enable just in time compilation/transpiling for esm & ts files ([732bb4b](https://github.com/tada5hi/locter/commit/732bb4baa802e8d22d3261baccb42f8ebf934bdd))
+
 ## [0.7.1](https://github.com/tada5hi/locter/compare/v0.7.0...v0.7.1) (2023-01-17)
 
 
