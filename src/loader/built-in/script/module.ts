@@ -14,7 +14,7 @@ import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils
 import { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 import { ScriptFileLoadOptions } from './type';
-import { isJestEnvironment } from './utils';
+import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
 export class ScriptLoader implements Loader {
     protected jiti : JITI;
@@ -63,7 +63,13 @@ export class ScriptLoader implements Loader {
         try {
             output = await this.load(info);
         } catch (e) {
-            output = this.jiti(filePath);
+            // jiti + ts-node
+            // issue: https://github.com/nuxt/bridge/issues/228
+            if (isTsNodeRuntimeEnvironment()) {
+                output = this.loadSync(info);
+            } else {
+                output = this.jiti(filePath);
+            }
         }
 
         return output;
@@ -107,7 +113,7 @@ export class ScriptLoader implements Loader {
         try {
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
-            if (isJestEnvironment()) {
+            if (isJestRuntimeEnvironment()) {
                 // eslint-disable-next-line global-require,import/no-dynamic-require
                 return require(filePath);
             }
