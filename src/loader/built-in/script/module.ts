@@ -14,6 +14,7 @@ import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils
 import { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 import { ScriptFileLoadOptions } from './type';
+import { isJestEnvironment } from './utils';
 
 export class ScriptLoader implements Loader {
     protected jiti : JITI;
@@ -104,6 +105,13 @@ export class ScriptLoader implements Loader {
         }
 
         try {
+            // segmentation fault
+            // issue: https://github.com/nodejs/node/issues/35889
+            if (isJestEnvironment()) {
+                // eslint-disable-next-line global-require,import/no-dynamic-require
+                return require(filePath);
+            }
+
             return await import(filePath);
         } catch (e) {
             /* istanbul ignore next */

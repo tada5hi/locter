@@ -7,9 +7,9 @@
 
 import path from "path";
 import {
-    getExportItem,
     loadFile,
     loadFileSync,
+    getExportItem
 } from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
