@@ -1,3 +1,10 @@
+## [0.8.1](https://github.com/tada5hi/locter/compare/v0.8.0...v0.8.1) (2023-01-31)
+
+
+### Bug Fixes
+
+* fallback to require for jest env, due segmentation fault ([c514882](https://github.com/tada5hi/locter/commit/c51488216591ef8e07cfd056ecc2f95b6e14d35d))
+
 # [0.8.0](https://github.com/tada5hi/locter/compare/v0.7.1...v0.8.0) (2023-01-30)
 
 

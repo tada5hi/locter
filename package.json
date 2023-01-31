@@ -1,6 +1,6 @@
 {
     "name": "locter",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "A library to locate a file by criteria and load it",
     "author": {
         "name": "Peter Placzek",
@@ -59,14 +59,14 @@
         "@semantic-release/github": "^8.0.7",
         "@semantic-release/npm": "^9.0.1",
         "@semantic-release/release-notes-generator": "^10.0.3",
-        "@swc/core": "^1.3.30",
+        "@swc/core": "^1.3.31",
         "@swc/jest": "^0.2.24",
         "@tada5hi/eslint-config-typescript": "^1.1.1",
         "@tada5hi/tsconfig": "^0.4.0",
         "@types/glob": "^8.0.1",
         "@types/jest": "^27.5.2",
         "@types/node": "^18.11.18",
-        "@types/yargs": "^17.0.20",
+        "@types/yargs": "^17.0.21",
         "coveralls": "^3.1.0",
         "cross-env": "^7.0.3",
         "eslint": "^8.32.0",
@@ -78,7 +78,7 @@
         "rollup": "^3.12.0",
         "semantic-release": "^19.0.5",
         "sourcemap-codec": "^1.4.8",
-        "typescript": "^4.9.4"
+        "typescript": "^4.9.5"
     },
     "dependencies": {
         "ebec": "^0.2.1",
