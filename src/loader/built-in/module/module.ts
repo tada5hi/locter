@@ -11,12 +11,12 @@ import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
 import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils';
-import { Loader } from '../../type';
+import { LoaderInterface } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 import { ScriptFileLoadOptions } from './type';
 import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
-export class ScriptLoader implements Loader {
+export class ScriptLoader implements LoaderInterface {
     protected jiti : JITI;
 
     constructor() {
