@@ -12,7 +12,7 @@ import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
 const globAsync = promisify(glob);
 
-export async function locateFiles(
+export async function locateMany(
     pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : Promise<LocatorInfo[]> {
@@ -42,18 +42,10 @@ export async function locateFiles(
     return items;
 }
 
-export async function locateFile(
-    pattern: string | string[],
-    options: Partial<LocatorOptions> & { soft: false }
-) : Promise<LocatorInfo>;
-export async function locateFile(
+export async function locate(
     pattern: string | string[],
     options?: Partial<LocatorOptions>,
-) : Promise<LocatorInfo | undefined>;
-export async function locateFile(
-    pattern: string | string[],
-    options?: Partial<LocatorOptions>,
-) : Promise<any> {
+) : Promise<LocatorInfo | undefined> {
     options = buildLocatorOptions(options);
 
     const patterns = Array.isArray(pattern) ?
@@ -74,10 +66,6 @@ export async function locateFile(
                 return pathToLocatorInfo(element, true);
             }
         }
-    }
-
-    if (!options.soft) {
-        throw new Error('The file could not be located.');
     }
 
     return undefined;

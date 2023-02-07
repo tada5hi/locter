@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocatorInfo } from '../locator';
-import { JSONLoader, ScriptLoader } from './built-in';
+import path from 'node:path';
+import { isFilePath, pathToLocatorInfo } from '../locator';
+import { JSONLoader, ModuleLoader } from './built-in';
+import { LoaderId } from './constants';
 import { Loader, Rule } from './type';
 import { buildLoaderFilePath } from './utils';
 
-export class LoaderManager {
+export class LoaderManager implements Loader {
     protected loaders : Record<string, Loader>;
 
     protected rules : Rule[];
@@ -18,44 +20,65 @@ export class LoaderManager {
     constructor() {
         this.loaders = {};
         this.rules = [
-            { test: ['.js', '.mjs', '.cjs', '.ts'], loader: 'script' },
-            { test: ['.json'], loader: 'json' },
+            {
+                test: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
+                loader: LoaderId.MODULE,
+            },
+            {
+                test: ['.json'], loader: LoaderId.JSON,
+            },
         ];
     }
 
-    register(rule: Rule) {
-        this.rules.push(rule);
+    register(rule: Rule) : void;
+
+    register(test: string[] | RegExp, loader: Loader) : void;
+
+    register(test: any, loader?: Loader) : void {
+        if (typeof loader !== 'undefined') {
+            this.rules.push({ test, loader });
+            return;
+        }
+
+        this.rules.push(test);
     }
 
-    async execute(info: LocatorInfo) : Promise<any> {
-        const rule = this.findRule(info);
-        if (!rule) {
+    async execute(input: string) : Promise<any> {
+        const id = this.findLoader(input);
+        if (!id) {
+            const info = pathToLocatorInfo(input);
             throw new Error(`No loader registered for extension: "${info.extension}"`);
         }
 
-        const loader = this.resolve(rule.loader);
-        return loader.execute(info);
+        const loader = this.resolve(id);
+        return loader.execute(input);
     }
 
-    executeSync(info: LocatorInfo) : any {
-        const rule = this.findRule(info);
-        if (!rule) {
+    executeSync(input: string) : any {
+        const id = this.findLoader(input);
+        if (!id) {
+            const info = pathToLocatorInfo(input);
             throw new Error(`No loader registered for extension: ${info.extension || 'unknown'}`);
         }
 
-        const loader = this.resolve(rule.loader);
-        return loader.executeSync(info);
+        const loader = this.resolve(id);
+        return loader.executeSync(input);
     }
 
-    findRule(info: LocatorInfo) : Rule | undefined {
+    findLoader(input: string) : Loader | string | undefined {
+        if (!isFilePath(input)) {
+            return LoaderId.MODULE;
+        }
+
+        const info = pathToLocatorInfo(input);
         for (let i = 0; i < this.rules.length; i++) {
             const { test } = this.rules[i] as Rule;
             if (Array.isArray(test)) {
                 if (test.indexOf(info.extension) !== -1) {
-                    return this.rules[i];
+                    return this.rules[i].loader;
                 }
             } else if (test.test(buildLoaderFilePath(info))) {
-                return this.rules[i];
+                return this.rules[i].loader;
             }
         }
 
@@ -72,27 +95,53 @@ export class LoaderManager {
             return id;
         }
 
-        if (this.loaders[id]) {
+        if (Object.prototype.hasOwnProperty.call(this.loaders, id)) {
             return this.loaders[id] as Loader;
         }
 
         let loader : Loader | undefined;
 
+        // built-in
         switch (id) {
-            case 'script': {
-                loader = new ScriptLoader();
+            case LoaderId.MODULE: {
+                loader = new ModuleLoader();
                 break;
             }
-            case 'json': {
+            case LoaderId.JSON: {
                 loader = new JSONLoader();
+                break;
+            }
+            default: {
+                const pluginPath = this.normalizePath(id);
+                const moduleLoader = this.resolve(LoaderId.MODULE);
+                loader = moduleLoader.executeSync(pluginPath);
+
                 break;
             }
         }
 
         if (typeof loader !== 'undefined') {
+            this.loaders[id] = loader;
+
             return loader;
         }
 
         throw new Error(`The loader ${id} could not be resolved.`);
+    }
+
+    normalizePath(input: string) {
+        if (path.isAbsolute(input) || input.startsWith('./')) {
+            return input;
+        }
+
+        if (input.startsWith('module:')) {
+            return input.substring(0, 'module:'.length);
+        }
+
+        if (!input.startsWith('@')) {
+            return `@locter/${input}`;
+        }
+
+        return input;
     }
 }

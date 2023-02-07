@@ -7,14 +7,14 @@
 
 
 import path from "path";
-import {locateFile, locateFiles, locateFilesSync, locateFileSync} from "../../src";
+import {locate, locateMany, locateManySync, locateSync} from "../../src";
 import {LocatorInfo} from "../../src";
 
 const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/locator.ts', () => {
     it('should not locate .js file', async () => {
-        let locatorInfo = await locateFile( ['file.ts', 'file.js'], {path: [basePath]});
+        let locatorInfo = await locate( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -22,7 +22,7 @@ describe('src/locator.ts', () => {
             extension: '.js'
         } as LocatorInfo);
 
-        locatorInfo = locateFileSync( ['file.ts', 'file.js'], {path: [basePath]});
+        locatorInfo = locateSync( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -32,7 +32,7 @@ describe('src/locator.ts', () => {
     });
 
     it('should not locate .js files', async () => {
-        let locatorInfo = await locateFiles( ['file.ts', 'file.js'], {path: [basePath]});
+        let locatorInfo = await locateMany( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual([{
             path: basePath,
@@ -40,7 +40,7 @@ describe('src/locator.ts', () => {
             extension: '.js'
         }] as LocatorInfo[]);
 
-        locatorInfo = locateFilesSync( ['file.ts', 'file.js'], {path: [basePath]});
+        locatorInfo = locateManySync( ['file.ts', 'file.js'], {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual([{
             path: basePath,
@@ -50,7 +50,7 @@ describe('src/locator.ts', () => {
     });
 
     it('should locate .ts file', async () => {
-        let locatorInfo = await locateFile( 'file-ts.{js,ts}', {path: [basePath]});
+        let locatorInfo = await locate( 'file-ts.{js,ts}', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -58,7 +58,7 @@ describe('src/locator.ts', () => {
             extension: '.ts'
         } as LocatorInfo);
 
-        locatorInfo = locateFileSync( 'file-ts.{js,ts}', {path: [basePath]});
+        locatorInfo = locateSync( 'file-ts.{js,ts}', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -68,7 +68,7 @@ describe('src/locator.ts', () => {
     });
 
     it('should locate .json file', async () => {
-        let locatorInfo = await locateFile( 'file.json', {path: [basePath]});
+        let locatorInfo = await locate( 'file.json', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -76,7 +76,7 @@ describe('src/locator.ts', () => {
             extension: '.json'
         } as LocatorInfo);
 
-        locatorInfo = locateFileSync('file.json', {path: [basePath]});
+        locatorInfo = locateSync('file.json', {path: [basePath]});
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             path: basePath,
@@ -86,10 +86,10 @@ describe('src/locator.ts', () => {
     });
 
     it('should not locate file async', async () => {
-        let locatorInfo = await locateFile( 'file.foo', {path: [basePath]});
+        let locatorInfo = await locate( 'file.foo', {path: [basePath]});
         expect(locatorInfo).toBeUndefined();
 
-        locatorInfo = locateFileSync( 'file.foo', {path: [basePath]});
+        locatorInfo = locateSync( 'file.foo', {path: [basePath]});
         expect(locatorInfo).toBeUndefined();
     });
 });

@@ -5,31 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocatorInfo, pathToLocatorInfo } from '../locator';
-import { useLoaderManager } from './singleton';
+import { LocatorInfo } from '../locator';
+import { useLoader } from './singleton';
+import { Loader, Rule } from './type';
+import { buildLoaderFilePath } from './utils';
 
-export async function loadFile(input: LocatorInfo | string) : Promise<unknown> {
-    let info : LocatorInfo;
-    if (typeof input === 'string') {
-        info = pathToLocatorInfo(input);
-    } else {
-        info = input;
+export function registerLoader(rule: Rule) : void;
+export function registerLoader(test: string[] | RegExp, loader: Loader) : void;
+export function registerLoader(test: any, loader?: Loader) : void {
+    const manager = useLoader();
+    if (typeof loader !== 'undefined') {
+        manager.register(test, loader);
+
+        return;
     }
 
-    const manager = useLoaderManager();
-
-    return manager.execute(info);
+    manager.register(test);
 }
 
-export function loadFileSync(input: LocatorInfo | string) : unknown {
-    let info : LocatorInfo;
+export async function load(input: LocatorInfo | string) : Promise<unknown> {
+    const manager = useLoader();
     if (typeof input === 'string') {
-        info = pathToLocatorInfo(input);
-    } else {
-        info = input;
+        return manager.execute(input);
     }
 
-    const manager = useLoaderManager();
+    return manager.execute(buildLoaderFilePath(input));
+}
 
-    return manager.executeSync(info);
+export function loadSync(input: LocatorInfo | string) : unknown {
+    const manager = useLoader();
+    if (typeof input === 'string') {
+        return manager.executeSync(input);
+    }
+
+    return manager.executeSync(buildLoaderFilePath(input));
 }

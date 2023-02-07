@@ -8,7 +8,7 @@
 import { LoaderManager } from './module';
 
 let instance : LoaderManager;
-export function useLoaderManager() {
+export function useLoader() {
     if (typeof instance !== 'undefined') {
         return instance;
     }

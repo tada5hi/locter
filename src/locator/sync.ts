@@ -9,7 +9,7 @@ import glob from 'glob';
 import { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
-export function locateFilesSync(
+export function locateManySync(
     pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : LocatorInfo[] {
@@ -39,7 +39,7 @@ export function locateFilesSync(
     return items;
 }
 
-export function locateFileSync(
+export function locateSync(
     pattern: string | string[],
     options?: Partial<LocatorOptions>,
 ) : LocatorInfo | undefined {

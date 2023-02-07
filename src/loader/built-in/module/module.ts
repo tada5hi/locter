@@ -11,79 +11,48 @@ import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
 import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
 import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils';
-import { LoaderInterface } from '../../type';
+import { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 import { ScriptFileLoadOptions } from './type';
 import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
-export class ScriptLoader implements LoaderInterface {
+export class ModuleLoader implements Loader {
     protected jiti : JITI;
 
     constructor() {
-        /*
-        const loaderMap : Record<string, ESLoader> = {
-            '.mjs': 'js',
-            '.js': 'js',
-            '.jsx': 'jsx',
-            '.ts': 'ts',
-            '.tsx': 'tsx',
-        };
-        */
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.jiti = createJITI(undefined, {
+            extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
             esmResolve: true,
-            /*
-            transform: (options) => {
-                let loader : ESLoader = 'ts';
-                if (options.filename) {
-                    const info = pathToLocatorInfo(options.filename, true);
-                    if (loaderMap[info.extension]) {
-                        loader = loaderMap[info.extension] as ESLoader;
-                    }
-                }
-
-                return transformSync(options.source, {
-                    target: 'ES2020',
-                    jsx: 'transform',
-                    format: 'cjs',
-                    loader,
-                });
-            },
-
-             */
         });
     }
 
-    async execute(info: LocatorInfo) {
-        const filePath = buildLoaderFilePath(info);
-
+    async execute(input: string) {
         let output : any;
 
         try {
-            output = await this.load(info);
+            output = await this.load(input);
         } catch (e) {
             // jiti + ts-node
             // issue: https://github.com/nuxt/bridge/issues/228
             if (isTsNodeRuntimeEnvironment()) {
-                output = this.loadSync(info);
+                output = this.loadSync(input);
             } else {
-                output = this.jiti(filePath);
+                output = this.jiti(input);
             }
         }
 
         return output;
     }
 
-    executeSync(info: LocatorInfo) {
-        const filePath = buildLoaderFilePath(info);
-
+    executeSync(input: string) {
         let output : any;
 
         try {
-            output = this.loadSync(info);
+            output = this.loadSync(input);
         } catch (e) {
-            output = this.jiti(filePath);
+            output = this.jiti(input);
         }
 
         return output;

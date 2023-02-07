@@ -6,13 +6,12 @@
  */
 
 import fs from 'node:fs';
-import { LocatorInfo } from '../../../locator';
 import { handleFileLoadError } from '../../../utils';
 import { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 
 export class JSONLoader implements Loader {
-    async execute(input: LocatorInfo) {
+    async execute(input: string) {
         const filePath = buildLoaderFilePath(input, true);
 
         try {
@@ -23,7 +22,7 @@ export class JSONLoader implements Loader {
         }
     }
 
-    executeSync(input: LocatorInfo) {
+    executeSync(input: string) {
         const filePath = buildLoaderFilePath(input, true);
 
         try {

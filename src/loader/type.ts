@@ -5,11 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocatorInfo } from '../locator';
-
 export type Loader = {
-    execute: (info: LocatorInfo) => Promise<any>,
-    executeSync: (info: LocatorInfo) => any
+    execute: (input: string) => Promise<any>,
+    executeSync: (input: string) => any
 };
 
 export type Rule = {

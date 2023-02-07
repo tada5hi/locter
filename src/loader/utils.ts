@@ -7,11 +7,18 @@
 
 import { BaseError } from 'ebec';
 import path from 'node:path';
-import { LocatorInfo } from '../locator';
+import { LocatorInfo, pathToLocatorInfo } from '../locator';
 import { hasOwnProperty } from '../utils';
 import { LoaderFilterFn, ScriptFileExportItem } from './built-in';
 
-export function buildLoaderFilePath(info: LocatorInfo, withExtension?: boolean) {
+export function buildLoaderFilePath(input: LocatorInfo | string, withExtension?: boolean) {
+    let info: LocatorInfo;
+    if (typeof input === 'string') {
+        info = pathToLocatorInfo(input);
+    } else {
+        info = input;
+    }
+
     if (withExtension) {
         return path.join(info.path, info.name) + info.extension;
     }

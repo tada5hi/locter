@@ -18,17 +18,24 @@ export function buildLocatorOptions(options?: Partial<LocatorOptions>) : Locator
         options.path.push(process.cwd());
     }
 
-    options.soft ??= true;
     options.ignore ??= [];
 
     return options as LocatorOptions;
+}
+
+export function isFilePath(input: string) {
+    const info = path.parse(input);
+    return info.ext !== '';
 }
 
 export function pathToLocatorInfo(
     input: string,
     skipResolve?: boolean,
 ) : LocatorInfo {
-    if (!skipResolve && !path.isAbsolute(input)) {
+    if (
+        !skipResolve &&
+        !path.isAbsolute(input)
+    ) {
         input = path.resolve(process.cwd(), input);
     }
 

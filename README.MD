@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-Locter is a library to locate and load a file regarding specific criteria.
+Locter is a library to locate and load a file/modules regarding specific criteria.
 
 **Table of Contents**
 
@@ -40,10 +40,10 @@ The following examples are based on some shared assumptions:
 Locating multiple files will return information about all files matching the pattern.
 
 ```typescript
-import { locateFiles } from 'locter';
+import { locateMany } from 'locter';
 
 (async () => {
-    let files = await locateFiles(
+    let files = await locateMany(
         'files/example.{js,.ts}',
         {
             path: process.cwd()
@@ -58,7 +58,7 @@ import { locateFiles } from 'locter';
     ]
      */
 
-    files = await locateFiles(
+    files = await locateMany(
         'files/*.{js,ts}',
         {
             path: process.cwd()
@@ -76,17 +76,17 @@ import { locateFiles } from 'locter';
 })
 ```
 
-A synchronous variant is also available: `locateFilesSync`
+A synchronous variant is also available: `locateManySync`
 
 **Single**
 
 Locating a single file will return information about the first file matching the pattern.
 
 ```typescript
-import { locateFile } from 'locter';
+import { locate } from 'locter';
 
 (async () => {
-    let file = await locateFile(
+    let file = await locate(
         'files/example.{js,.ts}',
         {
             path: process.cwd()
@@ -100,32 +100,77 @@ import { locateFile } from 'locter';
 })
 ```
 
-A synchronous variant is also available: `locateFileSync`
+A synchronous variant is also available: `locateSync`
 
 ### Loader
 
-The method will load the located file.
+The `load` method can be used to load a file/module in an asynchronous fashion.
+Either a string or the output of the locate/locateSync method can be passed as argument.
 
 ```typescript
-import { loadFile, locateFile } from 'locter';
+import { load, locate } from 'locter';
 
 (async () => {
-    const file = await locateFile(
+    const file = await locate(
         'files/example.{js,.ts}',
         {
             path: process.cwd()
         }
     );
 
-    const content = loadFile(file);
-
+    let content = await load(file);
     console.log(content);
+    // ...
 
+    content = await load('...');
+    console.log(content);
     // ...
 })
 ```
 
-A synchronous variant is also available: `loadFileSync`
+There is also a synchronous method called `loadSync` to load files.
+
+```typescript
+import { loadSync, locateSync } from 'locter';
+
+(async () => {
+    const file = await locateSync(
+        'files/example.{js,.ts}',
+        {
+            path: process.cwd()
+        }
+    );
+
+    let content = await loadSync(file);
+    console.log(content);
+    // ...
+
+    content = await loadSync('...');
+    console.log(content);
+    // ...
+})
+```
+
+Two loaders are predefined from scratch and already registered:
+- **JsonLoader**: This loader allows to load `.json` files.
+- **ModuleLoader**: This loader allows to load modules with
+  `.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts` file extensions independent of the environment (cjs or esm).
+
+To register loader for other file types, the function `registerLoader` can be used.
+
+```typescript
+import { LocatorInfo, registerLoader } from 'locter';
+
+registerLoader(['.ext'], {
+    execute(info: LocatorInfo) {
+
+    },
+    executeSync(info: LocatorInfo) {
+
+    }
+})
+```
+
 
 ## License
 
