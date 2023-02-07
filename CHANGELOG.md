@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/tada5hi/locter/compare/v1.0.0...v1.0.1) (2023-02-07)
+
+
+### Bug Fixes
+
+* change return type of load and loadSync ([1613372](https://github.com/tada5hi/locter/commit/1613372e1931ba5d9a5bde124feb5827e794a5d7))
+
 # [1.0.0](https://github.com/tada5hi/locter/compare/v0.8.2...v1.0.0) (2023-02-07)
 
 
