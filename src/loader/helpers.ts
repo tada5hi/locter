@@ -23,7 +23,7 @@ export function registerLoader(test: any, loader?: Loader) : void {
     manager.register(test);
 }
 
-export async function load(input: LocatorInfo | string) : Promise<unknown> {
+export async function load(input: LocatorInfo | string) : Promise<any> {
     const manager = useLoader();
     if (typeof input === 'string') {
         return manager.execute(input);
@@ -32,7 +32,7 @@ export async function load(input: LocatorInfo | string) : Promise<unknown> {
     return manager.execute(buildLoaderFilePath(input));
 }
 
-export function loadSync(input: LocatorInfo | string) : unknown {
+export function loadSync(input: LocatorInfo | string) : any {
     const manager = useLoader();
     if (typeof input === 'string') {
         return manager.executeSync(input);
