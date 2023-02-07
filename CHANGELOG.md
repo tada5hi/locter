@@ -1,3 +1,15 @@
+# [1.0.0](https://github.com/tada5hi/locter/compare/v0.8.2...v1.0.0) (2023-02-07)
+
+
+### Features
+
+* refactored code base and public api ([a864805](https://github.com/tada5hi/locter/commit/a864805d031118d5d7beaad5fd9713bf0d96f097))
+
+
+### BREAKING CHANGES
+
+* public api changed
+
 ## [0.8.2](https://github.com/tada5hi/locter/compare/v0.8.1...v0.8.2) (2023-01-31)
 
 
