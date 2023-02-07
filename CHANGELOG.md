@@ -1,3 +1,10 @@
+## [0.8.2](https://github.com/tada5hi/locter/compare/v0.8.1...v0.8.2) (2023-01-31)
+
+
+### Bug Fixes
+
+* compatibility issues with ts-node ([da3db7f](https://github.com/tada5hi/locter/commit/da3db7f231918525ccbf5e70aa083f02fb8ba48e))
+
 ## [0.8.1](https://github.com/tada5hi/locter/compare/v0.8.0...v0.8.1) (2023-01-31)
 
 
