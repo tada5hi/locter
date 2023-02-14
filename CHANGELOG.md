@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/tada5hi/locter/compare/v1.0.2...v1.0.3) (2023-02-14)
+
+
+### Bug Fixes
+
+* append file extension for loading by file-info ([122e3f9](https://github.com/tada5hi/locter/commit/122e3f9f3c2340d07b3c5cad6a420f8ae63ce41a))
+
 ## [1.0.2](https://github.com/tada5hi/locter/compare/v1.0.1...v1.0.2) (2023-02-14)
 
 
