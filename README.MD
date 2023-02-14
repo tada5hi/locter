@@ -159,13 +159,13 @@ Two loaders are predefined from scratch and already registered:
 To register loader for other file types, the function `registerLoader` can be used.
 
 ```typescript
-import { LocatorInfo, registerLoader } from 'locter';
+import { registerLoader } from 'locter';
 
 registerLoader(['.ext'], {
-    execute(info: LocatorInfo) {
+    execute(input: string) {
 
     },
-    executeSync(info: LocatorInfo) {
+    executeSync(input: string) {
 
     }
 })
