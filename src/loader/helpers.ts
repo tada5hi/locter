@@ -29,7 +29,7 @@ export async function load(input: LocatorInfo | string) : Promise<any> {
         return manager.execute(input);
     }
 
-    return manager.execute(buildLoaderFilePath(input));
+    return manager.execute(buildLoaderFilePath(input, true));
 }
 
 export function loadSync(input: LocatorInfo | string) : any {
@@ -38,5 +38,5 @@ export function loadSync(input: LocatorInfo | string) : any {
         return manager.executeSync(input);
     }
 
-    return manager.executeSync(buildLoaderFilePath(input));
+    return manager.executeSync(buildLoaderFilePath(input, true));
 }

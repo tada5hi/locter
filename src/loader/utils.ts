@@ -13,13 +13,17 @@ import { LoaderFilterFn, ScriptFileExportItem } from './built-in';
 
 export function buildLoaderFilePath(input: LocatorInfo | string, withExtension?: boolean) {
     let info: LocatorInfo;
+
     if (typeof input === 'string') {
         info = pathToLocatorInfo(input);
     } else {
         info = input;
     }
 
-    if (withExtension) {
+    if (
+        withExtension &&
+        info.extension
+    ) {
         return path.join(info.path, info.name) + info.extension;
     }
 
