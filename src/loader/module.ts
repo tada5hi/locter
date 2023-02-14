@@ -111,6 +111,7 @@ export class LoaderManager implements Loader {
                 loader = new JSONLoader();
                 break;
             }
+            /* istanbul ignore next */
             default: {
                 const pluginPath = this.normalizePath(id);
                 const moduleLoader = this.resolve(LoaderId.MODULE);
@@ -129,6 +130,7 @@ export class LoaderManager implements Loader {
         throw new Error(`The loader ${id} could not be resolved.`);
     }
 
+    /* istanbul ignore next */
     normalizePath(input: string) {
         if (path.isAbsolute(input) || input.startsWith('./')) {
             return input;

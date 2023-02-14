@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from "path";
+import path from "node:path";
 import {
     load,
     loadSync,
-    getExportItem
+    getExportItem, LoaderManager
 } from "../../src";
+import {LoaderId} from "../../src/loader/constants";
 
 const basePath = path.join(__dirname, '..', 'data');
 
@@ -176,4 +177,22 @@ describe('src/loader/**', () => {
             expect(e).toBeDefined();
         }
     });
+
+    it('should register loader', () => {
+        const manager = new LoaderManager();
+        manager.register(['.foo'], {
+            async execute(input) {
+                return input;
+            },
+            executeSync(input: string) {
+                return input;
+            }
+        })
+    });
+
+    it('should use module loader as fallback', () => {
+        const manager = new LoaderManager();
+        const loader = manager.findLoader('foo');
+        expect(loader).toEqual(LoaderId.MODULE);
+    })
 });
