@@ -25,7 +25,6 @@ export class ModuleLoader implements Loader {
         // @ts-ignore
         this.jiti = createJITI(undefined, {
             extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
-            esmResolve: true,
         });
     }
 
