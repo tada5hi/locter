@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocatorInfo } from '../locator';
+import type { LocatorInfo } from '../locator';
 import { useLoader } from './singleton';
-import { Loader, Rule } from './type';
+import type { Loader, Rule } from './type';
 import { buildLoaderFilePath } from './utils';
 
 export function registerLoader(rule: Rule) : void;

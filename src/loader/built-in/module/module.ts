@@ -9,11 +9,12 @@ import { BaseError } from 'ebec';
 import type { JITI } from 'jiti';
 import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
-import { LocatorInfo, pathToLocatorInfo } from '../../../locator';
+import type { LocatorInfo } from '../../../locator';
+import { pathToLocatorInfo } from '../../../locator';
 import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils';
-import { Loader } from '../../type';
+import type { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
-import { ScriptFileLoadOptions } from './type';
+import type { ScriptFileLoadOptions } from './type';
 import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
 export class ModuleLoader implements Loader {

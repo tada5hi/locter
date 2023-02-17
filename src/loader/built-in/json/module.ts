@@ -7,7 +7,7 @@
 
 import fs from 'node:fs';
 import { handleFileLoadError } from '../../../utils';
-import { Loader } from '../../type';
+import type { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 
 export class JSONLoader implements Loader {

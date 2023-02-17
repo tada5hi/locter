@@ -6,7 +6,7 @@
  */
 
 import glob from 'glob';
-import { LocatorInfo, LocatorOptions } from './type';
+import type { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
 export function locateManySync(

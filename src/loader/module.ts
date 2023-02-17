@@ -9,7 +9,7 @@ import path from 'node:path';
 import { isFilePath, pathToLocatorInfo } from '../locator';
 import { JSONLoader, ModuleLoader } from './built-in';
 import { LoaderId } from './constants';
-import { Loader, Rule } from './type';
+import type { Loader, Rule } from './type';
 import { buildLoaderFilePath } from './utils';
 
 export class LoaderManager implements Loader {

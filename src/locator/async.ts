@@ -7,7 +7,7 @@
 
 import glob from 'glob';
 import { promisify } from 'node:util';
-import { LocatorInfo, LocatorOptions } from './type';
+import type { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
 const globAsync = promisify(glob);

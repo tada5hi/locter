@@ -6,7 +6,7 @@
  */
 
 import path from 'node:path';
-import { LocatorInfo, LocatorOptions } from './type';
+import type { LocatorInfo, LocatorOptions } from './type';
 import { toArray } from '../utils';
 
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
