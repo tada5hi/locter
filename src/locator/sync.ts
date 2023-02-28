@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import glob from 'glob';
+import { globSync } from 'glob';
 import type { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
@@ -23,7 +23,7 @@ export function locateManySync(
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = glob.sync(patterns[i] as string, {
+            const files = globSync(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
                 nodir: true,
@@ -51,7 +51,7 @@ export function locateSync(
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = glob.sync(patterns[i] as string, {
+            const files = globSync(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
                 nodir: true,

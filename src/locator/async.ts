@@ -5,12 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import glob from 'glob';
-import { promisify } from 'node:util';
+import { glob } from 'glob';
 import type { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
-
-const globAsync = promisify(glob);
 
 export async function locateMany(
     pattern: string | string[],
@@ -26,7 +23,7 @@ export async function locateMany(
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = await globAsync(patterns[i] as string, {
+            const files = await glob(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
                 nodir: true,
@@ -54,7 +51,7 @@ export async function locate(
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = await globAsync(patterns[i] as string, {
+            const files = await glob(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
                 nodir: true,
