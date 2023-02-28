@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/tada5hi/locter/compare/v1.0.5...v1.0.6) (2023-02-28)
+
+
+### Bug Fixes
+
+* **deps:** bump glob to v9 + simplified commitlint config ([1cf0baa](https://github.com/tada5hi/locter/commit/1cf0baad662ddf1bd28ebf6c6e1fe62844e2dac8))
+
 ## [1.0.5](https://github.com/tada5hi/locter/compare/v1.0.4...v1.0.5) (2023-02-17)
 
 
