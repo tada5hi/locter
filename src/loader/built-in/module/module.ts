@@ -11,7 +11,7 @@ import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
 import { pathToLocatorInfo } from '../../../locator';
-import { handleFileLoadError, hasStringProperty, isObject } from '../../../utils';
+import { handleException, hasStringProperty, isObject } from '../../../utils';
 import type { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 import type { ScriptFileLoadOptions } from './type';
@@ -128,7 +128,7 @@ export class ModuleLoader implements Loader {
             }
 
             /* istanbul ignore next */
-            return handleFileLoadError(e);
+            return handleException(e);
         }
     }
 
@@ -177,7 +177,7 @@ export class ModuleLoader implements Loader {
                 });
             }
 
-            return handleFileLoadError(e);
+            return handleException(e);
         }
     }
 }

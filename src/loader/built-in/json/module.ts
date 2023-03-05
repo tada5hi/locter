@@ -6,7 +6,7 @@
  */
 
 import fs from 'node:fs';
-import { handleFileLoadError } from '../../../utils';
+import { handleException } from '../../../utils';
 import type { Loader } from '../../type';
 import { buildLoaderFilePath } from '../../utils';
 
@@ -18,7 +18,7 @@ export class JSONLoader implements Loader {
             const file = await fs.promises.readFile(filePath);
             return JSON.parse(file.toString('utf-8'));
         } catch (e) {
-            return handleFileLoadError(e);
+            return handleException(e);
         }
     }
 
@@ -29,7 +29,7 @@ export class JSONLoader implements Loader {
             const file = fs.readFileSync(filePath);
             return JSON.parse(file.toString('utf-8'));
         } catch (e) {
-            return handleFileLoadError(e);
+            return handleException(e);
         }
     }
 }
