@@ -7,10 +7,10 @@
 
 import path from 'node:path';
 import { isFilePath, pathToLocatorInfo } from '../locator';
+import { buildFilePath } from '../utils';
 import { JSONLoader, ModuleLoader } from './built-in';
 import { LoaderId } from './constants';
 import type { Loader, Rule } from './type';
-import { buildLoaderFilePath } from './utils';
 
 export class LoaderManager implements Loader {
     protected loaders : Record<string, Loader>;
@@ -77,7 +77,7 @@ export class LoaderManager implements Loader {
                 if (test.indexOf(info.extension) !== -1) {
                     return this.rules[i].loader;
                 }
-            } else if (test.test(buildLoaderFilePath(info))) {
+            } else if (test.test(buildFilePath(info))) {
                 return this.rules[i].loader;
             }
         }

@@ -11,9 +11,10 @@ import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
 import { pathToLocatorInfo } from '../../../locator';
-import { handleException, hasStringProperty, isObject } from '../../../utils';
+import {
+    buildFilePath, buildFilePathWithoutExtension, handleException, hasStringProperty, isObject,
+} from '../../../utils';
 import type { Loader } from '../../type';
-import { buildLoaderFilePath } from '../../utils';
 import type { ScriptFileLoadOptions } from './type';
 import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
@@ -64,17 +65,17 @@ export class ModuleLoader implements Loader {
         data: LocatorInfo | string,
         options?: ScriptFileLoadOptions,
     ) : Promise<unknown> {
-        let locatorInfo : LocatorInfo;
-
-        if (typeof data === 'string') {
-            locatorInfo = pathToLocatorInfo(data);
-        } else {
-            locatorInfo = data;
-        }
+        const locatorInfo = this.buildLocatorInfo(data);
 
         options = options || {};
 
-        let filePath = buildLoaderFilePath(locatorInfo, options.withExtension);
+        let filePath : string;
+        if (options.withExtension) {
+            filePath = buildFilePath(locatorInfo);
+        } else {
+            filePath = buildFilePathWithoutExtension(locatorInfo);
+        }
+
         if (options.withFilePrefix) {
             filePath = pathToFileURL(filePath).href;
         }
@@ -136,17 +137,16 @@ export class ModuleLoader implements Loader {
         data: LocatorInfo | string,
         options?: ScriptFileLoadOptions,
     ) : unknown {
-        let locatorInfo : LocatorInfo;
-
-        if (typeof data === 'string') {
-            locatorInfo = pathToLocatorInfo(data);
-        } else {
-            locatorInfo = data;
-        }
+        const locatorInfo = this.buildLocatorInfo(data);
 
         options = options || {};
 
-        const filePath = buildLoaderFilePath(locatorInfo, options.withExtension);
+        let filePath : string;
+        if (options.withExtension) {
+            filePath = buildFilePath(locatorInfo);
+        } else {
+            filePath = buildFilePathWithoutExtension(locatorInfo);
+        }
 
         try {
             // eslint-disable-next-line global-require,import/no-dynamic-require
@@ -179,5 +179,13 @@ export class ModuleLoader implements Loader {
 
             return handleException(e);
         }
+    }
+
+    private buildLocatorInfo(input: LocatorInfo | string) : LocatorInfo {
+        if (typeof input === 'string') {
+            return pathToLocatorInfo(input);
+        }
+
+        return input;
     }
 }

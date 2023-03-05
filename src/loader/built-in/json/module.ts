@@ -6,13 +6,12 @@
  */
 
 import fs from 'node:fs';
-import { handleException } from '../../../utils';
+import { buildFilePath, handleException } from '../../../utils';
 import type { Loader } from '../../type';
-import { buildLoaderFilePath } from '../../utils';
 
 export class JSONLoader implements Loader {
     async execute(input: string) {
-        const filePath = buildLoaderFilePath(input, true);
+        const filePath = buildFilePath(input);
 
         try {
             const file = await fs.promises.readFile(filePath);
@@ -23,7 +22,7 @@ export class JSONLoader implements Loader {
     }
 
     executeSync(input: string) {
-        const filePath = buildLoaderFilePath(input, true);
+        const filePath = buildFilePath(input);
 
         try {
             const file = fs.readFileSync(filePath);

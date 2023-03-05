@@ -6,9 +6,9 @@
  */
 
 import type { LocatorInfo } from '../locator';
+import { buildFilePath } from '../utils';
 import { useLoader } from './singleton';
 import type { Loader, Rule } from './type';
-import { buildLoaderFilePath } from './utils';
 
 export function registerLoader(rule: Rule) : void;
 export function registerLoader(test: string[] | RegExp, loader: Loader) : void;
@@ -29,7 +29,7 @@ export async function load(input: LocatorInfo | string) : Promise<any> {
         return manager.execute(input);
     }
 
-    return manager.execute(buildLoaderFilePath(input, true));
+    return manager.execute(buildFilePath(input));
 }
 
 export function loadSync(input: LocatorInfo | string) : any {
@@ -38,5 +38,5 @@ export function loadSync(input: LocatorInfo | string) : any {
         return manager.executeSync(input);
     }
 
-    return manager.executeSync(buildLoaderFilePath(input, true));
+    return manager.executeSync(buildFilePath(input));
 }

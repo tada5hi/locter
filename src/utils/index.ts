@@ -10,3 +10,4 @@ export * from './file-name';
 export * from './has-property';
 export * from './object';
 export * from './to-array';
+export * from './file-path';
