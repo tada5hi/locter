@@ -1,3 +1,11 @@
+## [1.0.7](https://github.com/tada5hi/locter/compare/v1.0.6...v1.0.7) (2023-03-05)
+
+
+### Bug Fixes
+
+* enhance exception handling ([3b741b1](https://github.com/tada5hi/locter/commit/3b741b16f7f5ac164bdd5d5ca3d15dd6b974548c))
+* optimized file path building ([cea0141](https://github.com/tada5hi/locter/commit/cea014131943bcbec8d1a6eae721103403d3bf27))
+
 ## [1.0.6](https://github.com/tada5hi/locter/compare/v1.0.5...v1.0.6) (2023-02-28)
 
 
