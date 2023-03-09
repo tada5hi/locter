@@ -70,7 +70,7 @@
         "jest": "^27.5.1",
         "magic-string": "^0.30.0",
         "mlly": "^1.1.1",
-        "rimraf": "^4.3.1",
+        "rimraf": "^4.4.0",
         "rollup": "^3.18.0",
         "semantic-release": "^19.0.5",
         "sourcemap-codec": "^1.4.8",
