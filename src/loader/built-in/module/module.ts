@@ -22,7 +22,7 @@ import {
     isObject,
 } from '../../../utils';
 import type { Loader } from '../../type';
-import type { ScriptFileLoadOptions } from './type';
+import type { ModuleLoadOptions } from './type';
 import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
 
 export class ModuleLoader implements Loader {
@@ -70,7 +70,7 @@ export class ModuleLoader implements Loader {
 
     async load(
         data: LocatorInfo | string,
-        options?: ScriptFileLoadOptions,
+        options?: ModuleLoadOptions,
     ) : Promise<unknown> {
         options = options || {};
         const [name, locatorInfo] = this.build(data, options);
@@ -132,7 +132,7 @@ export class ModuleLoader implements Loader {
 
     loadSync(
         data: LocatorInfo | string,
-        options?: ScriptFileLoadOptions,
+        options?: ModuleLoadOptions,
     ) : unknown {
         options = options || {};
         const [name, locatorInfo] = this.build(data, options);
@@ -174,7 +174,7 @@ export class ModuleLoader implements Loader {
 
     private build(
         data: LocatorInfo | string,
-        options: ScriptFileLoadOptions,
+        options: ModuleLoadOptions,
     ) : [string, LocatorInfo | undefined] {
         let name : string;
         let locatorInfo : LocatorInfo | undefined;

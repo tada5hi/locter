@@ -9,7 +9,8 @@ import path from "node:path";
 import {
     load,
     loadSync,
-    getExportItem, LoaderManager
+    getModuleExport,
+    LoaderManager
 } from "../../src";
 import {LoaderId} from "../../src/loader/constants";
 
@@ -69,7 +70,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file.js');
 
         let loaderContent = await load(filePath) as Record<string, any>;
-        loaderContent = getExportItem(loaderContent);
+        loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({foo: 'bar'});
@@ -79,7 +80,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file.js');
 
         let loaderContent = loadSync(filePath) as Record<string, any>;
-        loaderContent = getExportItem(loaderContent);
+        loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({foo: 'bar'});
@@ -97,7 +98,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file-ts.ts');
 
         let loaderContent = await load(filePath) as Record<string, any>;
-        loaderContent = getExportItem(loaderContent);
+        loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({bar: 'baz'});
@@ -115,7 +116,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file-ts.ts');
 
         let loaderContent = loadSync(filePath) as Record<string, any>;
-        loaderContent = getExportItem(loaderContent);
+        loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
         expect(loaderContent.value).toEqual({bar: 'baz'});
@@ -125,7 +126,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file-many-ts.ts');
 
         let loaderContent = await load(filePath) as Record<string, any>;
-        loaderContent = await getExportItem(loaderContent, (key) => {
+        loaderContent = await getModuleExport(loaderContent, (key) => {
             return key === 'bar';
         }) as Record<string, any>;
 
@@ -138,7 +139,7 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file-many-ts.ts');
 
         let loaderContent = loadSync(filePath) as Record<string, any>;
-        loaderContent = getExportItem(loaderContent, (key) => {
+        loaderContent = getModuleExport(loaderContent, (key) => {
             return key === 'bar';
         }) as Record<string, any>;
         expect(loaderContent).toBeDefined();

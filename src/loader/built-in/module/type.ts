@@ -7,12 +7,12 @@
 
 export type LoaderFilterFn = (key: string, value: unknown) => boolean;
 
-export type ScriptFileExportItem = {
+export type ModuleExport = {
     key: string,
     value: unknown
 };
 
-export type ScriptFileLoadOptions = {
+export type ModuleLoadOptions = {
     withExtension?: boolean,
     withFilePrefix?: boolean
 };
