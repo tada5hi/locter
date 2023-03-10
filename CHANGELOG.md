@@ -1,3 +1,11 @@
+## [1.0.9](https://github.com/tada5hi/locter/compare/v1.0.8...v1.0.9) (2023-03-10)
+
+
+### Bug Fixes
+
+* reading module export item ([adf4115](https://github.com/tada5hi/locter/commit/adf4115c3b91cdad983ddf79a855e82051356f50))
+* set module export value type to any ([7154898](https://github.com/tada5hi/locter/commit/71548986b4e64fa64c32f406e7b5d3ace3f0259e))
+
 ## [1.0.8](https://github.com/tada5hi/locter/compare/v1.0.7...v1.0.8) (2023-03-10)
 
 
