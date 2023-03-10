@@ -10,9 +10,16 @@ import type { JITI } from 'jiti';
 import createJITI from 'jiti';
 import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
-import { pathToLocatorInfo } from '../../../locator';
 import {
-    buildFilePath, buildFilePathWithoutExtension, handleException, hasStringProperty, isObject,
+    buildFilePath,
+    buildFilePathWithoutExtension,
+    isLocatorInfo,
+    pathToLocatorInfo,
+} from '../../../locator';
+import {
+    handleException,
+    hasStringProperty, isFilePath,
+    isObject,
 } from '../../../utils';
 import type { Loader } from '../../type';
 import type { ScriptFileLoadOptions } from './type';
@@ -65,60 +72,50 @@ export class ModuleLoader implements Loader {
         data: LocatorInfo | string,
         options?: ScriptFileLoadOptions,
     ) : Promise<unknown> {
-        const locatorInfo = this.buildLocatorInfo(data);
-
         options = options || {};
-
-        let filePath : string;
-        if (options.withExtension) {
-            filePath = buildFilePath(locatorInfo);
-        } else {
-            filePath = buildFilePathWithoutExtension(locatorInfo);
-        }
-
-        if (options.withFilePrefix) {
-            filePath = pathToFileURL(filePath).href;
-        }
+        const [name, locatorInfo] = this.build(data, options);
 
         try {
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
             if (isJestRuntimeEnvironment()) {
                 // eslint-disable-next-line global-require,import/no-dynamic-require
-                return require(filePath);
+                return require(name);
             }
 
-            return await import(filePath);
+            return await import(name);
         } catch (e) {
             /* istanbul ignore next */
             if (
                 isObject(e) &&
                 hasStringProperty(e, 'code')
             ) {
-                if (
-                    !options.withExtension &&
-                    (
-                        e.code === 'ERR_MODULE_NOT_FOUND' ||
-                        e.code === 'MODULE_NOT_FOUND'
-                    )
-                ) {
-                    return this.load(locatorInfo, {
-                        ...options,
-                        withExtension: true,
-                    });
-                }
+                if (locatorInfo) {
+                    if (
+                        !options.withExtension &&
+                        (
+                            e.code === 'ERR_MODULE_NOT_FOUND' ||
+                            e.code === 'MODULE_NOT_FOUND'
+                        )
+                    ) {
+                        return this.load(locatorInfo, {
+                            ...options,
+                            withExtension: true,
+                        });
+                    }
 
-                if (
-                    !options.withFilePrefix &&
-                    (
-                        e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
-                        e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
-                    )
-                ) {
-                    return this.load(locatorInfo, {
-                        ...options,
-                        withFilePrefix: true,
-                    });
+                    if (
+                        !options.withFilePrefix &&
+                        (
+                            e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                            e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                        )
+                    ) {
+                        return this.load(locatorInfo, {
+                            ...options,
+                            withFilePrefix: true,
+                        });
+                    }
                 }
 
                 throw new BaseError({
@@ -137,37 +134,31 @@ export class ModuleLoader implements Loader {
         data: LocatorInfo | string,
         options?: ScriptFileLoadOptions,
     ) : unknown {
-        const locatorInfo = this.buildLocatorInfo(data);
-
         options = options || {};
-
-        let filePath : string;
-        if (options.withExtension) {
-            filePath = buildFilePath(locatorInfo);
-        } else {
-            filePath = buildFilePathWithoutExtension(locatorInfo);
-        }
+        const [name, locatorInfo] = this.build(data, options);
 
         try {
             // eslint-disable-next-line global-require,import/no-dynamic-require
-            return require(filePath);
+            return require(name);
         } catch (e) {
             /* istanbul ignore next */
             if (
                 isObject(e) &&
                 hasStringProperty(e, 'code')
             ) {
-                if (
-                    !options.withExtension &&
-                    (
-                        e.code === 'ERR_MODULE_NOT_FOUND' ||
-                        e.code === 'MODULE_NOT_FOUND'
-                    )
-                ) {
-                    return this.loadSync(locatorInfo, {
-                        ...options,
-                        withExtension: true,
-                    });
+                if (locatorInfo) {
+                    if (
+                        !options.withExtension &&
+                        (
+                            e.code === 'ERR_MODULE_NOT_FOUND' ||
+                            e.code === 'MODULE_NOT_FOUND'
+                        )
+                    ) {
+                        return this.loadSync(locatorInfo, {
+                            ...options,
+                            withExtension: true,
+                        });
+                    }
                 }
 
                 throw new BaseError({
@@ -181,11 +172,35 @@ export class ModuleLoader implements Loader {
         }
     }
 
-    private buildLocatorInfo(input: LocatorInfo | string) : LocatorInfo {
-        if (typeof input === 'string') {
-            return pathToLocatorInfo(input);
+    private build(
+        data: LocatorInfo | string,
+        options: ScriptFileLoadOptions,
+    ) : [string, LocatorInfo | undefined] {
+        let name : string;
+        let locatorInfo : LocatorInfo | undefined;
+
+        options = options || {};
+
+        if (isLocatorInfo(data) || isFilePath(data)) {
+            if (typeof data === 'string') {
+                locatorInfo = pathToLocatorInfo(data);
+            } else {
+                locatorInfo = data;
+            }
+
+            if (options.withExtension) {
+                name = buildFilePath(locatorInfo);
+            } else {
+                name = buildFilePathWithoutExtension(locatorInfo);
+            }
+
+            if (options.withFilePrefix) {
+                name = pathToFileURL(name).href;
+            }
+        } else {
+            name = data;
         }
 
-        return input;
+        return [name, locatorInfo];
     }
 }

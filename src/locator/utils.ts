@@ -6,8 +6,8 @@
  */
 
 import path from 'node:path';
+import { isObject, toArray } from '../utils';
 import type { LocatorInfo, LocatorOptions } from './type';
-import { toArray } from '../utils';
 
 export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
     options = options || {};
@@ -21,11 +21,6 @@ export function buildLocatorOptions(options?: Partial<LocatorOptions>) : Locator
     options.ignore ??= [];
 
     return options as LocatorOptions;
-}
-
-export function isFilePath(input: string) {
-    const info = path.parse(input);
-    return info.ext !== '';
 }
 
 export function pathToLocatorInfo(
@@ -46,4 +41,37 @@ export function pathToLocatorInfo(
         name: info.name,
         extension: info.ext,
     };
+}
+
+export function isLocatorInfo(
+    input: unknown,
+) : input is LocatorInfo {
+    return isObject(input) &&
+        typeof input.path === 'string' &&
+        typeof input.name === 'string' &&
+        typeof input.extension === 'string';
+}
+
+export function buildFilePath(input: LocatorInfo | string) {
+    if (typeof input === 'string') {
+        return input;
+    }
+
+    if (input.extension) {
+        return path.join(input.path, input.name) + input.extension;
+    }
+
+    return path.join(input.path, input.name);
+}
+
+export function buildFilePathWithoutExtension(input: LocatorInfo | string) {
+    let info: LocatorInfo;
+
+    if (typeof input === 'string') {
+        info = pathToLocatorInfo(input);
+    } else {
+        info = input;
+    }
+
+    return path.join(info.path, info.name);
 }

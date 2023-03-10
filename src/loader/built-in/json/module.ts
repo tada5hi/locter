@@ -6,7 +6,8 @@
  */
 
 import fs from 'node:fs';
-import { buildFilePath, handleException } from '../../../utils';
+import { buildFilePath } from '../../../locator';
+import { handleException } from '../../../utils';
 import type { Loader } from '../../type';
 
 export class JSONLoader implements Loader {

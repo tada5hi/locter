@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildFilePath } from '../locator';
 import type { LocatorInfo } from '../locator';
-import { buildFilePath } from '../utils';
 import { useLoader } from './singleton';
 import type { Loader, Rule } from './type';
 

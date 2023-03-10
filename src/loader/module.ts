@@ -6,8 +6,8 @@
  */
 
 import path from 'node:path';
-import { isFilePath, pathToLocatorInfo } from '../locator';
-import { buildFilePath } from '../utils';
+import { buildFilePath, pathToLocatorInfo } from '../locator';
+import { isFilePath } from '../utils';
 import { JSONLoader, ModuleLoader } from './built-in';
 import { LoaderId } from './constants';
 import type { Loader, Rule } from './type';
