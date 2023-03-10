@@ -9,7 +9,7 @@ export type LoaderFilterFn = (key: string, value: unknown) => boolean;
 
 export type ModuleExport = {
     key: string,
-    value: unknown
+    value: any
 };
 
 export type ModuleLoadOptions = {
