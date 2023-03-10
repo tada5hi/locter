@@ -1,3 +1,11 @@
+## [1.0.8](https://github.com/tada5hi/locter/compare/v1.0.7...v1.0.8) (2023-03-10)
+
+
+### Bug Fixes
+
+* **deps:** bump jiti from 1.17.1 to 1.17.2 ([#211](https://github.com/tada5hi/locter/issues/211)) ([6efd49a](https://github.com/tada5hi/locter/commit/6efd49a6be3a2be9151308a4d824927a1dee440d))
+* enhanced module loading ([b7c99c6](https://github.com/tada5hi/locter/commit/b7c99c61c49baa4a9d9e8b2bbe5d541957b4bd24))
+
 ## [1.0.7](https://github.com/tada5hi/locter/compare/v1.0.6...v1.0.7) (2023-03-05)
 
 
