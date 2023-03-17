@@ -1,3 +1,11 @@
+## [1.0.10](https://github.com/tada5hi/locter/compare/v1.0.9...v1.0.10) (2023-03-17)
+
+
+### Bug Fixes
+
+* **deps:** bump glob from 9.2.1 to 9.3.0 ([#225](https://github.com/tada5hi/locter/issues/225)) ([2697879](https://github.com/tada5hi/locter/commit/26978794cc60ce0ccbc0ec79670618551857610d))
+* **deps:** bump jiti from 1.17.2 to 1.18.2 ([#227](https://github.com/tada5hi/locter/issues/227)) ([232e3fd](https://github.com/tada5hi/locter/commit/232e3fd2fa8c5a6d1cb8875aed184e61d10fe599))
+
 ## [1.0.9](https://github.com/tada5hi/locter/compare/v1.0.8...v1.0.9) (2023-03-10)
 
 
