@@ -1,3 +1,11 @@
+## [1.0.11](https://github.com/tada5hi/locter/compare/v1.0.10...v1.0.11) (2023-03-26)
+
+
+### Bug Fixes
+
+* **deps:** bump ebec from 0.2.1 to 1.0.0 ([#231](https://github.com/tada5hi/locter/issues/231)) ([fa5c0f3](https://github.com/tada5hi/locter/commit/fa5c0f3dcd1f29e8aae9468274b9479222f4f007))
+* **deps:** bump glob from 9.3.0 to 9.3.2 ([#235](https://github.com/tada5hi/locter/issues/235)) ([6b563f8](https://github.com/tada5hi/locter/commit/6b563f8f4ed922a13eb34969e0b8e73c62e9e094))
+
 ## [1.0.10](https://github.com/tada5hi/locter/compare/v1.0.9...v1.0.10) (2023-03-17)
 
 
