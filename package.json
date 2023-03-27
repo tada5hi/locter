@@ -62,6 +62,7 @@
         "@tada5hi/commitlint-config": "^1.0.0",
         "@tada5hi/eslint-config-typescript": "^1.1.5",
         "@tada5hi/tsconfig": "^0.4.0",
+        "@types/flat": "^5.0.2",
         "@types/jest": "^27.5.2",
         "@types/node": "^18.15.7",
         "cross-env": "^7.0.3",
@@ -77,7 +78,9 @@
         "typescript": "^5.0.2"
     },
     "dependencies": {
+        "destr": "^1.2.2",
         "ebec": "^1.0.0",
+        "flat": "^5.0.2",
         "glob": "^9.3.2",
         "jiti": "^1.18.2"
     }

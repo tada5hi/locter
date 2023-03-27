@@ -152,6 +152,7 @@ import { loadSync, locateSync } from 'locter';
 ```
 
 Two loaders are predefined from scratch and already registered:
+- **ConfLoader**: This loader allows to load `.conf` files.
 - **JsonLoader**: This loader allows to load `.json` files.
 - **ModuleLoader**: This loader allows to load modules with
   `.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts` file extensions independent of the environment (cjs or esm).

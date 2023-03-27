@@ -8,7 +8,7 @@
 import path from 'node:path';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
 import { isFilePath } from '../utils';
-import { JSONLoader, ModuleLoader } from './built-in';
+import { ConfLoader, JSONLoader, ModuleLoader } from './built-in';
 import { LoaderId } from './constants';
 import type { Loader, Rule } from './type';
 
@@ -23,6 +23,9 @@ export class LoaderManager implements Loader {
             {
                 test: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
                 loader: LoaderId.MODULE,
+            },
+            {
+                test: ['.conf'], loader: LoaderId.CONF,
             },
             {
                 test: ['.json'], loader: LoaderId.JSON,
@@ -103,6 +106,10 @@ export class LoaderManager implements Loader {
 
         // built-in
         switch (id) {
+            case LoaderId.CONF: {
+                loader = new ConfLoader();
+                break;
+            }
             case LoaderId.MODULE: {
                 loader = new ModuleLoader();
                 break;

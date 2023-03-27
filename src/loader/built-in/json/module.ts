@@ -15,8 +15,8 @@ export class JSONLoader implements Loader {
         const filePath = buildFilePath(input);
 
         try {
-            const file = await fs.promises.readFile(filePath);
-            return JSON.parse(file.toString('utf-8'));
+            const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+            return JSON.parse(file);
         } catch (e) {
             return handleException(e);
         }
@@ -26,8 +26,8 @@ export class JSONLoader implements Loader {
         const filePath = buildFilePath(input);
 
         try {
-            const file = fs.readFileSync(filePath);
-            return JSON.parse(file.toString('utf-8'));
+            const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
+            return JSON.parse(file);
         } catch (e) {
             return handleException(e);
         }

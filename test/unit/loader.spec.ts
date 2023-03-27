@@ -17,6 +17,28 @@ import {LoaderId} from "../../src/loader/constants";
 const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/loader/**', () => {
+    it('should load .conf file', async() => {
+        const filePath = path.join(basePath, 'file.conf');
+
+        const loaderContent = await load(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.bar).toBeDefined();
+        expect(loaderContent.bar.a).toEqual('baz');
+        expect(loaderContent.bar.b).toEqual('boz');
+    });
+
+    it('should load .conf file sync', async() => {
+        const filePath = path.join(basePath, 'file.conf');
+
+        const loaderContent = loadSync(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.bar).toBeDefined();
+        expect(loaderContent.bar.a).toEqual('baz');
+        expect(loaderContent.bar.b).toEqual('boz');
+    })
+
     it('should load .mjs file', async () => {
         const filePath = path.join(basePath, 'file.mjs');
 

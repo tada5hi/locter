@@ -12,3 +12,9 @@ export function isObject(item: unknown) : item is Record<string, any> {
         !Array.isArray(item)
     );
 }
+
+export function isSafeObjectKey(key: string) : boolean {
+    return key !== '__proto__' &&
+        key !== 'prototype' &&
+        key !== 'constructor';
+}
