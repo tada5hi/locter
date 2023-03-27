@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/tada5hi/locter/compare/v1.0.11...v1.1.0) (2023-03-27)
+
+
+### Features
+
+* add built-in conf loader ([cc50423](https://github.com/tada5hi/locter/commit/cc504235d873edba0301db10b35ac6126d1a9307))
+
 ## [1.0.11](https://github.com/tada5hi/locter/compare/v1.0.10...v1.0.11) (2023-03-26)
 
 
