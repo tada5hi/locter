@@ -70,7 +70,7 @@
         "rollup": "^3.20.2",
         "semantic-release": "^19.0.5",
         "sourcemap-codec": "^1.4.8",
-        "typescript": "^5.0.2"
+        "typescript": "^5.0.4"
     },
     "dependencies": {
         "destr": "^1.2.2",
