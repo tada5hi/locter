@@ -59,7 +59,7 @@
         "@types/flat": "^5.0.2",
         "@types/jest": "^27.5.2",
         "@types/node": "^20.0.0",
-        "changelogen": "^0.5.2",
+        "changelogen": "^0.5.3",
         "cross-env": "^7.0.3",
         "eslint": "^8.39.0",
         "husky": "^8.0.3",
