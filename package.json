@@ -67,7 +67,7 @@
         "magic-string": "^0.30.0",
         "mlly": "^1.2.1",
         "rimraf": "^4.4.1",
-        "rollup": "^3.21.7",
+        "rollup": "^3.21.8",
         "semantic-release": "^21.0.2",
         "sourcemap-codec": "^1.4.8",
         "typescript": "^5.0.4"
