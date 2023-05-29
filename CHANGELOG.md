@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/tada5hi/locter/compare/v1.1.1...v1.1.2) (2023-05-29)
+
+
+### Bug Fixes
+
+* append file extension for esm unsupported url scheme error ([fa308b8](https://github.com/tada5hi/locter/commit/fa308b8b3cabd6df612426f5609cc8d95e7df32f))
+
 ## [1.1.1](https://github.com/tada5hi/locter/compare/v1.1.0...v1.1.1) (2023-05-29)
 
 
