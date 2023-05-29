@@ -42,6 +42,13 @@ export class ModuleLoader implements Loader {
         try {
             output = await this.load(input);
         } catch (e) {
+            if (
+                e instanceof SyntaxError ||
+                e instanceof ReferenceError
+            ) {
+                throw e;
+            }
+
             // jiti + ts-node
             // issue: https://github.com/nuxt/bridge/issues/228
             if (isTsNodeRuntimeEnvironment()) {
@@ -60,6 +67,13 @@ export class ModuleLoader implements Loader {
         try {
             output = this.loadSync(input);
         } catch (e) {
+            if (
+                e instanceof SyntaxError ||
+                e instanceof ReferenceError
+            ) {
+                throw e;
+            }
+
             output = this.jiti(input);
         }
 
