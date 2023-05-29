@@ -33,8 +33,7 @@
         "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
         "lint": "eslint --ext .js,.vue,.ts ./src",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "npx husky install",
-        "release": "npm run build && changelogen --release --push && npm publish"
+        "prepare": "npx husky install"
     },
     "keywords": [
         "file",
@@ -55,11 +54,11 @@
         "@swc/jest": "^0.2.26",
         "@tada5hi/commitlint-config": "^1.0.2",
         "@tada5hi/eslint-config-typescript": "^1.1.9",
+        "@tada5hi/semantic-release": "^0.1.0",
         "@tada5hi/tsconfig": "^0.4.0",
         "@types/flat": "^5.0.2",
         "@types/jest": "^27.5.2",
         "@types/node": "^20.2.5",
-        "changelogen": "^0.5.3",
         "cross-env": "^7.0.3",
         "eslint": "^8.40.0",
         "husky": "^8.0.3",
