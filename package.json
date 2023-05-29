@@ -61,7 +61,7 @@
         "@types/node": "^20.2.5",
         "changelogen": "^0.5.3",
         "cross-env": "^7.0.3",
-        "eslint": "^8.40.0",
+        "eslint": "^8.41.0",
         "husky": "^8.0.3",
         "jest": "^27.5.1",
         "magic-string": "^0.30.0",
