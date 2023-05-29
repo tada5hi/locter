@@ -127,6 +127,7 @@ export class ModuleLoader implements Loader {
                     ) {
                         return this.load(locatorInfo, {
                             ...options,
+                            withExtension: true,
                             withFilePrefix: true,
                         });
                     }
