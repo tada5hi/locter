@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/tada5hi/locter/compare/v1.1.0...v1.1.1) (2023-05-29)
+
+
+### Bug Fixes
+
+* don't use fallback for module loading  on syntax/reference-error ([a6c9009](https://github.com/tada5hi/locter/commit/a6c90094cef9fa3a7e8c664b42667cc1c429bdca))
+
 # [1.1.0](https://github.com/tada5hi/locter/compare/v1.0.11...v1.1.0) (2023-03-27)
 
 
