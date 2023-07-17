@@ -69,7 +69,7 @@
         "rollup": "^3.23.0",
         "semantic-release": "^19.0.5",
         "sourcemap-codec": "^1.4.8",
-        "typescript": "^5.0.4"
+        "typescript": "^5.1.6"
     },
     "dependencies": {
         "destr": "^1.2.2",
