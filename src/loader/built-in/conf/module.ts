@@ -7,7 +7,7 @@
 
 // Based on https://github.com/unjs/rc9 (MIT)
 
-import destr from 'destr';
+import { destr } from 'destr';
 import flat from 'flat';
 import fs from 'node:fs';
 import { buildFilePath } from '../../../locator';
