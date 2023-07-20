@@ -5,23 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'node:path';
+
+export function getFileNameExtension(
+    input: string,
+    allowed?: string[],
+) : string | undefined {
+    const extension = path.extname(input);
+    if (extension === '' || extension === '.') {
+        return undefined;
+    }
+
+    if (
+        typeof allowed === 'undefined' ||
+        allowed.indexOf(extension) !== -1
+    ) {
+        return extension;
+    }
+
+    return undefined;
+}
+
 export function removeFileNameExtension(
     input: string,
     extensions?: string[],
 ) {
-    if (input.includes('.')) {
-        const position = input.lastIndexOf('.');
-        const extension = input.substring(
-            position,
-            input.length,
-        );
-
-        if (
-            typeof extensions === 'undefined' ||
-            extensions.indexOf(extension) !== -1
-        ) {
-            input = input.substring(0, position);
-        }
+    const extension = getFileNameExtension(input, extensions);
+    if (extension) {
+        return input.substring(0, input.length - extension.length);
     }
 
     return input;
