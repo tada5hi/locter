@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/tada5hi/locter/compare/v1.1.3...v1.2.0) (2023-07-20)
+
+
+### Features
+
+* optimize remove file name extension ([fb6edfb](https://github.com/tada5hi/locter/commit/fb6edfb7390490acc6b9c55a976dec089ae3497b))
+
 ## [1.1.3](https://github.com/tada5hi/locter/compare/v1.1.2...v1.1.3) (2023-07-18)
 
 
