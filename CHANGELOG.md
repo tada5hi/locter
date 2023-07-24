@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/tada5hi/locter/compare/v1.2.0...v1.2.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* **deps:** bump glob to v10.x ([af38163](https://github.com/tada5hi/locter/commit/af38163fdfee064ca2140d86a884f04f990e048c))
+
 # [1.2.0](https://github.com/tada5hi/locter/compare/v1.1.3...v1.2.0) (2023-07-20)
 
 
