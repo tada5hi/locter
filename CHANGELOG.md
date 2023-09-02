@@ -1,3 +1,11 @@
+## [1.2.2](https://github.com/tada5hi/locter/compare/v1.2.1...v1.2.2) (2023-09-02)
+
+
+### Bug Fixes
+
+* **deps:** bump ebec from 1.1.0 to 1.1.1 ([#368](https://github.com/tada5hi/locter/issues/368)) ([63bb048](https://github.com/tada5hi/locter/commit/63bb0481c84666bcf11bfff6459243399d68bc03))
+* **deps:** bump jiti from 1.19.1 to 1.19.3 ([#367](https://github.com/tada5hi/locter/issues/367)) ([eda17d0](https://github.com/tada5hi/locter/commit/eda17d01ee98e09f43f947454283e00be8427954))
+
 ## [1.2.1](https://github.com/tada5hi/locter/compare/v1.2.0...v1.2.1) (2023-07-24)
 
 
