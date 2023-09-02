@@ -6,41 +6,13 @@
  */
 
 import resolve from '@rollup/plugin-node-resolve';
+import esmShim from "@rollup/plugin-esm-shim";
 import { transform } from '@swc/core';
 import pkg from './package.json' assert { type: 'json' };
-import { findStaticImports } from 'mlly';
-import MagicString from 'magic-string';
 
 const extensions = [
     '.js', '.jsx', '.ts', '.tsx',
 ];
-
-const CJSyntaxRe = /__filename|__dirname|require\(|require\.resolve\(/;
-
-const CJSShim = `
-import __cjs_url__ from 'url';
-import __cjs_path__ from 'path';
-import __cjs_mod__ from 'module';
-const __filename = __cjs_url__.fileURLToPath(import.meta.url);
-const __dirname = __cjs_path__.dirname(__filename);
-const require = __cjs_mod__.createRequire(import.meta.url);
-`;
-
-function transformCJSToESM(code) {
-    if (code.includes(CJSShim) || !CJSyntaxRe.test(code)) {
-        return null;
-    }
-
-    const lastESMImport = findStaticImports(code).pop();
-    const indexToAppend = lastESMImport ? lastESMImport.end : 0;
-    const s = new MagicString(code);
-    s.appendRight(indexToAppend, CJSShim);
-
-    return {
-        code: s.toString(),
-        map: s.generateMap(),
-    };
-}
 
 export default [
     {
@@ -74,15 +46,7 @@ export default [
                 }
             },
 
-            {
-                renderChunk(code, _chunk, opts) {
-                    if (opts.format === "es") {
-                        return transformCJSToESM(code);
-                    }
-
-                    return null;
-                }
-            }
+            esmShim()
         ],
         output: [
             {
