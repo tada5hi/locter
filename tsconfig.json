@@ -1,6 +1,7 @@
 {
     "extends": "@tada5hi/tsconfig",
     "compilerOptions": {
+        "module": "CommonJS",
         "noPropertyAccessFromIndexSignature": false,
         "esModuleInterop": true,
         "outDir": "dist"
