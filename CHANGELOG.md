@@ -1,3 +1,14 @@
+## [1.2.3](https://github.com/tada5hi/locter/compare/v1.2.2...v1.2.3) (2023-11-25)
+
+
+### Bug Fixes
+
+* bump (dev-) dependencies ([d26237d](https://github.com/tada5hi/locter/commit/d26237d264f68433145115347a333ea3977c3a79))
+* **deps:** bump destr from 2.0.0 to 2.0.1 ([#372](https://github.com/tada5hi/locter/issues/372)) ([eaa078d](https://github.com/tada5hi/locter/commit/eaa078d57237f0e61ec7130d29d887dd7978ee23))
+* **deps:** bump destr from 2.0.0 to 2.0.1 ([#372](https://github.com/tada5hi/locter/issues/372)) ([ac38c56](https://github.com/tada5hi/locter/commit/ac38c56f3e6a48a50d0126f362fa98dd711cc4ba))
+* **deps:** bump glob from 10.3.3 to 10.3.4 ([#373](https://github.com/tada5hi/locter/issues/373)) ([7631de4](https://github.com/tada5hi/locter/commit/7631de40916d6bfbe39ac0c8a45d75658c932401))
+* **deps:** bump glob from 10.3.3 to 10.3.4 ([#373](https://github.com/tada5hi/locter/issues/373)) ([df9181b](https://github.com/tada5hi/locter/commit/df9181b75a0ad02ca5147f0d8b524848d1926b09))
+
 ## [1.2.2](https://github.com/tada5hi/locter/compare/v1.2.1...v1.2.2) (2023-09-02)
 
 
