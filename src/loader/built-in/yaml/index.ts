@@ -5,9 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum LoaderId {
-    MODULE = 'module',
-    JSON = 'json',
-    CONF = 'conf',
-    YAML = 'yaml',
-}
+export * from './module';
