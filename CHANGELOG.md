@@ -1,3 +1,12 @@
+# [1.3.0](https://github.com/tada5hi/locter/compare/v1.2.3...v1.3.0) (2024-01-09)
+
+
+### Features
+
+* replaced glob with fast-glob ([216e4ef](https://github.com/tada5hi/locter/commit/216e4ef971404ba8b6decf10fc0841c0710dd9b4))
+* simplified get module export ([6a759c7](https://github.com/tada5hi/locter/commit/6a759c716dc22aaae089a4b27df2024b5964ebac))
+* yaml loader ([a92b445](https://github.com/tada5hi/locter/commit/a92b445e2c8cb1750922bee3c5e3f23c89aa07f6))
+
 ## [1.2.3](https://github.com/tada5hi/locter/compare/v1.2.2...v1.2.3) (2023-11-25)
 
 
