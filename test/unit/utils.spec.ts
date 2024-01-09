@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeFileNameExtension } from "../../src";
+import { removeFileNameExtension } from '../../src';
 
-describe('src/utils/*.ts', function () {
+describe('src/utils/*.ts', () => {
     it('should remove file name extension', () => {
         let data = removeFileNameExtension('test.js', ['.js', '.ts']);
         expect(data).toEqual('test');
@@ -20,5 +20,5 @@ describe('src/utils/*.ts', function () {
 
         data = removeFileNameExtension('test.js');
         expect(data).toEqual('test');
-    })
+    });
 });

@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from "node:path";
+import path from 'node:path';
 import {
+    LoaderManager,
+    getModuleExport,
     load,
     loadSync,
-    getModuleExport,
-    LoaderManager
-} from "../../src";
-import {LoaderId} from "../../src/loader/constants";
+} from '../../src';
+import { LoaderId } from '../../src/loader/constants';
 
 const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/loader/**', () => {
-    it('should load .conf file', async() => {
+    it('should load .conf file', async () => {
         const filePath = path.join(basePath, 'file.conf');
 
         const loaderContent = await load(filePath) as Record<string, any>;
@@ -28,7 +28,7 @@ describe('src/loader/**', () => {
         expect(loaderContent.bar.b).toEqual('boz');
     });
 
-    it('should load .conf file sync', async() => {
+    it('should load .conf file sync', async () => {
         const filePath = path.join(basePath, 'file.conf');
 
         const loaderContent = loadSync(filePath) as Record<string, any>;
@@ -37,7 +37,25 @@ describe('src/loader/**', () => {
         expect(loaderContent.bar).toBeDefined();
         expect(loaderContent.bar.a).toEqual('baz');
         expect(loaderContent.bar.b).toEqual('boz');
-    })
+    });
+
+    it('should load .yml file', async () => {
+        const filePath = path.join(basePath, 'file.yml');
+
+        const loaderContent = await load(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.YAML).toBeDefined();
+        expect(loaderContent.yaml).toBeDefined();
+    });
+
+    it('should load .yml file sync', () => {
+        const filePath = path.join(basePath, 'file.yml');
+
+        const loaderContent = loadSync(filePath) as Record<string, any>;
+        expect(loaderContent).toBeDefined();
+        expect(loaderContent.YAML).toBeDefined();
+        expect(loaderContent.yaml).toBeDefined();
+    });
 
     it('should load .mjs file', async () => {
         const filePath = path.join(basePath, 'file.mjs');
@@ -52,7 +70,7 @@ describe('src/loader/**', () => {
         const loaderContent = loadSync(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
-    })
+    });
 
     it('should load .mjs file with default export', async () => {
         const filePath = path.join(basePath, 'file-default.mjs');
@@ -78,7 +96,7 @@ describe('src/loader/**', () => {
         expect(loaderContent.foo).toEqual('bar');
     });
 
-    it('should load .js file sync',  () => {
+    it('should load .js file sync', () => {
         const filePath = path.join(basePath, 'file.js');
 
         const loaderContent = loadSync(filePath) as Record<string, any>;
@@ -87,7 +105,6 @@ describe('src/loader/**', () => {
         expect(loaderContent.foo).toEqual('bar');
     });
 
-
     it('should load .js file with named export', async () => {
         const filePath = path.join(basePath, 'file.js');
 
@@ -95,8 +112,8 @@ describe('src/loader/**', () => {
         loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
-        expect(loaderContent.value).toEqual({foo: 'bar'});
-    })
+        expect(loaderContent.value).toEqual({ foo: 'bar' });
+    });
 
     it('should load .js file with named export sync', () => {
         const filePath = path.join(basePath, 'file.js');
@@ -105,13 +122,13 @@ describe('src/loader/**', () => {
         loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
-        expect(loaderContent.value).toEqual({foo: 'bar'});
+        expect(loaderContent.value).toEqual({ foo: 'bar' });
     });
 
     it('should load .ts file', async () => {
         const filePath = path.join(basePath, 'file-ts.ts');
 
-        let loaderContent = await load(filePath) as Record<string, any>;
+        const loaderContent = await load(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
     });
@@ -123,34 +140,32 @@ describe('src/loader/**', () => {
         loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
-        expect(loaderContent.value).toEqual({bar: 'baz'});
+        expect(loaderContent.value).toEqual({ bar: 'baz' });
     });
 
-    it('should load .ts file sync',  () => {
+    it('should load .ts file sync', () => {
         const filePath = path.join(basePath, 'file-ts.ts');
 
-        let loaderContent = loadSync(filePath) as Record<string, any>;
+        const loaderContent = loadSync(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
     });
 
-    it('should load .ts file with named export sync',  () => {
+    it('should load .ts file with named export sync', () => {
         const filePath = path.join(basePath, 'file-ts.ts');
 
         let loaderContent = loadSync(filePath) as Record<string, any>;
         loaderContent = getModuleExport(loaderContent);
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('default');
-        expect(loaderContent.value).toEqual({bar: 'baz'});
+        expect(loaderContent.value).toEqual({ bar: 'baz' });
     });
 
     it('should filter .ts file', async () => {
         const filePath = path.join(basePath, 'file-many-ts.ts');
 
         let loaderContent = await load(filePath) as Record<string, any>;
-        loaderContent = await getModuleExport(loaderContent, (key) => {
-            return key === 'bar';
-        }) as Record<string, any>;
+        loaderContent = await getModuleExport(loaderContent, (key) => key === 'bar') as Record<string, any>;
 
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('bar');
@@ -161,26 +176,24 @@ describe('src/loader/**', () => {
         const filePath = path.join(basePath, 'file-many-ts.ts');
 
         let loaderContent = loadSync(filePath) as Record<string, any>;
-        loaderContent = getModuleExport(loaderContent, (key) => {
-            return key === 'bar';
-        }) as Record<string, any>;
+        loaderContent = getModuleExport(loaderContent, (key) => key === 'bar') as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.key).toEqual('bar');
         expect(loaderContent.value).toEqual('baz');
-    })
+    });
 
-    it('should load .json file',  async () => {
+    it('should load .json file', async () => {
         const filePath = path.join(basePath, 'file.json');
 
-        let loaderContent : Record<string, any> = await load(filePath) as Record<string, any>;
+        const loaderContent : Record<string, any> = await load(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
     });
 
-    it('should load .json file sync',  () => {
+    it('should load .json file sync', () => {
         const filePath = path.join(basePath, 'file.json');
 
-        let loaderContent = loadSync(filePath) as Record<string, any>;
+        const loaderContent = loadSync(filePath) as Record<string, any>;
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
     });
@@ -209,13 +222,13 @@ describe('src/loader/**', () => {
             },
             executeSync(input: string) {
                 return input;
-            }
-        })
+            },
+        });
     });
 
     it('should use module loader as fallback', () => {
         const manager = new LoaderManager();
         const loader = manager.findLoader('foo');
         expect(loader).toEqual(LoaderId.MODULE);
-    })
+    });
 });

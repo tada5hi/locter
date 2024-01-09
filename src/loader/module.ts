@@ -9,6 +9,7 @@ import path from 'node:path';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
 import { isFilePath } from '../utils';
 import { ConfLoader, JSONLoader, ModuleLoader } from './built-in';
+import { YAMLLoader } from './built-in/yaml';
 import { LoaderId } from './constants';
 import type { Loader, Rule } from './type';
 
@@ -29,6 +30,9 @@ export class LoaderManager implements Loader {
             },
             {
                 test: ['.json'], loader: LoaderId.JSON,
+            },
+            {
+                test: ['.yml'], loader: LoaderId.YAML,
             },
         ];
     }
@@ -116,6 +120,10 @@ export class LoaderManager implements Loader {
             }
             case LoaderId.JSON: {
                 loader = new JSONLoader();
+                break;
+            }
+            case LoaderId.YAML: {
+                loader = new YAMLLoader();
                 break;
             }
             /* istanbul ignore next */
