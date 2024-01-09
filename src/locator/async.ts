@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { glob } from 'glob';
+import fg from 'fast-glob';
 import type { LocatorInfo, LocatorOptions } from './type';
 import { buildLocatorOptions, pathToLocatorInfo } from './utils';
 
@@ -19,15 +19,20 @@ export async function locateMany(
         pattern :
         [pattern];
 
+    let ignore : string[] | undefined;
+    if (options.ignore) {
+        ignore = Array.isArray(options.ignore) ? options.ignore : [options.ignore];
+    }
+
     const items : LocatorInfo[] = [];
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = await glob(patterns[i] as string, {
+            const files = await fg(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
-                nodir: true,
-                ignore: options.ignore,
+                ignore,
+                onlyFiles: true,
             });
 
             for (let k = 0; k < files.length; k++) {
@@ -49,13 +54,18 @@ export async function locate(
         pattern :
         [pattern];
 
+    let ignore : string[] | undefined;
+    if (options.ignore) {
+        ignore = Array.isArray(options.ignore) ? options.ignore : [options.ignore];
+    }
+
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < (options as LocatorOptions).path.length; j++) {
-            const files = await glob(patterns[i] as string, {
+            const files = await fg(patterns[i] as string, {
                 absolute: true,
                 cwd: (options as LocatorOptions).path[j],
-                nodir: true,
-                ignore: options.ignore,
+                ignore,
+                onlyFiles: true,
             });
 
             const element = files.shift();
