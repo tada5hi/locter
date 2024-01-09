@@ -6,7 +6,6 @@
  */
 
 import { BaseError } from 'ebec';
-import { hasOwnProperty, isObject } from '../../../utils';
 import type { LoaderFilterFn, ModuleExport } from './type';
 
 export function isJestRuntimeEnvironment() : boolean {
@@ -38,28 +37,19 @@ export function getModuleExport(
         throw new BaseError('Cannot find specific module export.');
     }
 
-    let value: any;
-
     if (
-        hasOwnProperty(data, '__esModule') &&
         // eslint-disable-next-line no-underscore-dangle
-        !!data.__esModule &&
-        hasOwnProperty(data, 'default')
+        typeof data.__esModule !== 'undefined' &&
+        typeof data.default !== 'undefined'
     ) {
-        value = data.default;
-    } else {
-        value = data;
-    }
-
-    if (
-        isObject(value) &&
-        hasOwnProperty(value, 'default')
-    ) {
-        value = value.default;
+        return {
+            key: 'default',
+            value: data.default,
+        };
     }
 
     return {
         key: 'default',
-        value,
+        value: data,
     };
 }
