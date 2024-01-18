@@ -20,6 +20,18 @@ export function toModuleRecord(
     data: unknown,
 ) {
     if (isESModule(data)) {
+        // @see https://github.com/testing-library/user-event/issues/813
+        // @see https://stackoverflow.com/questions/62717394/export-default-class-exports-double-nested-default
+        if (
+            isESModule(data.default) &&
+            data.default.default
+        ) {
+            return {
+                ...data,
+                default: data.default.default,
+            };
+        }
+
         return data;
     }
 
