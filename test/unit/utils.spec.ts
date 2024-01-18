@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { removeFileNameExtension } from '../../src';
+import { isJestRuntimeEnvironment, removeFileNameExtension } from '../../src';
 
 describe('src/utils/*.ts', () => {
     it('should remove file name extension', () => {
@@ -20,5 +20,10 @@ describe('src/utils/*.ts', () => {
 
         data = removeFileNameExtension('test.js');
         expect(data).toEqual('test');
+    });
+
+    it('should detect environment', () => {
+        const jestEnv = isJestRuntimeEnvironment();
+        expect(jestEnv).toEqual(true);
     });
 });

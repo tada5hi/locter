@@ -8,8 +8,7 @@
 import {
     LoaderManager,
     getModuleExport,
-    load,
-    loadSync,
+    load, loadSync,
 } from '../../../src';
 import { LoaderId } from '../../../src/loader/constants';
 

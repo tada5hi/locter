@@ -11,3 +11,5 @@ export * from './has-property';
 export * from './object';
 export * from './to-array';
 export * from './file-path';
+export * from './runtime';
+export * from './typescript';

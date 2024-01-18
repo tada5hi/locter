@@ -8,17 +8,6 @@
 import { hasOwnProperty, isObject } from '../../../utils';
 import type { LoaderFilterFn, ModuleExport } from './type';
 
-export function isJestRuntimeEnvironment() : boolean {
-    return process.env &&
-        process.env.JEST_WORKER_ID !== undefined;
-}
-
-export function isTsNodeRuntimeEnvironment() : boolean {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return !!process[Symbol.for('ts-node.register.instance')];
-}
-
 type ESModule = { [key: string]: any, __esModule: boolean };
 export function isESModule(input: unknown) : input is ESModule {
     return isObject(input) &&
