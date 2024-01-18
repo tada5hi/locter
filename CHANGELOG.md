@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/tada5hi/locter/compare/v2.0.1...v2.0.2) (2024-01-18)
+
+
+### Bug Fixes
+
+* nested default exports with using dynamic import ([9cf3e36](https://github.com/tada5hi/locter/commit/9cf3e366e49ec6c441b8259ecd5b4c449189456a))
+
 ## [2.0.1](https://github.com/tada5hi/locter/compare/v2.0.0...v2.0.1) (2024-01-18)
 
 
