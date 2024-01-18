@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const bar = 'baz';
-
+export const foo : string = 'bar';
 export default {
-    foo: 'bar'
+    bar: 'baz'
 }

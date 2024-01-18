@@ -13,6 +13,5 @@ export type ModuleExport = {
 };
 
 export type ModuleLoadOptions = {
-    withExtension?: boolean,
     withFilePrefix?: boolean
 };
