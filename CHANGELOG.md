@@ -1,3 +1,16 @@
+# [2.0.0](https://github.com/tada5hi/locter/compare/v1.3.0...v2.0.0) (2024-01-18)
+
+
+### Features
+
+* add typescript error check utility ([0735473](https://github.com/tada5hi/locter/commit/0735473bd2d29987b43a0a57982845417fd4e406))
+* refactor module loader ([a8ab89d](https://github.com/tada5hi/locter/commit/a8ab89da838134625760f756dee2d454cac8521a))
+
+
+### BREAKING CHANGES
+
+* get module export api changed
+
 # [1.3.0](https://github.com/tada5hi/locter/compare/v1.2.3...v1.3.0) (2024-01-09)
 
 
