@@ -12,9 +12,7 @@ import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
 import {
     buildFilePath,
-    buildFilePathWithoutExtension,
     isLocatorInfo,
-    pathToLocatorInfo,
 } from '../../../locator';
 import {
     handleException,
@@ -23,7 +21,7 @@ import {
 } from '../../../utils';
 import type { Loader } from '../../type';
 import type { ModuleLoadOptions } from './type';
-import { isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment } from './utils';
+import { isTsNodeRuntimeEnvironment, toModuleRecord } from './utils';
 
 export class ModuleLoader implements Loader {
     protected jiti : JITI;
@@ -58,7 +56,7 @@ export class ModuleLoader implements Loader {
             }
         }
 
-        return output;
+        return toModuleRecord(output);
     }
 
     executeSync(input: string) {
@@ -77,60 +75,44 @@ export class ModuleLoader implements Loader {
             output = this.jiti(input);
         }
 
-        return output;
+        return toModuleRecord(output);
     }
 
     // ---------------------------------------------------------------------------
 
     async load(
         data: LocatorInfo | string,
-        options?: ModuleLoadOptions,
+        options: ModuleLoadOptions = {},
     ) : Promise<unknown> {
-        options = options || {};
-        const [name, locatorInfo] = this.build(data, options);
+        const id = this.build(data, options);
 
         try {
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
+            /*
             if (isJestRuntimeEnvironment()) {
-                // eslint-disable-next-line global-require,import/no-dynamic-require
-                return require(name);
+                return require(id);
             }
+             */
 
-            return await import(name);
+            return await import(id);
         } catch (e) {
             /* istanbul ignore next */
             if (
                 isObject(e) &&
                 hasStringProperty(e, 'code')
             ) {
-                if (locatorInfo) {
-                    if (
-                        !options.withExtension &&
-                        (
-                            e.code === 'ERR_MODULE_NOT_FOUND' ||
-                            e.code === 'MODULE_NOT_FOUND'
-                        )
-                    ) {
-                        return this.load(locatorInfo, {
-                            ...options,
-                            withExtension: true,
-                        });
-                    }
-
-                    if (
-                        !options.withFilePrefix &&
-                        (
-                            e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
-                            e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
-                        )
-                    ) {
-                        return this.load(locatorInfo, {
-                            ...options,
-                            withExtension: true,
-                            withFilePrefix: true,
-                        });
-                    }
+                if (
+                    !options.withFilePrefix &&
+                    (
+                        e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                        e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                    )
+                ) {
+                    return this.load(data, {
+                        ...options,
+                        withFilePrefix: true,
+                    });
                 }
 
                 throw new BaseError({
@@ -147,35 +129,19 @@ export class ModuleLoader implements Loader {
 
     loadSync(
         data: LocatorInfo | string,
-        options?: ModuleLoadOptions,
+        options: ModuleLoadOptions = {},
     ) : unknown {
-        options = options || {};
-        const [name, locatorInfo] = this.build(data, options);
+        const id = this.build(data, options);
 
         try {
             // eslint-disable-next-line global-require,import/no-dynamic-require
-            return require(name);
+            return require(id);
         } catch (e) {
             /* istanbul ignore next */
             if (
                 isObject(e) &&
                 hasStringProperty(e, 'code')
             ) {
-                if (locatorInfo) {
-                    if (
-                        !options.withExtension &&
-                        (
-                            e.code === 'ERR_MODULE_NOT_FOUND' ||
-                            e.code === 'MODULE_NOT_FOUND'
-                        )
-                    ) {
-                        return this.loadSync(locatorInfo, {
-                            ...options,
-                            withExtension: true,
-                        });
-                    }
-                }
-
                 throw new BaseError({
                     code: e.code,
                     message: hasStringProperty(e, 'message') ? e.message : undefined,
@@ -189,33 +155,18 @@ export class ModuleLoader implements Loader {
 
     private build(
         data: LocatorInfo | string,
-        options: ModuleLoadOptions,
-    ) : [string, LocatorInfo | undefined] {
-        let name : string;
-        let locatorInfo : LocatorInfo | undefined;
-
-        options = options || {};
-
+        options: ModuleLoadOptions = {},
+    ) : string {
         if (isLocatorInfo(data) || isFilePath(data)) {
-            if (typeof data === 'string') {
-                locatorInfo = pathToLocatorInfo(data);
-            } else {
-                locatorInfo = data;
-            }
-
-            if (options.withExtension) {
-                name = buildFilePath(locatorInfo);
-            } else {
-                name = buildFilePathWithoutExtension(locatorInfo);
+            if (typeof data !== 'string') {
+                data = buildFilePath(data);
             }
 
             if (options.withFilePrefix) {
-                name = pathToFileURL(name).href;
+                data = pathToFileURL(data).href;
             }
-        } else {
-            name = data;
         }
 
-        return [name, locatorInfo];
+        return data;
     }
 }

@@ -5,5 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const foo = 'bar';
-export const bar = 'baz';
+export const bar : string = 'baz';
