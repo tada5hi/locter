@@ -17,7 +17,7 @@ import {
 import {
     handleException,
     hasStringProperty,
-    isFilePath,
+    isFilePath, isJestRuntimeEnvironment,
     isObject,
     isTsNodeRuntimeEnvironment,
     isTypeScriptError,
@@ -94,11 +94,10 @@ export class ModuleLoader implements Loader {
         try {
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
-            /*
             if (isJestRuntimeEnvironment()) {
+                // eslint-disable-next-line global-require,import/no-dynamic-require
                 return require(id);
             }
-             */
 
             return await import(id);
         } catch (e) {
