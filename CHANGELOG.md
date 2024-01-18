@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/tada5hi/locter/compare/v2.0.0...v2.0.1) (2024-01-18)
+
+
+### Bug Fixes
+
+* use require for async loading in jest environment ([878ab64](https://github.com/tada5hi/locter/commit/878ab64085254dcba4d7510a6d8f51a90991ebff))
+
 # [2.0.0](https://github.com/tada5hi/locter/compare/v1.3.0...v2.0.0) (2024-01-18)
 
 
