@@ -16,12 +16,15 @@ import {
 } from '../../../locator';
 import {
     handleException,
-    hasStringProperty, isFilePath,
+    hasStringProperty,
+    isFilePath,
     isObject,
+    isTsNodeRuntimeEnvironment,
+    isTypeScriptError,
 } from '../../../utils';
 import type { Loader } from '../../type';
 import type { ModuleLoadOptions } from './type';
-import { isTsNodeRuntimeEnvironment, toModuleRecord } from './utils';
+import { toModuleRecord } from './utils';
 
 export class ModuleLoader implements Loader {
     protected jiti : JITI;
@@ -42,7 +45,8 @@ export class ModuleLoader implements Loader {
         } catch (e) {
             if (
                 e instanceof SyntaxError ||
-                e instanceof ReferenceError
+                e instanceof ReferenceError ||
+                isTypeScriptError(e)
             ) {
                 throw e;
             }
@@ -67,7 +71,8 @@ export class ModuleLoader implements Loader {
         } catch (e) {
             if (
                 e instanceof SyntaxError ||
-                e instanceof ReferenceError
+                e instanceof ReferenceError ||
+                isTypeScriptError(e)
             ) {
                 throw e;
             }
