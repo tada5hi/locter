@@ -7,22 +7,14 @@
 
 import fg from 'fast-glob';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
-import { buildLocatorOptions, pathToLocatorInfo } from './utils';
+import { buildLocatorOptions, buildLocatorPatterns, pathToLocatorInfo } from './utils';
 
 export function locateManySync(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : LocatorInfo[] {
+    const patterns = buildLocatorPatterns(pattern);
     const opts = buildLocatorOptions(options);
-
-    const patterns = Array.isArray(pattern) ?
-        pattern :
-        [pattern];
-
-    let ignore : string[] | undefined;
-    if (opts.ignore) {
-        ignore = Array.isArray(opts.ignore) ? opts.ignore : [opts.ignore];
-    }
 
     const items : LocatorInfo[] = [];
 
@@ -31,7 +23,7 @@ export function locateManySync(
             const files = fg.sync(patterns[i], {
                 absolute: true,
                 cwd: opts.path[j],
-                ignore,
+                ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,
             });
@@ -49,23 +41,15 @@ export function locateSync(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : LocatorInfo | undefined {
+    const patterns = buildLocatorPatterns(pattern);
     const opts = buildLocatorOptions(options);
-
-    const patterns = Array.isArray(pattern) ?
-        pattern :
-        [pattern];
-
-    let ignore : string[] | undefined;
-    if (opts.ignore) {
-        ignore = Array.isArray(opts.ignore) ? opts.ignore : [opts.ignore];
-    }
 
     for (let i = 0; i < patterns.length; i++) {
         for (let j = 0; j < opts.path.length; j++) {
             const files = fg.sync(patterns[i] as string, {
                 absolute: true,
                 cwd: opts.path[j],
-                ignore,
+                ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,
             });

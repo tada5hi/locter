@@ -9,9 +9,19 @@ import path from 'node:path';
 import { isObject, toArray } from '../utils';
 import type { LocatorInfo, LocatorOptions, LocatorOptionsInput } from './types';
 
+export function buildLocatorPatterns(pattern: string | string[]) : string[] {
+    return Array.isArray(pattern) ?
+        pattern :
+        [pattern];
+}
+
 export function buildLocatorOptions(options: LocatorOptionsInput = {}) : LocatorOptions {
     const paths = options.path ?
         toArray(options.path) :
+        [];
+
+    const ignore = options.ignore ?
+        toArray(options.ignore) :
         [];
 
     if (paths.length === 0) {
@@ -34,7 +44,7 @@ export function buildLocatorOptions(options: LocatorOptionsInput = {}) : Locator
 
     return {
         path: paths,
-        ignore: options.ignore ?? [],
+        ignore,
         onlyDirectories,
         onlyFiles,
     };
