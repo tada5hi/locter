@@ -18,7 +18,7 @@ export type LocatorOptions = {
     onlyDirectories: boolean
 };
 
-export type LocatorOptionsInput = Partial<LocatorOptions> & {
+export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'path' | 'ignore'>> & {
     path?: string | string[],
     ignore?: string | string[],
 };
