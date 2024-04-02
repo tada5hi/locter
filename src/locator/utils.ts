@@ -66,7 +66,9 @@ export function pathToLocatorInfo(
     return {
         path: info.dir.split('/').join(path.sep),
         name: info.name,
-        extension: info.ext,
+        extension: info.ext ?
+            info.ext :
+            undefined,
     };
 }
 

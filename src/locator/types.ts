@@ -8,7 +8,7 @@
 export type LocatorInfo = {
     path: string,
     name: string,
-    extension: string,
+    extension?: string
 };
 
 export type LocatorOptions = {
