@@ -44,10 +44,7 @@ import { locateMany } from 'locter';
 
 (async () => {
     let files = await locateMany(
-        'files/example.{js,.ts}',
-        {
-            path: process.cwd()
-        }
+        'files/example.{js,.ts}'
     );
 
     console.log(files);
@@ -59,10 +56,7 @@ import { locateMany } from 'locter';
      */
 
     files = await locateMany(
-        'files/*.{js,ts}',
-        {
-            path: process.cwd()
-        }
+        'files/*.{js,ts}'
     );
 
     console.log(files);
@@ -87,10 +81,7 @@ import { locate } from 'locter';
 
 (async () => {
     let file = await locate(
-        'files/example.{js,.ts}',
-        {
-            path: process.cwd()
-        }
+        'files/example.{js,.ts}'
     );
 
     console.log(file);
@@ -112,10 +103,7 @@ import { load, locate } from 'locter';
 
 (async () => {
     const file = await locate(
-        'files/example.{js,.ts}',
-        {
-            path: process.cwd()
-        }
+        'files/example.{js,.ts}'
     );
 
     let content = await load(file);
@@ -135,10 +123,7 @@ import { loadSync, locateSync } from 'locter';
 
 (async () => {
     const file = await locateSync(
-        'files/example.{js,.ts}',
-        {
-            path: process.cwd()
-        }
+        'files/example.{js,.ts}'
     );
 
     let content = await loadSync(file);
