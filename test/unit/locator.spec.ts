@@ -14,6 +14,42 @@ import type { LocatorInfo } from '../../src';
 const basePath = path.join(__dirname, '..', 'data');
 
 describe('src/locator.ts', () => {
+    it('should locate directory', async () => {
+        let locatorInfo = await locate(['data'], {
+            onlyDirectories: true,
+            path: path.join(__dirname, '..'),
+        });
+        expect(locatorInfo).toBeDefined();
+        if (locatorInfo) {
+            expect(locatorInfo.name).toEqual('data');
+        }
+
+        locatorInfo = locateSync(['unit'], {
+            onlyDirectories: true,
+            path: path.join(__dirname, '..'),
+        });
+        expect(locatorInfo).toBeDefined();
+        if (locatorInfo) {
+            expect(locatorInfo.name).toEqual('unit');
+        }
+    });
+
+    it('should locate directories', async () => {
+        let locatorInfo = await locateMany(['*'], {
+            onlyDirectories: true,
+            path: path.join(__dirname, '..'),
+        });
+        expect(locatorInfo.length).toEqual(2);
+        expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
+
+        locatorInfo = locateManySync(['*'], {
+            onlyDirectories: true,
+            path: path.join(__dirname, '..'),
+        });
+        expect(locatorInfo.length).toEqual(2);
+        expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
+    });
+
     it('should locate .[cm]js file', async () => {
         let locatorInfo = await locate(['file.[cf]js'], { path: [basePath] });
         expect(locatorInfo).toBeDefined();

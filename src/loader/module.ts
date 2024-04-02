@@ -81,7 +81,10 @@ export class LoaderManager implements Loader {
         for (let i = 0; i < this.rules.length; i++) {
             const { test } = this.rules[i] as Rule;
             if (Array.isArray(test)) {
-                if (test.indexOf(info.extension) !== -1) {
+                if (
+                    info.extension &&
+                    test.indexOf(info.extension) !== -1
+                ) {
                     return this.rules[i].loader;
                 }
             } else if (test.test(buildFilePath(info))) {

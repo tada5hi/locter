@@ -8,10 +8,17 @@
 export type LocatorInfo = {
     path: string,
     name: string,
-    extension: string,
+    extension?: string
 };
 
 export type LocatorOptions = {
-    path: string | string[],
-    ignore: string | string[]
+    path: string[],
+    ignore: string[],
+    onlyFiles: boolean,
+    onlyDirectories: boolean
+};
+
+export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'path' | 'ignore'>> & {
+    path?: string | string[],
+    ignore?: string | string[],
 };

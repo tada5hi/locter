@@ -7,5 +7,5 @@
 
 export * from './async';
 export * from './sync';
-export * from './type';
+export * from './types';
 export * from './utils';

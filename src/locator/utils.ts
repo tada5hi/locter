@@ -7,20 +7,47 @@
 
 import path from 'node:path';
 import { isObject, toArray } from '../utils';
-import type { LocatorInfo, LocatorOptions } from './type';
+import type { LocatorInfo, LocatorOptions, LocatorOptionsInput } from './types';
 
-export function buildLocatorOptions(options?: Partial<LocatorOptions>) : LocatorOptions {
-    options = options || {};
+export function buildLocatorPatterns(pattern: string | string[]) : string[] {
+    return Array.isArray(pattern) ?
+        pattern :
+        [pattern];
+}
 
-    options.path = options.path || [];
-    options.path = toArray(options.path);
-    if (options.path.length === 0) {
-        options.path.push(process.cwd());
+export function buildLocatorOptions(options: LocatorOptionsInput = {}) : LocatorOptions {
+    const paths = options.path ?
+        toArray(options.path) :
+        [];
+
+    const ignore = options.ignore ?
+        toArray(options.ignore) :
+        [];
+
+    if (paths.length === 0) {
+        paths.push(process.cwd());
     }
 
-    options.ignore ??= [];
+    let onlyFiles : boolean;
+    let onlyDirectories : boolean;
 
-    return options as LocatorOptions;
+    if (options.onlyDirectories === options.onlyFiles) {
+        onlyDirectories = false;
+        onlyFiles = !options.onlyDirectories;
+    } else if (typeof options.onlyFiles === 'undefined') {
+        onlyDirectories = options.onlyDirectories ?? false;
+        onlyFiles = !options.onlyDirectories;
+    } else {
+        onlyFiles = options.onlyFiles ?? true;
+        onlyDirectories = !options.onlyFiles;
+    }
+
+    return {
+        path: paths,
+        ignore,
+        onlyDirectories,
+        onlyFiles,
+    };
 }
 
 export function pathToLocatorInfo(
@@ -39,7 +66,9 @@ export function pathToLocatorInfo(
     return {
         path: info.dir.split('/').join(path.sep),
         name: info.name,
-        extension: info.ext,
+        extension: info.ext ?
+            info.ext :
+            undefined,
     };
 }
 
