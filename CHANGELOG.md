@@ -1,3 +1,16 @@
+# [2.1.0](https://github.com/tada5hi/locter/compare/v2.0.2...v2.1.0) (2024-04-02)
+
+
+### Bug Fixes
+
+* **deps:** bump destr from 2.0.2 to 2.0.3 ([#475](https://github.com/tada5hi/locter/issues/475)) ([4955630](https://github.com/tada5hi/locter/commit/4955630455565ad6b8d66b3b900e3f374a2b27be))
+* **deps:** bump yaml from 2.3.4 to 2.4.1 ([#473](https://github.com/tada5hi/locter/issues/473)) ([7d450ec](https://github.com/tada5hi/locter/commit/7d450ec1be975e4f46b4660c3df7079a70780675))
+
+
+### Features
+
+* add locator onlyFiles & onlyDirectories option ([#469](https://github.com/tada5hi/locter/issues/469)) ([147e824](https://github.com/tada5hi/locter/commit/147e8245ac40c56a5265fd5c95c2acef3a89690b))
+
 ## [2.0.2](https://github.com/tada5hi/locter/compare/v2.0.1...v2.0.2) (2024-01-18)
 
 
