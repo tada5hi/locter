@@ -13,5 +13,9 @@ export type LocatorInfo = {
 
 export type LocatorOptions = {
     path: string | string[],
-    ignore: string | string[]
+    ignore: string | string[],
+    onlyFiles: boolean,
+    onlyDirectories: boolean
 };
+
+export type LocatorOptionsInput = Partial<LocatorOptions>;
