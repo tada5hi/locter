@@ -70,7 +70,7 @@
         "typescript": "^5.3.3"
     },
     "dependencies": {
-        "destr": "^2.0.2",
+        "destr": "^2.0.3",
         "ebec": "^2.3.0",
         "fast-glob": "^3.3.2",
         "flat": "^5.0.2",
