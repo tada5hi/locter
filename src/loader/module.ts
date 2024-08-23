@@ -32,7 +32,7 @@ export class LoaderManager implements Loader {
                 test: ['.json'], loader: LoaderId.JSON,
             },
             {
-                test: ['.yml'], loader: LoaderId.YAML,
+                test: ['.yml', '.yaml'], loader: LoaderId.YAML,
             },
         ];
     }
