@@ -1,3 +1,13 @@
+## [2.1.1](https://github.com/tada5hi/locter/compare/v2.1.0...v2.1.1) (2024-08-23)
+
+
+### Bug Fixes
+
+* add missing .yaml extension for loader manager ([0e56ab4](https://github.com/tada5hi/locter/commit/0e56ab4517d6c7c333a021973a60042e7f97f0f3))
+* **deps:** bump jiti from 1.21.0 to 1.21.6 ([#544](https://github.com/tada5hi/locter/issues/544)) ([7f24ea9](https://github.com/tada5hi/locter/commit/7f24ea9ac1d3c0def487a4b45013bcd216810e45))
+* **deps:** bump yaml from 2.4.1 to 2.4.5 ([#543](https://github.com/tada5hi/locter/issues/543)) ([790c080](https://github.com/tada5hi/locter/commit/790c0805b4ab0e0b9b4d97151c48bb6272f50484))
+* **deps:** bump yaml from 2.4.5 to 2.5.0 ([#580](https://github.com/tada5hi/locter/issues/580)) ([cd29c41](https://github.com/tada5hi/locter/commit/cd29c41ff2561d98e6318f098c4b24788be30ec1))
+
 # [2.1.0](https://github.com/tada5hi/locter/compare/v2.0.2...v2.1.0) (2024-04-02)
 
 
