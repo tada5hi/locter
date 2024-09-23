@@ -50,7 +50,7 @@
     "license": "MIT",
     "devDependencies": {
         "@rollup/plugin-esm-shim": "^0.1.7",
-        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-node-resolve": "^15.2.4",
         "@swc/core": "^1.7.11",
         "@swc/jest": "^0.2.36",
         "@tada5hi/commitlint-config": "^1.2.1",
