@@ -6,8 +6,7 @@
  */
 
 import { BaseError } from 'ebec';
-import type { JITI } from 'jiti';
-import createJITI from 'jiti';
+import { createJiti } from 'jiti';
 import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
 import {
@@ -26,13 +25,15 @@ import type { Loader } from '../../type';
 import type { ModuleLoadOptions } from './type';
 import { toModuleRecord } from './utils';
 
+type Jiti = ReturnType<typeof createJiti>;
+
 export class ModuleLoader implements Loader {
-    protected jiti : JITI;
+    protected instance : Jiti;
 
     constructor() {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        this.jiti = createJITI(undefined, {
+        this.instance = createJiti(undefined, {
             extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
         });
     }
@@ -56,7 +57,7 @@ export class ModuleLoader implements Loader {
             if (isTsNodeRuntimeEnvironment()) {
                 output = this.loadSync(input);
             } else {
-                output = this.jiti(input);
+                output = this.instance(input);
             }
         }
 
@@ -77,7 +78,7 @@ export class ModuleLoader implements Loader {
                 throw e;
             }
 
-            output = this.jiti(input);
+            output = this.instance(input);
         }
 
         return toModuleRecord(output);
@@ -99,7 +100,7 @@ export class ModuleLoader implements Loader {
                 return require(id);
             }
 
-            return await import(id);
+            return await this.instance.import(id);
         } catch (e) {
             /* istanbul ignore next */
             if (
