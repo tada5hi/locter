@@ -1,6 +1,6 @@
 {
     "name": "locter",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "description": "A library to locate a file/module by criteria and load it!",
     "author": {
         "name": "Peter Placzek",

@@ -1,3 +1,10 @@
+## [2.1.3](https://github.com/tada5hi/locter/compare/v2.1.2...v2.1.3) (2024-10-08)
+
+
+### Bug Fixes
+
+* **deps:** bump jiti from 2.0.0 to 2.3.3 ([#661](https://github.com/tada5hi/locter/issues/661)) ([69fe6d3](https://github.com/tada5hi/locter/commit/69fe6d3dd23e3ed684cd23d97d249891857ab709))
+
 ## [2.1.2](https://github.com/tada5hi/locter/compare/v2.1.1...v2.1.2) (2024-09-26)
 
 
