@@ -1,3 +1,10 @@
+## [2.1.4](https://github.com/tada5hi/locter/compare/v2.1.3...v2.1.4) (2024-10-11)
+
+
+### Bug Fixes
+
+* use native import for load fn ([68b1af9](https://github.com/tada5hi/locter/commit/68b1af90e212daa8831bc6c9327147020a51c331))
+
 ## [2.1.3](https://github.com/tada5hi/locter/compare/v2.1.2...v2.1.3) (2024-10-08)
 
 
