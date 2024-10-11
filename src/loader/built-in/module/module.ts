@@ -100,7 +100,7 @@ export class ModuleLoader implements Loader {
                 return require(id);
             }
 
-            return await this.instance.import(id);
+            return await import(id);
         } catch (e) {
             /* istanbul ignore next */
             if (
