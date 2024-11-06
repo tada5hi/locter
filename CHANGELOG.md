@@ -1,3 +1,11 @@
+## [2.1.5](https://github.com/tada5hi/locter/compare/v2.1.4...v2.1.5) (2024-11-06)
+
+
+### Bug Fixes
+
+* **deps:** bump jiti from 2.3.3 to 2.4.0 ([#689](https://github.com/tada5hi/locter/issues/689)) ([c213f9b](https://github.com/tada5hi/locter/commit/c213f9bd84c1302d034ccdf27154a164349bea1e))
+* **deps:** bump yaml from 2.5.1 to 2.6.0 ([#665](https://github.com/tada5hi/locter/issues/665)) ([0af3af7](https://github.com/tada5hi/locter/commit/0af3af75f3c151ebbe2847edf95e1360fcc216a3))
+
 ## [2.1.4](https://github.com/tada5hi/locter/compare/v2.1.3...v2.1.4) (2024-10-11)
 
 
