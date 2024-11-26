@@ -56,7 +56,7 @@
         "@tada5hi/commitlint-config": "^1.2.2",
         "@tada5hi/eslint-config-typescript": "^1.2.12",
         "@tada5hi/semantic-release": "^0.3.1",
-        "@tada5hi/tsconfig": "^0.5.1",
+        "@tada5hi/tsconfig": "^0.6.0",
         "@types/flat": "^5.0.2",
         "@types/jest": "^29.5.12",
         "@types/node": "^22.7.2",
