@@ -7,6 +7,9 @@
         "email": "contact@tada5hi.net",
         "url": "https://github.com/tada5hi"
     },
+    "engines": {
+        "node": ">=22.0.0"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/tada5hi/locter.git"

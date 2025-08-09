@@ -12,28 +12,28 @@ describe('src/loader/**', () => {
         const loaderContent = await load('./test/data/file.mjs');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
-        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.default).toEqual({ foo: 'bar' });
     });
 
     it('should load .mjs file sync', () => {
         const loaderContent = loadSync('./test/data/file.mjs');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
-        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.default).toEqual({ foo: 'bar' });
     });
 
     it('should load .mts file', async () => {
         const loaderContent = await load('./test/data/file.mts');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
-        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.default).toEqual({ bar: 'baz' });
     });
 
     it('should load .mts file sync', () => {
         const loaderContent = loadSync('./test/data/file.mts');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
-        expect(loaderContent.default).toBeUndefined();
+        expect(loaderContent.default).toEqual({ bar: 'baz' });
     });
 
     it('should load .mjs file with default export', async () => {
