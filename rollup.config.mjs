@@ -8,7 +8,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import esmShim from "@rollup/plugin-esm-shim";
 import { transform } from '@swc/core';
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 
 const extensions = [
     '.js', '.jsx', '.ts', '.tsx',
