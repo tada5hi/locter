@@ -56,7 +56,6 @@
         "@swc/jest": "^0.2.37",
         "@tada5hi/commitlint-config": "^1.2.3",
         "@tada5hi/eslint-config-typescript": "^1.2.13",
-        "@tada5hi/semantic-release": "^0.3.1",
         "@tada5hi/tsconfig": "^0.6.0",
         "@types/flat": "^5.0.2",
         "@types/jest": "^29.5.14",
@@ -67,15 +66,15 @@
         "jest": "^29.6.4",
         "rimraf": "^6.0.1",
         "rollup": "^4.32.0",
-        "semantic-release": "^22.0.8",
-        "typescript": "^5.7.3"
+        "typescript": "^5.7.3",
+        "workspaces-publish": "^1.4.5"
     },
     "dependencies": {
-        "destr": "^2.0.3",
+        "destr": "^2.0.5",
         "ebec": "^2.3.0",
         "fast-glob": "^3.3.3",
         "flat": "^5.0.2",
-        "jiti": "^2.4.2",
-        "yaml": "^2.7.0"
+        "jiti": "^2.5.1",
+        "yaml": "^2.8.1"
     }
 }

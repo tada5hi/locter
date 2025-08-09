@@ -1,0 +1,88 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - master
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+    NODE_VERSION: 22
+
+permissions:
+    issues: write
+    packages: write
+    contents: write
+    pull-requests: write
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+
+        steps:
+            -   uses: google-github-actions/release-please-action@v4
+                id: release
+                with:
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Checkout
+                if: steps.release.outputs.releases_created == 'true'
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+
+            -   name: Configure Git
+                if: steps.release.outputs.releases_created == 'true'
+                run: |
+                    git config user.name "$GITHUB_ACTOR"
+                    git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+            -   name: tag major and minor versions
+                if: ${{ steps.release.outputs.release_created }}
+                run: |
+                    git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/tada5hi/action-docker-image-publish.git"
+                    git tag -d v${{ steps.release.outputs.major }} || true
+                    git tag -d v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
+                    git push origin :v${{ steps.release.outputs.major }} || true
+                    git push origin :v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
+                    git tag -a v${{ steps.release.outputs.major }} -m "Release v${{ steps.release.outputs.major }}"
+                    git tag -a v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} -m "Release v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
+                    git push origin v${{ steps.release.outputs.major }}
+                    git push origin v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}
+
+            -   name: Install
+                if: steps.release.outputs.releases_created == 'true'
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+
+            -   name: Build
+                if: steps.release.outputs.releases_created == 'true'
+                uses: ./.github/actions/build
+
+            -   name: Publish
+                if: steps.release.outputs.releases_created == 'true'
+                run: npx workspaces-publish
+                env:
+                    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            -   name: Coverage
+                if: steps.release.outputs.releases_created == 'true'
+                run: |
+                    npm run test:coverage
+
+            -   name: Upload report
+                if: steps.release.outputs.releases_created == 'true'
+                uses: codecov/codecov-action@v5.4.2
+                with:
+                    token: ${{ secrets.codecov }}
+                    directory: ./coverage/
+
+
+
