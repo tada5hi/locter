@@ -5,6 +5,13 @@
 
 * **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
 
+## [2.2.1](https://github.com/tada5hi/locter/compare/v2.2.0...v2.2.1) (2025-11-24)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#798](https://github.com/tada5hi/locter/issues/798)) ([34dd5ac](https://github.com/tada5hi/locter/commit/34dd5aced5588304e36a046db2fdde0b00d19c32))
+
 ## [2.2.0](https://github.com/tada5hi/locter/compare/v2.1.6...v2.2.0) (2025-08-09)
 
 
