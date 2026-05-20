@@ -72,7 +72,7 @@ export function pathToLocatorInfo(
         directory,
         name: info.name,
         extension,
-        filePath,
+        path: filePath,
     };
 }
 
@@ -82,7 +82,8 @@ export function isLocatorInfo(
     return isObject(input) &&
         typeof input.directory === 'string' &&
         typeof input.name === 'string' &&
-        typeof input.filePath === 'string';
+        (typeof input.extension === 'undefined' || typeof input.extension === 'string') &&
+        typeof input.path === 'string';
 }
 
 export function buildFilePath(input: LocatorInfo | string) {
@@ -90,7 +91,7 @@ export function buildFilePath(input: LocatorInfo | string) {
         return input;
     }
 
-    return input.filePath;
+    return input.path;
 }
 
 export function buildFilePathWithoutExtension(input: LocatorInfo | string) {

@@ -9,7 +9,7 @@ export type LocatorInfo = {
     directory: string,
     name: string,
     extension?: string,
-    filePath: string,
+    path: string,
 };
 
 export type LocatorOptions = {

@@ -61,7 +61,7 @@ describe('src/locator.ts', () => {
             directory: basePath,
             name: 'file',
             extension: '.cjs',
-            filePath: path.join(basePath, 'file.cjs'),
+            path: path.join(basePath, 'file.cjs'),
         } as LocatorInfo);
 
         locatorInfo = locateSync(['file.[mf]js'], { path: [basePath] });
@@ -70,7 +70,7 @@ describe('src/locator.ts', () => {
             directory: basePath,
             name: 'file',
             extension: '.mjs',
-            filePath: path.join(basePath, 'file.mjs'),
+            path: path.join(basePath, 'file.mjs'),
         } as LocatorInfo);
     });
 
@@ -80,13 +80,13 @@ describe('src/locator.ts', () => {
                 directory: basePath,
                 name: 'file',
                 extension: '.cts',
-                filePath: path.join(basePath, 'file.cts'),
+                path: path.join(basePath, 'file.cts'),
             },
             {
                 directory: basePath,
                 name: 'file',
                 extension: '.mts',
-                filePath: path.join(basePath, 'file.mts'),
+                path: path.join(basePath, 'file.mts'),
             },
         ];
         let locatorInfo = await locateMany(['file.[cm]ts'], { path: [basePath] });
@@ -105,7 +105,7 @@ describe('src/locator.ts', () => {
             directory: basePath,
             name: 'file',
             extension: '.json',
-            filePath: path.join(basePath, 'file.json'),
+            path: path.join(basePath, 'file.json'),
         } as LocatorInfo);
 
         locatorInfo = locateSync('file.json', { path: [basePath] });
@@ -114,7 +114,7 @@ describe('src/locator.ts', () => {
             directory: basePath,
             name: 'file',
             extension: '.json',
-            filePath: path.join(basePath, 'file.json'),
+            path: path.join(basePath, 'file.json'),
         } as LocatorInfo);
     });
 
