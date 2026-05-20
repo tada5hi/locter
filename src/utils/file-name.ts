@@ -18,7 +18,7 @@ export function getFileNameExtension(
 
     if (
         typeof allowed === 'undefined' ||
-        allowed.indexOf(extension) !== -1
+        allowed.includes(extension)
     ) {
         return extension;
     }

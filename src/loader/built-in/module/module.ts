@@ -7,6 +7,7 @@
 
 import { BaseError } from 'ebec';
 import { createJiti } from 'jiti';
+import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { LocatorInfo } from '../../../locator';
 import {
@@ -16,7 +17,8 @@ import {
 import {
     handleException,
     hasStringProperty,
-    isFilePath, isJestRuntimeEnvironment,
+    isFilePath, 
+    isJestRuntimeEnvironment,
     isObject,
     isTsNodeRuntimeEnvironment,
     isTypeScriptError,
@@ -24,6 +26,8 @@ import {
 import type { Loader } from '../../type';
 import type { ModuleLoadOptions } from './type';
 import { toModuleRecord } from './utils';
+
+const require = createRequire(import.meta.url);
 
 type Jiti = ReturnType<typeof createJiti>;
 
@@ -33,9 +37,7 @@ export class ModuleLoader implements Loader {
     constructor() {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        this.instance = createJiti(undefined, {
-            extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
-        });
+        this.instance = createJiti(undefined, { extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'] });
     }
 
     async execute(input: string) {
@@ -96,7 +98,6 @@ export class ModuleLoader implements Loader {
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
             if (isJestRuntimeEnvironment()) {
-                // eslint-disable-next-line global-require,import/no-dynamic-require
                 return require(id);
             }
 
@@ -139,7 +140,6 @@ export class ModuleLoader implements Loader {
         const id = this.build(data, options);
 
         try {
-            // eslint-disable-next-line global-require,import/no-dynamic-require
             return require(id);
         } catch (e) {
             /* istanbul ignore next */

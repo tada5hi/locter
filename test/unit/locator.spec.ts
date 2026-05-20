@@ -5,19 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 import {
-    locate, locateMany, locateManySync, locateSync,
+    locate, 
+    locateMany, 
+    locateManySync, 
+    locateSync,
 } from '../../src';
 import type { LocatorInfo } from '../../src';
 
-const basePath = path.join(__dirname, '..', 'data');
+const basePath = path.join(import.meta.dirname, '..', 'data');
 
 describe('src/locator.ts', () => {
     it('should locate directory', async () => {
         let locatorInfo = await locate(['data'], {
             onlyDirectories: true,
-            path: path.join(__dirname, '..'),
+            path: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo).toBeDefined();
         if (locatorInfo) {
@@ -26,7 +30,7 @@ describe('src/locator.ts', () => {
 
         locatorInfo = locateSync(['unit'], {
             onlyDirectories: true,
-            path: path.join(__dirname, '..'),
+            path: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo).toBeDefined();
         if (locatorInfo) {
@@ -37,14 +41,14 @@ describe('src/locator.ts', () => {
     it('should locate directories', async () => {
         let locatorInfo = await locateMany(['*'], {
             onlyDirectories: true,
-            path: path.join(__dirname, '..'),
+            path: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo.length).toEqual(2);
         expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
 
         locatorInfo = locateManySync(['*'], {
             onlyDirectories: true,
-            path: path.join(__dirname, '..'),
+            path: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo.length).toEqual(2);
         expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);

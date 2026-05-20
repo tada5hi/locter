@@ -6,6 +6,4 @@
  */
 
 export const foo : string = 'bar';
-module.exports.default = {
-    bar: 'baz'
-}
+module.exports.default = { bar: 'baz' };

@@ -18,18 +18,18 @@ export async function locateMany(
 
     const items : LocatorInfo[] = [];
 
-    for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < opts.path.length; j++) {
-            const files = await fg(patterns[i], {
+    for (const p of patterns) {
+        for (const cwd of opts.path) {
+            const files = await fg(p, {
                 absolute: true,
-                cwd: opts.path[j],
+                cwd,
                 ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,
             });
 
-            for (let k = 0; k < files.length; k++) {
-                items.push(pathToLocatorInfo(files[k], true));
+            for (const file of files) {
+                items.push(pathToLocatorInfo(file, true));
             }
         }
     }
@@ -44,11 +44,11 @@ export async function locate(
     const patterns = buildLocatorPatterns(pattern);
     const opts = buildLocatorOptions(options);
 
-    for (let i = 0; i < patterns.length; i++) {
-        for (let j = 0; j < opts.path.length; j++) {
-            const files = await fg(patterns[i], {
+    for (const p of patterns) {
+        for (const cwd of opts.path) {
+            const files = await fg(p, {
                 absolute: true,
-                cwd: opts.path[j],
+                cwd,
                 ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,

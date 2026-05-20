@@ -44,20 +44,20 @@ export class ConfLoader implements Loader {
 
         const lines = contents.split(/\n|\r|\r\n/);
 
-        for (let i = 0; i < lines.length; i++) {
-            const match = lines[i].match(/^\s*([^\s=]+)\s*=\s*(.*)?\s*$/);
+        for (const line of lines) {
+            const match = line.match(/^\s*([^\s=]+)\s*=\s*(.*)?\s*$/);
             if (!match) {
                 continue;
             }
 
-            // Key
             const key = match[1];
+            const rawValue = match[2];
 
             if (!key || !isSafeObjectKey(key)) {
                 continue;
             }
 
-            const value = destr(match[2].trim() /* val */);
+            const value = destr(rawValue ? rawValue.trim() : '');
 
             if (key.endsWith('[]')) {
                 const arrKey = key.slice(0, Math.max(0, key.length - 2));

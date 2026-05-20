@@ -4,32 +4,30 @@
 
 | Tool                                | Purpose                                                                  |
 |-------------------------------------|--------------------------------------------------------------------------|
-| TypeScript 5                        | Source language; compiled to `dist/*.d.ts` via `tsc --emitDeclarationOnly` |
-| Rollup + `@rollup/plugin-node-resolve` + `@swc/core` | Bundles `src/index.ts` into `dist/index.cjs` and `dist/index.mjs` |
-| `@swc/jest`                         | Jest transform (TypeScript → ES2020)                                     |
-| ESLint 8 + `@tada5hi/eslint-config-typescript` | Lint TypeScript source                                        |
+| TypeScript 6                        | Source language. `tsc --noEmit` (`build:types`) typechecks only.         |
+| tsdown                              | Bundles `src/index.ts` to `dist/index.mjs` and emits `dist/index.d.mts` (`build:js`). |
+| Vitest 4 + `@vitest/coverage-v8`    | Test runner + coverage                                                   |
+| ESLint 10 (flat) + `@tada5hi/eslint-config` | Lint TypeScript source                                           |
+| typescript-eslint 8                 | Brought in transitively by `@tada5hi/eslint-config` for TS rules         |
 | Husky + commitlint                  | `commit-msg` hook validates Conventional Commits                         |
 | release-please                      | Automated release PRs (alpha prereleases, node release-type)             |
+| monoship                            | Publishes built artifacts to npm on release                              |
 | `@tada5hi/tsconfig`                 | Base tsconfig (extended by `tsconfig.json`)                              |
 
 ## Workflow
 
-- After making changes to `src/`, **always** run `npm run lint` and `npm test`. Run `npm run build` if you've touched the public API or exports.
-- The `dist/` directory is committed because it ships to npm — do not edit it by hand; always rebuild via `npm run build`.
+- After making changes to `src/`, **always** run `npm run lint` and `npm test`. Run `npm run build` to confirm both `tsc --noEmit` (types) and `tsdown` (bundle) succeed.
+- The `dist/` directory is not committed — it is rebuilt by CI and published by monoship.
 - When changing the public API (`src/index.ts` re-exports), update `README.MD` usage examples.
 
 ## Code Style
 
-- **Module format**: TypeScript source uses ESM-style `import`/`export`. Output ships both `.cjs` and `.mjs`.
+- **Module format**: ESM throughout. Package declares `"type": "module"`. Only ESM is published (`dist/index.mjs` + `dist/index.d.mts`).
 - **Indentation**: 4 spaces (enforced by `.editorconfig`).
 - **Line endings**: LF.
 - **Trailing whitespace**: trimmed (except in `.md` files).
 - **Final newline**: required.
-- **Linting**: `@tada5hi/eslint-config-typescript`, parsed against `tsconfig.eslint.json`. Project-local rule overrides in `.eslintrc`:
-    - `class-methods-use-this`: off
-    - `no-shadow`, `no-use-before-define`, `@typescript-eslint/no-use-before-define`: off
-    - `@typescript-eslint/no-unused-vars`: off
-- **Ignored from lint**: `**/dist/*`, `**/*.d.ts`.
+- **Linting**: Flat config in `eslint.config.js` extends `@tada5hi/eslint-config` and ignores `dist/**`.
 
 ## Naming Conventions
 
@@ -74,40 +72,49 @@ Common types observed in `git log`: `feat`, `fix`, `chore`, `build`, `ci`, `docs
 
 - Extends `@tada5hi/tsconfig`.
 - Project overrides in `tsconfig.json`:
-    - `module: "CommonJS"` (the bundler emits both CJS and ESM separately via Rollup; the TypeScript compile step only emits `.d.ts`)
+    - `target: "ES2022"`, `module: "ESNext"`, `moduleResolution: "bundler"`
+    - `noEmit: true` — `tsc` is purely a typechecker; tsdown handles emit (both `.mjs` and `.d.mts`)
+    - `allowImportingTsExtensions: true`
     - `esModuleInterop: true`
     - `noPropertyAccessFromIndexSignature: false`
-    - `outDir: "dist"`
-- `tsconfig.eslint.json` extends `tsconfig.json` and widens the include set so ESLint can type-check `src/` + `test/`.
+- There is no separate `tsconfig.eslint.json` — the flat ESLint config doesn't need a TS project reference.
 
 ## Build Output
 
-- `npm run build` cleans `dist/` and produces:
-    - `dist/index.cjs` (CommonJS) — referenced by `"main"` and the `require` export
-    - `dist/index.mjs` (ESM) — referenced by `"module"` and the `import` export
-    - `dist/index.d.ts` (types) — referenced by `"types"`
-    - Source maps alongside each `.cjs`/`.mjs`
-- Bundle externals: every entry under `dependencies` and `peerDependencies` in `package.json` is marked external (see `rollup.config.mjs`). Adding a new runtime dependency means adding it to `dependencies`, not `devDependencies`.
-- Only `dist/` is published to npm (`"files": ["dist/"]`).
+- `npm run build:types` runs `tsc --noEmit` and only verifies types.
+- `npm run build:js` runs `tsdown` per `tsdown.config.ts`:
+    - `entry: 'src/index.ts'`
+    - `format: 'esm'`
+    - `dts: true` → `dist/index.d.mts`
+    - `sourcemap: true`
+- `npm run build` runs both, types first then bundle.
+- Output files: `dist/index.mjs`, `dist/index.d.mts`, `dist/index.mjs.map`.
+- Externals: tsdown infers `dependencies` (and `peerDependencies`) as externals automatically. Adding a new runtime dep means adding it under `dependencies` in `package.json`, not `devDependencies`.
+- Only `dist/` is published to npm (`"files": ["dist"]`).
 
 ## Release Process
 
-Releases are driven by **release-please** (`release-please-config.json`):
+Releases are driven by **release-please** + **monoship** (`.github/workflows/release.yml`):
 
-- `prerelease: true`, `prerelease-type: "alpha"` — releases land as `2.x.y-alpha.N` until stabilized.
-- `bump-minor-pre-major: true`, `bump-patch-for-minor-pre-major: true` — appropriate for the pre-1.0 / 2.x line.
-- release-please opens a PR; merging the PR creates a git tag and (via the release workflow) publishes to npm.
+1. A push to `master` triggers `googleapis/release-please-action@v5`.
+2. release-please opens/updates a release PR with computed version + changelog.
+3. Merging that PR creates a git tag.
+4. The same workflow then runs `tada5hi/monoship@v2` to publish the built `dist/` to npm.
+5. Coverage is uploaded to Codecov on the same run.
+
+Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-type: "alpha"`, `bump-minor-pre-major: true`, `bump-patch-for-minor-pre-major: true` (pre-1.0 / 2.x behavior).
 
 ## CI/CD
 
-- `.github/workflows/main.yml` — install → build → (lint || tests) on push to `master` and on PRs against any branch. Uses Node 22 only.
-- `.github/workflows/release.yml` — publish flow triggered by release-please.
-- `.github/dependabot.yml` — bumps npm and GitHub Actions deps; minor + patch updates are grouped under the `minorandpatch` group.
+- `.github/workflows/main.yml` — install → build → (lint || tests) on push to `develop`/`master`/`next`/`beta`/`alpha` and on PRs against those branches. Uses Node 24 only.
+- `.github/workflows/release.yml` — publish flow triggered by release-please on push to `master`.
+- `.github/dependabot.yml` — bumps npm and GitHub Actions deps; major prod, major dev, and minor/patch groups.
 
 ## Best Practices
 
-- Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `jest.mock` / `jest.fn` calls — keep it that way.
+- Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
 - When adding a new file format: create `src/loader/built-in/<format>/{module.ts,index.ts}`, add a `LoaderId.<FORMAT>` enum entry, register a default `Rule` in `LoaderManager`'s constructor, add a `case` in `LoaderManager.resolve()`, export from `src/loader/built-in/index.ts`, and add a corresponding `test/unit/loader/<format>.spec.ts` + fixture in `test/data/`.
 - Always implement both sync and async variants of a public function.
 - Use `handleException(e)` (from `src/utils/error.ts`) inside loader `catch` blocks to normalize non-`Error` throws.
+- In source files that need `require` (e.g. for `loadSync` semantics), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
 - Keep `src/utils/` free of imports from `src/locator/` or `src/loader/`.

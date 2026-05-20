@@ -2,19 +2,19 @@
 
 ## Setup
 
-- **Runner**: Jest 30 with `@swc/jest` transform (target `es2020`, TypeScript syntax)
-- **Test location**: `test/unit/**/*.spec.ts` (regex: `(/unit/.*|(\\.|/)(test|spec))\\.(ts|js)x?$`)
-- **Config**: `test/jest.config.js` (note `rootDir: '../'` — run jest with `--config ./test/jest.config.js` from repo root)
+- **Runner**: Vitest (run mode, no watch in CI)
+- **Test location**: `test/unit/**/*.{test,spec}.{js,ts}` (from `test/vitest.config.ts`)
+- **Config**: `test/vitest.config.ts` (vitest is invoked with `--config test/vitest.config.ts --run`)
 - **Fixture data**: `test/data/` contains one file per supported extension (`.json`, `.yml`, `.conf`, `.cjs`, `.mjs`, `.cts`, `.mts`, plus `file-default.*` variants for default-export cases)
-- **Prerequisite**: `NODE_ENV=test` is set automatically by the `test` script via `cross-env`
+- **Coverage provider**: `@vitest/coverage-v8`
 
 ## Running Tests
 
 ```bash
-npm test                     # all tests
-npm run test:coverage        # with coverage (writes to ./coverage)
-npx jest --config ./test/jest.config.js test/unit/locator.spec.ts   # single file
-npx jest --config ./test/jest.config.js -t "should load module"     # single test by name
+npm test                                                        # all tests
+npm run test:coverage                                           # with coverage (./coverage)
+npx vitest --config test/vitest.config.ts --run test/unit/locator.spec.ts   # single file
+npx vitest --config test/vitest.config.ts --run -t "should load module"     # by test name
 ```
 
 ## Test Layout
@@ -34,6 +34,12 @@ Tests mirror the `src/` tree, one spec per subsystem or built-in loader:
 
 Every test covers **both** the sync and async surface in the same `it()` block — when adding a new locator or loader function, follow this pattern (see `test/unit/locator.spec.ts`).
 
+Vitest globals are **not** enabled — each spec must `import { describe, expect, it } from 'vitest'`.
+
+## ESM-specific patterns
+
+Specs are ESM (`"type": "module"` in `package.json`). `__dirname` is not defined; use `import.meta.dirname` (Node 20.11+) when a spec needs a path relative to itself — see `test/unit/locator.spec.ts`.
+
 ## Test Helpers & Fixtures
 
 - All fixture files live under `test/data/`. Add a new fixture file when introducing a new extension or testing a new edge case.
@@ -46,7 +52,7 @@ Tests assert *expected* behavior — the public contract documented in `README.M
 
 ### Mocks
 
-This project does **not** use `jest.mock` or `jest.fn` in any current spec. Tests exercise the real loaders against real fixture files on disk. When adding tests, prefer the same pattern: write a fixture in `test/data/` rather than mocking `fs`.
+This project does **not** use `vi.mock` or `vi.fn` in any current spec. Tests exercise the real loaders against real fixture files on disk. When adding tests, prefer the same pattern: write a fixture in `test/data/` rather than mocking `fs`.
 
 ## Code Coverage
 
@@ -54,7 +60,7 @@ This project does **not** use `jest.mock` or `jest.fn` in any current spec. Test
 npm run test:coverage
 ```
 
-Jest enforces (from `test/jest.config.js`):
+Vitest enforces (from `test/vitest.config.ts`):
 
 | Metric     | Threshold |
 |------------|-----------|
@@ -63,22 +69,23 @@ Jest enforces (from `test/jest.config.js`):
 | lines      | 80%       |
 | statements | 80%       |
 
-Coverage is collected from `src/**/*.{ts,tsx,js,jsx}` excluding `.d.ts`. `/* istanbul ignore next */` is used sparingly in `ModuleLoader` for environment-specific branches that are hard to exercise from a single Node runtime — keep those scoped tightly.
+Coverage is collected from `src/**/*.{ts,tsx,js,jsx}`. `/* istanbul ignore next */` is used sparingly in `ModuleLoader` for environment-specific branches that are hard to exercise from a single Node runtime — keep those scoped tightly. (Istanbul-style pragmas are recognized by v8 coverage via Vitest's report transformation.)
 
 ## CI Pipeline
 
-GitHub Actions (`.github/workflows/main.yml`) runs on push to `master` and on PRs:
+GitHub Actions (`.github/workflows/main.yml`) runs on push to `develop`/`master`/`next`/`beta`/`alpha` and on PRs targeting those branches:
 
 ```
 install ──▶ build ──▶ lint
                  └──▶ tests
 ```
 
-All four jobs run against `PRIMARY_NODE_VERSION=22` only. There is no Node version matrix.
+All jobs run against `PRIMARY_NODE_VERSION=24` only. There is no Node version matrix. Note that `engines.node` in `package.json` requires `>=22` — CI runs newer but the package supports Node 22+.
 
 ## Writing New Tests
 
 1. Place the spec under `test/unit/`, mirroring the `src/` path (e.g. a new built-in loader at `src/loader/built-in/toml/` → spec at `test/unit/loader/toml.spec.ts`).
 2. Add fixture files to `test/data/` rather than stubbing `fs`.
-3. Cover both `execute` (async, awaited) and `executeSync` paths.
-4. Run `npm test` to verify and `npm run test:coverage` if you touched code that may move the thresholds.
+3. Import vitest globals explicitly: `import { describe, expect, it } from 'vitest'`.
+4. Cover both `execute` (async, awaited) and `executeSync` paths.
+5. Run `npm test` to verify and `npm run test:coverage` if you touched code that may move the thresholds.
