@@ -26,6 +26,7 @@ export async function locateMany(
                 ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,
+                dot: opts.dot,
             });
 
             for (const file of files) {
@@ -52,6 +53,7 @@ export async function locate(
                 ignore: opts.ignore,
                 onlyFiles: opts.onlyFiles,
                 onlyDirectories: opts.onlyDirectories,
+                dot: opts.dot,
             });
 
             const element = files.shift();

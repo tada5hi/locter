@@ -127,4 +127,27 @@ describe('src/locator.ts', () => {
         const locatorInfo = locateSync('file.foo', { path: [basePath] });
         expect(locatorInfo).toBeUndefined();
     });
+
+    it('should ignore dotfiles by default with wildcard patterns', async () => {
+        const asyncResult = await locateMany('*', { path: [basePath] });
+        expect(asyncResult.map((r) => r.name)).not.toContain('.hidden');
+
+        const syncResult = locateManySync('*', { path: [basePath] });
+        expect(syncResult.map((r) => r.name)).not.toContain('.hidden');
+    });
+
+    it('should include dotfiles when `dot: true`', async () => {
+        const expected: LocatorInfo = {
+            directory: basePath,
+            name: '.hidden',
+            extension: undefined,
+            path: path.join(basePath, '.hidden'),
+        };
+
+        const asyncResult = await locateMany('*', { path: [basePath], dot: true });
+        expect(asyncResult).toContainEqual(expected);
+
+        const syncResult = locateManySync('*', { path: [basePath], dot: true });
+        expect(syncResult).toContainEqual(expected);
+    });
 });
