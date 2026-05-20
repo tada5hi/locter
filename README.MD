@@ -158,6 +158,52 @@ registerLoader(['.ext'], {
 })
 ```
 
+### Runtime environments
+
+Locter ships with two runtime detection helpers:
+
+- `isJestRuntimeEnvironment()` — true when running under Jest. Built-in: the
+  `ModuleLoader` falls back to `require()` under Jest to avoid a known
+  segmentation fault ([nodejs/node#35889](https://github.com/nodejs/node/issues/35889)).
+- `isVitestRuntimeEnvironment()` — true when running under Vitest (checks
+  `process.env.VITEST === 'true'`).
+
+#### Using locter with Vitest
+
+Locter's built-in `await import(id)` runs inside `node_modules/locter` and
+therefore bypasses Vitest's `vite-node` module graph by default. For most use
+cases this is fine, but it produces **duplicate module instances** when test
+code statically imports a module and locter dynamically loads the same module
+(or a transitive dependency of it). This breaks class identity for libraries
+that rely on it (e.g. TypeORM entity metadata).
+
+Use `setModuleLoader` to inject an `import` call from user space so Vitest can
+rewrite it:
+
+```typescript
+// vitest setup file
+import { setModuleLoader } from 'locter';
+
+setModuleLoader({
+    load: (id) => import(id),
+});
+```
+
+Alternatively, the same effect can be achieved by inlining locter in
+`vitest.config.ts`:
+
+```typescript
+export default defineConfig({
+    test: {
+        server: {
+            deps: {
+                inline: [/locter/],
+            },
+        },
+    },
+});
+```
+
 
 ## License
 
