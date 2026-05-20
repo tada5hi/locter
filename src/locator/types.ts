@@ -6,9 +6,10 @@
  */
 
 export type LocatorInfo = {
-    path: string,
+    directory: string,
     name: string,
-    extension?: string
+    extension?: string,
+    path: string,
 };
 
 export type LocatorOptions = {

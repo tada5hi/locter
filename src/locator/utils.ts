@@ -62,13 +62,17 @@ export function pathToLocatorInfo(
     }
 
     const info = path.parse(input);
+    const directory = info.dir.split('/').join(path.sep);
+    const extension = info.ext ? info.ext : undefined;
+    const filePath = extension ?
+        path.join(directory, info.name) + extension :
+        path.join(directory, info.name);
 
     return {
-        path: info.dir.split('/').join(path.sep),
+        directory,
         name: info.name,
-        extension: info.ext ?
-            info.ext :
-            undefined,
+        extension,
+        path: filePath,
     };
 }
 
@@ -76,9 +80,10 @@ export function isLocatorInfo(
     input: unknown,
 ) : input is LocatorInfo {
     return isObject(input) &&
-        typeof input.path === 'string' &&
+        typeof input.directory === 'string' &&
         typeof input.name === 'string' &&
-        typeof input.extension === 'string';
+        (typeof input.extension === 'undefined' || typeof input.extension === 'string') &&
+        typeof input.path === 'string';
 }
 
 export function buildFilePath(input: LocatorInfo | string) {
@@ -86,11 +91,7 @@ export function buildFilePath(input: LocatorInfo | string) {
         return input;
     }
 
-    if (input.extension) {
-        return path.join(input.path, input.name) + input.extension;
-    }
-
-    return path.join(input.path, input.name);
+    return input.path;
 }
 
 export function buildFilePathWithoutExtension(input: LocatorInfo | string) {
@@ -102,5 +103,5 @@ export function buildFilePathWithoutExtension(input: LocatorInfo | string) {
         info = input;
     }
 
-    return path.join(info.path, info.name);
+    return path.join(info.directory, info.name);
 }

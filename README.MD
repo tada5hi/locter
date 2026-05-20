@@ -50,8 +50,8 @@ import { locateMany } from 'locter';
     console.log(files);
     /*
     [
-        { path: 'files', name: 'example', extension: '.js'},
-        { path: 'files', name: 'example', extension: '.ts'}
+        { directory: '/cwd/files', name: 'example', extension: '.js', path: '/cwd/files/example.js' },
+        { directory: '/cwd/files', name: 'example', extension: '.ts', path: '/cwd/files/example.ts' }
     ]
      */
 
@@ -62,9 +62,9 @@ import { locateMany } from 'locter';
     console.log(files);
     /*
     [
-        { path: 'files', name: 'example', extension: '.js'},
-        { path: 'files', name: 'example', extension: '.ts'},
-        { path: 'files', name: 'example-long', extension: '.ts'},
+        { directory: '/cwd/files', name: 'example', extension: '.js', path: '/cwd/files/example.js' },
+        { directory: '/cwd/files', name: 'example', extension: '.ts', path: '/cwd/files/example.ts' },
+        { directory: '/cwd/files', name: 'example-long', extension: '.ts', path: '/cwd/files/example-long.ts' }
     ]
      */
 })
@@ -86,7 +86,7 @@ import { locate } from 'locter';
 
     console.log(file);
     /*
-    { path: 'files', name: 'example', extension: '.js'}
+    { directory: '/cwd/files', name: 'example', extension: '.js', path: '/cwd/files/example.js' }
      */
 })
 ```
