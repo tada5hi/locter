@@ -5,19 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BaseError } from 'ebec';
 import { createJiti } from 'jiti';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { wrapLoaderError } from '../../../errors';
 import type { LocatorInfo } from '../../../locator';
 import {
     buildFilePath,
     isLocatorInfo,
 } from '../../../locator';
 import {
-    handleException,
     hasStringProperty,
-    isFilePath, 
+    isFilePath,
     isJestRuntimeEnvironment,
     isObject,
     isTsNodeRuntimeEnvironment,
@@ -71,7 +70,7 @@ export class ModuleLoader implements Loader {
                 e instanceof ReferenceError ||
                 isTypeScriptError(e)
             ) {
-                throw e;
+                throw wrapLoaderError(e, input);
             }
 
             // jiti + ts-node
@@ -97,7 +96,7 @@ export class ModuleLoader implements Loader {
                 e instanceof ReferenceError ||
                 isTypeScriptError(e)
             ) {
-                throw e;
+                throw wrapLoaderError(e, input);
             }
 
             output = this.instance(input);
@@ -129,31 +128,21 @@ export class ModuleLoader implements Loader {
         } catch (e) {
             /* istanbul ignore next */
             if (
+                !options.withFilePrefix &&
                 isObject(e) &&
-                hasStringProperty(e, 'code')
+                hasStringProperty(e, 'code') &&
+                (
+                    e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                    e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                )
             ) {
-                if (
-                    !options.withFilePrefix &&
-                    (
-                        e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
-                        e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
-                    )
-                ) {
-                    return this.load(data, {
-                        ...options,
-                        withFilePrefix: true,
-                    });
-                }
-
-                throw new BaseError({
-                    code: e.code,
-                    message: hasStringProperty(e, 'message') ? e.message : undefined,
-                    stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
+                return this.load(data, {
+                    ...options,
+                    withFilePrefix: true,
                 });
             }
 
-            /* istanbul ignore next */
-            return handleException(e);
+            throw wrapLoaderError(e, id);
         }
     }
 
@@ -170,19 +159,7 @@ export class ModuleLoader implements Loader {
 
             return require(id);
         } catch (e) {
-            /* istanbul ignore next */
-            if (
-                isObject(e) &&
-                hasStringProperty(e, 'code')
-            ) {
-                throw new BaseError({
-                    code: e.code,
-                    message: hasStringProperty(e, 'message') ? e.message : undefined,
-                    stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
-                });
-            }
-
-            return handleException(e);
+            throw wrapLoaderError(e, id);
         }
     }
 

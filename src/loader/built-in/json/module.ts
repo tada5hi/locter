@@ -6,8 +6,8 @@
  */
 
 import fs from 'node:fs';
+import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
-import { handleException } from '../../../utils';
 import type { Loader } from '../../type';
 
 export class JSONLoader implements Loader {
@@ -18,7 +18,7 @@ export class JSONLoader implements Loader {
             const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
             return JSON.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
@@ -29,7 +29,7 @@ export class JSONLoader implements Loader {
             const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
             return JSON.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 }

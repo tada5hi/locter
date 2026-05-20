@@ -7,8 +7,8 @@
 
 import { parse } from 'yaml';
 import fs from 'node:fs';
+import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
-import { handleException } from '../../../utils';
 import type { Loader } from '../../type';
 
 export class YAMLLoader implements Loader {
@@ -19,7 +19,7 @@ export class YAMLLoader implements Loader {
             const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
             return parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
@@ -30,7 +30,7 @@ export class YAMLLoader implements Loader {
             const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
             return parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 }

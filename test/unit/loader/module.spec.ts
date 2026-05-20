@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     LoaderManager,
+    LocterUnknownExtensionError,
     ModuleLoader,
     getModuleExport,
     load,
@@ -35,19 +36,8 @@ describe('src/loader/**', () => {
     });
 
     it('should not load file', async () => {
-        try {
-            await load('file.foo');
-            expect(true).toBe(false);
-        } catch (e) {
-            expect(e).toBeDefined();
-        }
-
-        try {
-            loadSync('file.foo');
-            expect(true).toBe(false);
-        } catch (e) {
-            expect(e).toBeDefined();
-        }
+        await expect(load('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => loadSync('file.foo')).toThrow(LocterUnknownExtensionError);
     });
 
     it('should load module', async () => {

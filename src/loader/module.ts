@@ -6,6 +6,11 @@
  */
 
 import path from 'node:path';
+import {
+    LocterError,
+    LocterUnknownExtensionError,
+    wrapLoaderError,
+} from '../errors';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
 import { isFilePath } from '../utils';
 import { ConfLoader, JSONLoader, ModuleLoader } from './built-in';
@@ -47,23 +52,37 @@ export class LoaderManager implements Loader {
     async execute(input: string) : Promise<any> {
         const id = this.findLoader(input);
         if (!id) {
-            const info = pathToLocatorInfo(input);
-            throw new Error(`No loader registered for extension: "${info.extension}"`);
+            throw this.unknownExtensionError(input);
         }
 
         const loader = this.resolve(id);
-        return loader.execute(input);
+        try {
+            return await loader.execute(input);
+        } catch (e) {
+            throw wrapLoaderError(e, input);
+        }
     }
 
     executeSync(input: string) : any {
         const id = this.findLoader(input);
         if (!id) {
-            const info = pathToLocatorInfo(input);
-            throw new Error(`No loader registered for extension: ${info.extension || 'unknown'}`);
+            throw this.unknownExtensionError(input);
         }
 
         const loader = this.resolve(id);
-        return loader.executeSync(input);
+        try {
+            return loader.executeSync(input);
+        } catch (e) {
+            throw wrapLoaderError(e, input);
+        }
+    }
+
+    protected unknownExtensionError(input: string) : LocterUnknownExtensionError {
+        const info = pathToLocatorInfo(input);
+        return new LocterUnknownExtensionError({
+            message: `No loader registered for extension: ${info.extension ?? 'unknown'}`,
+            path: input,
+        });
     }
 
     findLoader(input: string) : Loader | string | undefined {
@@ -139,7 +158,7 @@ export class LoaderManager implements Loader {
             return loader;
         }
 
-        throw new Error(`The loader ${id} could not be resolved.`);
+        throw new LocterError({ message: `The loader ${id} could not be resolved.` });
     }
 
     /* istanbul ignore next */
