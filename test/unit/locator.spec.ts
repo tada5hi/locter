@@ -58,31 +58,35 @@ describe('src/locator.ts', () => {
         let locatorInfo = await locate(['file.[cf]js'], { path: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
-            path: basePath,
+            directory: basePath,
             name: 'file',
             extension: '.cjs',
+            filePath: path.join(basePath, 'file.cjs'),
         } as LocatorInfo);
 
         locatorInfo = locateSync(['file.[mf]js'], { path: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
-            path: basePath,
+            directory: basePath,
             name: 'file',
             extension: '.mjs',
+            filePath: path.join(basePath, 'file.mjs'),
         } as LocatorInfo);
     });
 
     it('should locate .[cm]ts files', async () => {
         const files : LocatorInfo[] = [
             {
-                path: basePath,
+                directory: basePath,
                 name: 'file',
                 extension: '.cts',
+                filePath: path.join(basePath, 'file.cts'),
             },
             {
-                path: basePath,
+                directory: basePath,
                 name: 'file',
                 extension: '.mts',
+                filePath: path.join(basePath, 'file.mts'),
             },
         ];
         let locatorInfo = await locateMany(['file.[cm]ts'], { path: [basePath] });
@@ -98,17 +102,19 @@ describe('src/locator.ts', () => {
         let locatorInfo = await locate('file.json', { path: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
-            path: basePath,
+            directory: basePath,
             name: 'file',
             extension: '.json',
+            filePath: path.join(basePath, 'file.json'),
         } as LocatorInfo);
 
         locatorInfo = locateSync('file.json', { path: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
-            path: basePath,
+            directory: basePath,
             name: 'file',
             extension: '.json',
+            filePath: path.join(basePath, 'file.json'),
         } as LocatorInfo);
     });
 
