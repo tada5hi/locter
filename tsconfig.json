@@ -1,15 +1,15 @@
 {
     "extends": "@tada5hi/tsconfig",
     "compilerOptions": {
-        "module": "CommonJS",
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
         "noPropertyAccessFromIndexSignature": false,
-        "esModuleInterop": true,
-        "outDir": "dist"
+        "esModuleInterop": true
     },
     "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules/**/*"
+        "src/**/*"
     ]
 }

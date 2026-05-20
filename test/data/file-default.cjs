@@ -1,4 +1,2 @@
 export const bar = 'baz';
-module.exports.default = {
-    foo: 'bar'
-}
+module.exports.default = { foo: 'bar' };

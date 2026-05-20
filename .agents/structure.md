@@ -39,14 +39,14 @@ locter/
 │       ├── to-array.ts             # toArray
 │       └── typescript.ts           # isTypeScriptError
 ├── test/
-│   ├── jest.config.js              # rootDir: '../', SWC transform, coverage thresholds
+│   ├── vitest.config.ts            # Vitest config; coverage thresholds, include glob
 │   ├── data/                       # Fixture files for loader/locator tests (.json, .yml, .conf, .cjs, .mjs, .cts, .mts)
 │   └── unit/                       # Test specs mirroring src/ layout
-├── dist/                           # Build output (esm + cjs + d.ts) — git-ignored at source, published to npm
-├── rollup.config.mjs               # Rollup config (SWC transform, esm + cjs output)
-├── tsconfig.json                   # Extends @tada5hi/tsconfig, emits to dist/
-├── tsconfig.eslint.json            # Includes src/ + test/ for lint type-checking
-├── commitlint.config.js            # Extends @tada5hi/commitlint-config
+├── dist/                           # Build output (index.mjs + index.d.mts) — git-ignored at source, published to npm
+├── tsdown.config.ts                # tsdown bundler config (entry, esm format, dts, sourcemap)
+├── tsconfig.json                   # Extends @tada5hi/tsconfig (ESNext / bundler / noEmit)
+├── eslint.config.js                # Flat ESLint config (@tada5hi/eslint-config)
+├── commitlint.config.mjs           # Extends @tada5hi/commitlint-config
 ├── release-please-config.json      # release-please (alpha prereleases, node release-type)
 └── package.json
 ```
@@ -82,12 +82,13 @@ locter/
 {
     "./package.json": "./package.json",
     ".": {
-        "types": "./dist/index.d.ts",
-        "require": "./dist/index.cjs",
+        "types": "./dist/index.d.mts",
         "import": "./dist/index.mjs"
     }
 }
 ```
+
+The package is ESM-only (`"type": "module"`). There is no CJS entry point.
 
 Everything re-exported from `src/index.ts` is public API. The barrel re-exports `./loader`, `./locator`, and `./utils` — so any symbol exported from a leaf module under those directories is part of the public API. Add new internal-only symbols by keeping them out of the relevant `index.ts` files.
 

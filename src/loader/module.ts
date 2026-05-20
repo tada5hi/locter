@@ -25,15 +25,9 @@ export class LoaderManager implements Loader {
                 test: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
                 loader: LoaderId.MODULE,
             },
-            {
-                test: ['.conf'], loader: LoaderId.CONF,
-            },
-            {
-                test: ['.json'], loader: LoaderId.JSON,
-            },
-            {
-                test: ['.yml', '.yaml'], loader: LoaderId.YAML,
-            },
+            { test: ['.conf'], loader: LoaderId.CONF },
+            { test: ['.json'], loader: LoaderId.JSON },
+            { test: ['.yml', '.yaml'], loader: LoaderId.YAML },
         ];
     }
 
@@ -78,17 +72,17 @@ export class LoaderManager implements Loader {
         }
 
         const info = pathToLocatorInfo(input);
-        for (let i = 0; i < this.rules.length; i++) {
-            const { test } = this.rules[i] as Rule;
+        for (const rule of this.rules) {
+            const { test } = rule;
             if (Array.isArray(test)) {
                 if (
                     info.extension &&
-                    test.indexOf(info.extension) !== -1
+                    test.includes(info.extension)
                 ) {
-                    return this.rules[i].loader;
+                    return rule.loader;
                 }
             } else if (test.test(buildFilePath(info))) {
-                return this.rules[i].loader;
+                return rule.loader;
             }
         }
 

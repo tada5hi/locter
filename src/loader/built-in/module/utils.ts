@@ -11,7 +11,6 @@ import type { LoaderFilterFn, ModuleExport } from './type';
 type ESModule = { [key: string]: any, __esModule: boolean };
 export function isESModule(input: unknown) : input is ESModule {
     return isObject(input) &&
-        // eslint-disable-next-line no-underscore-dangle
         typeof input.__esModule !== 'undefined';
 }
 
@@ -36,16 +35,11 @@ export function toModuleRecord(
     }
 
     const output = Object.create(null, {
-        __esModule: {
-            value: true,
-        },
-        [Symbol.toStringTag]: {
-            value: 'Module',
-        },
+        __esModule: { value: true },
+        [Symbol.toStringTag]: { value: 'Module' },
     });
 
     if (isObject(data)) {
-        // eslint-disable-next-line no-restricted-syntax
         for (const key in data) {
             if (hasOwnProperty(output, key)) {
                 continue;
@@ -83,11 +77,11 @@ export function getModuleExport(
     filterFn: LoaderFilterFn,
 ): ModuleExport | undefined {
     const keys = Object.keys(data);
-    for (let i = 0; i < keys.length; i++) {
-        if (filterFn(keys[i] as string, data[keys[i] as string])) {
+    for (const key of keys) {
+        if (filterFn(key as string, data[key as string])) {
             return {
-                key: keys[i] as string,
-                value: data[keys[i] as string],
+                key: key as string,
+                value: data[key as string],
             };
         }
     }

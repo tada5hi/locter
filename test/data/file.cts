@@ -7,6 +7,4 @@
 
 export const bar : string = 'baz';
 
-module.exports = {
-    bar
-}
+module.exports = { bar };

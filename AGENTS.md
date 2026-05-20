@@ -2,7 +2,7 @@
 
 # Locter — Agent Guide
 
-Locter is a small Node.js/TypeScript library that locates files via glob patterns and loads them on demand. It bundles built-in loaders for `.json`, `.yml`/`.yaml`, `.conf`, and JavaScript/TypeScript modules (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`), and exposes a singleton `LoaderManager` that can be extended with custom loaders.
+Locter is a small Node.js/TypeScript library that locates files via glob patterns and loads them on demand. It bundles built-in loaders for `.json`, `.yml`/`.yaml`, `.conf`, and JavaScript/TypeScript modules (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`), and exposes a singleton `LoaderManager` that can be extended with custom loaders. The package ships as ESM-only.
 
 ## Quick Reference
 
@@ -11,16 +11,19 @@ Locter is a small Node.js/TypeScript library that locates files via glob pattern
 npm install
 
 # Development
-npm run build        # rimraf dist && tsc (types) && rollup (esm + cjs)
-npm test             # jest via test/jest.config.js
-npm run lint         # eslint src/
-npm run lint:fix     # eslint src/ --fix
-npm run commit       # interactive commitizen prompt
+npm run build           # tsc --noEmit (typecheck) + tsdown (emit dist/index.mjs + .d.mts)
+npm run build:types     # tsc --noEmit (typecheck only)
+npm run build:js        # tsdown (emit dist/index.mjs + .d.mts)
+npm test                # vitest run via test/vitest.config.ts
+npm run test:coverage   # vitest run with v8 coverage
+npm run lint            # eslint (flat config in eslint.config.js)
+npm run lint:fix        # eslint --fix
 ```
 
-- **Node.js**: `>=22.0.0` (CI uses Node 22)
+- **Node.js**: `>=22.0.0` (CI runs on Node 24)
 - **Package manager**: npm (lockfile committed)
-- **Build orchestration**: `tsc --emitDeclarationOnly` for `.d.ts`, Rollup + `@rollup/plugin-node-resolve` + SWC for `.cjs`/`.mjs`
+- **Module system**: ESM-only (`"type": "module"`)
+- **Build**: TypeScript only typechecks (`noEmit: true`); `tsdown` bundles `src/index.ts` to `dist/index.mjs` and emits `dist/index.d.mts`
 
 ## Documentation
 
@@ -30,8 +33,8 @@ No standalone documentation site. Public usage examples live in `README.MD`. Whe
 
 - **[Project Structure](.agents/structure.md)** — `src/` layout (locator, loader, utils), public `package.json` exports, and module responsibilities
 - **[Architecture](.agents/architecture.md)** — Locator/Loader split, the `Loader` port + rule-based dispatcher, and the `LoaderManager` singleton
-- **[Testing](.agents/testing.md)** — Jest + `@swc/jest`, `test/data/` fixture files, and the per-file-extension test suites
-- **[Conventions](.agents/conventions.md)** — Conventional Commits via commitlint/husky, ESLint config, release-please, and CI
+- **[Testing](.agents/testing.md)** — Vitest + `test/data/` fixture files, and the per-file-extension test suites
+- **[Conventions](.agents/conventions.md)** — Conventional Commits via commitlint/husky, flat ESLint config, release-please + monoship, and CI
 
 ## Commits
 

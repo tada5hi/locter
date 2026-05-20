@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { describe, expect, it } from 'vitest';
 import { isJestRuntimeEnvironment, removeFileNameExtension } from '../../src';
 
 describe('src/utils/*.ts', () => {
@@ -22,8 +23,8 @@ describe('src/utils/*.ts', () => {
         expect(data).toEqual('test');
     });
 
-    it('should detect environment', () => {
-        const jestEnv = isJestRuntimeEnvironment();
-        expect(jestEnv).toEqual(true);
+    it('should detect jest runtime environment', () => {
+        // Running under vitest, so this must be false.
+        expect(isJestRuntimeEnvironment()).toEqual(false);
     });
 });
