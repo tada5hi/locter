@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
     LoaderManager,
     getModuleExport,
-    load, 
+    load,
     loadSync,
 } from '../../../src';
 import { LoaderId } from '../../../src/loader/constants';

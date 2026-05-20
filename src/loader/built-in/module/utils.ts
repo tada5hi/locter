@@ -11,7 +11,6 @@ import type { LoaderFilterFn, ModuleExport } from './type';
 type ESModule = { [key: string]: any, __esModule: boolean };
 export function isESModule(input: unknown) : input is ESModule {
     return isObject(input) &&
-         
         typeof input.__esModule !== 'undefined';
 }
 

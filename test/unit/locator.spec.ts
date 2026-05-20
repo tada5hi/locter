@@ -8,9 +8,9 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-    locate, 
-    locateMany, 
-    locateManySync, 
+    locate,
+    locateMany,
+    locateManySync,
     locateSync,
 } from '../../src';
 import type { LocatorInfo } from '../../src';
