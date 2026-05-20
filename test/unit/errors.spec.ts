@@ -15,6 +15,7 @@ import {
     LocterUnknownExtensionError,
     load,
     loadSync,
+    setModuleLoader,
     wrapLoaderError,
 } from '../../src';
 
@@ -91,5 +92,39 @@ describe('src/errors/**', () => {
 
         expect(wrapped).toBe(original);
         expect(wrapped.path).toEqual('/x');
+    });
+
+    it('should not fall back to jiti when the module load throws SyntaxError', async () => {
+        const syntaxErr = new SyntaxError('bad code');
+        const refErr = new ReferenceError('missing');
+
+        setModuleLoader({
+            load: () => { throw syntaxErr; },
+            loadSync: () => { throw refErr; },
+        });
+
+        try {
+            let asyncError: unknown;
+            try {
+                await load('any-id');
+            } catch (e) {
+                asyncError = e;
+            }
+            expect(asyncError).toBeInstanceOf(LocterLoadError);
+            expect((asyncError as LocterLoadError).cause).toBe(syntaxErr);
+            expect((asyncError as LocterLoadError).path).toEqual('any-id');
+
+            let syncError: unknown;
+            try {
+                loadSync('any-id');
+            } catch (e) {
+                syncError = e;
+            }
+            expect(syncError).toBeInstanceOf(LocterLoadError);
+            expect((syncError as LocterLoadError).cause).toBe(refErr);
+            expect((syncError as LocterLoadError).path).toEqual('any-id');
+        } finally {
+            setModuleLoader({ load: undefined, loadSync: undefined });
+        }
     });
 });

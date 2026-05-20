@@ -8,7 +8,7 @@
 import { createJiti } from 'jiti';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { wrapLoaderError } from '../../../errors';
+import { LocterError, wrapLoaderError } from '../../../errors';
 import type { LocatorInfo } from '../../../locator';
 import {
     buildFilePath,
@@ -34,6 +34,17 @@ import { toModuleRecord } from './utils';
 const require = createRequire(import.meta.url);
 
 type Jiti = ReturnType<typeof createJiti>;
+
+function originalPath(data: LocatorInfo | string) : string {
+    return typeof data === 'string' ? data : buildFilePath(data);
+}
+
+function isUnrecoverableError(error: unknown) : boolean {
+    const underlying = error instanceof LocterError ? error.cause : error;
+    return underlying instanceof SyntaxError ||
+        underlying instanceof ReferenceError ||
+        isTypeScriptError(underlying);
+}
 
 export class ModuleLoader implements Loader {
     protected instance : Jiti;
@@ -65,12 +76,8 @@ export class ModuleLoader implements Loader {
         try {
             output = await this.load(input);
         } catch (e) {
-            if (
-                e instanceof SyntaxError ||
-                e instanceof ReferenceError ||
-                isTypeScriptError(e)
-            ) {
-                throw wrapLoaderError(e, input);
+            if (isUnrecoverableError(e)) {
+                throw e;
             }
 
             // jiti + ts-node
@@ -91,12 +98,8 @@ export class ModuleLoader implements Loader {
         try {
             output = this.loadSync(input);
         } catch (e) {
-            if (
-                e instanceof SyntaxError ||
-                e instanceof ReferenceError ||
-                isTypeScriptError(e)
-            ) {
-                throw wrapLoaderError(e, input);
+            if (isUnrecoverableError(e)) {
+                throw e;
             }
 
             output = this.instance(input);
@@ -142,7 +145,7 @@ export class ModuleLoader implements Loader {
                 });
             }
 
-            throw wrapLoaderError(e, id);
+            throw wrapLoaderError(e, originalPath(data));
         }
     }
 
@@ -159,7 +162,7 @@ export class ModuleLoader implements Loader {
 
             return require(id);
         } catch (e) {
-            throw wrapLoaderError(e, id);
+            throw wrapLoaderError(e, originalPath(data));
         }
     }
 
