@@ -24,7 +24,12 @@ import {
     isTypeScriptError,
 } from '../../../utils';
 import type { Loader } from '../../type';
-import type { ModuleLoadOptions } from './type';
+import type {
+    ModuleLoadFn,
+    ModuleLoadOptions,
+    ModuleLoadSyncFn,
+    ModuleLoaderOptions,
+} from './type';
 import { toModuleRecord } from './utils';
 
 const require = createRequire(import.meta.url);
@@ -34,10 +39,25 @@ type Jiti = ReturnType<typeof createJiti>;
 export class ModuleLoader implements Loader {
     protected instance : Jiti;
 
-    constructor() {
+    protected loadFn?: ModuleLoadFn;
+
+    protected loadSyncFn?: ModuleLoadSyncFn;
+
+    constructor(options: ModuleLoaderOptions = {}) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.instance = createJiti(undefined, { extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'] });
+        this.loadFn = options.load;
+        this.loadSyncFn = options.loadSync;
+    }
+
+    configure(options: ModuleLoaderOptions) : void {
+        if ('load' in options) {
+            this.loadFn = options.load;
+        }
+        if ('loadSync' in options) {
+            this.loadSyncFn = options.loadSync;
+        }
     }
 
     async execute(input: string) {
@@ -95,6 +115,10 @@ export class ModuleLoader implements Loader {
         const id = this.build(data, options);
 
         try {
+            if (this.loadFn) {
+                return await this.loadFn(id);
+            }
+
             // segmentation fault
             // issue: https://github.com/nodejs/node/issues/35889
             if (isJestRuntimeEnvironment()) {
@@ -140,6 +164,10 @@ export class ModuleLoader implements Loader {
         const id = this.build(data, options);
 
         try {
+            if (this.loadSyncFn) {
+                return this.loadSyncFn(id);
+            }
+
             return require(id);
         } catch (e) {
             /* istanbul ignore next */

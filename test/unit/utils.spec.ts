@@ -6,7 +6,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { isJestRuntimeEnvironment, removeFileNameExtension } from '../../src';
+import {
+    isJestRuntimeEnvironment,
+    isVitestRuntimeEnvironment,
+    removeFileNameExtension,
+} from '../../src';
 
 describe('src/utils/*.ts', () => {
     it('should remove file name extension', () => {
@@ -26,5 +30,9 @@ describe('src/utils/*.ts', () => {
     it('should detect jest runtime environment', () => {
         // Running under vitest, so this must be false.
         expect(isJestRuntimeEnvironment()).toEqual(false);
+    });
+
+    it('should detect vitest runtime environment', () => {
+        expect(isVitestRuntimeEnvironment()).toEqual(true);
     });
 });

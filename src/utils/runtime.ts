@@ -10,6 +10,11 @@ export function isJestRuntimeEnvironment() : boolean {
         process.env.JEST_WORKER_ID !== undefined;
 }
 
+export function isVitestRuntimeEnvironment() : boolean {
+    return typeof process !== 'undefined' &&
+        process.env.VITEST === 'true';
+}
+
 export function isTsNodeRuntimeEnvironment(): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

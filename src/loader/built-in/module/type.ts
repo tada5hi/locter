@@ -15,3 +15,23 @@ export type ModuleExport = {
 export type ModuleLoadOptions = {
     withFilePrefix?: boolean
 };
+
+export type ModuleLoadFn = (id: string) => unknown | Promise<unknown>;
+
+export type ModuleLoadSyncFn = (id: string) => unknown;
+
+export type ModuleLoaderOptions = {
+    /**
+     * Custom asynchronous module loader. When set, this replaces the
+     * built-in `await import(id)` call. Useful for test runners (e.g. Vitest)
+     * where dynamic imports inside `node_modules/locter` would otherwise
+     * escape the runner's module graph — defining this in user space lets
+     * the runner rewrite the `import()`.
+     */
+    load?: ModuleLoadFn,
+    /**
+     * Custom synchronous module loader. When set, this replaces the built-in
+     * `require(id)` call.
+     */
+    loadSync?: ModuleLoadSyncFn
+};
