@@ -270,10 +270,11 @@ The 3.0 release reshapes a few public surfaces. The list below is exhaustive —
 + await locate('config.json', { cwd: process.cwd() });
 
   // 2. LocatorInfo.path now holds the FULL file path (it was the
-  //    containing directory in 2.x). Use .directory for the containing dir.
-- const filePath = path.join(info.path, info.name + info.extension);
-+ const filePath = info.path;            // full file path
-+ const dir      = info.directory;       // containing directory
+  //    containing directory in 2.x). buildFilePath(info) still works in
+  //    both versions but is now a near-identity for LocatorInfo inputs.
+- const filePath = buildFilePath(info);  // 2.x: composed from .path + .name + .extension
++ const filePath = info.path;            // 3.x: just the path field
++ const dir      = info.directory;       // 3.x: containing directory (the old `info.path`)
 
   // 3. load() / loadSync() (and every built-in loader) now throw
   //    LocterError subclasses instead of generic Error / ebec BaseError.
