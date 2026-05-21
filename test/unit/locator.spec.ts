@@ -21,7 +21,7 @@ describe('src/locator.ts', () => {
     it('should locate directory', async () => {
         let locatorInfo = await locate(['data'], {
             onlyDirectories: true,
-            path: path.join(import.meta.dirname, '..'),
+            cwd: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo).toBeDefined();
         if (locatorInfo) {
@@ -30,7 +30,7 @@ describe('src/locator.ts', () => {
 
         locatorInfo = locateSync(['unit'], {
             onlyDirectories: true,
-            path: path.join(import.meta.dirname, '..'),
+            cwd: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo).toBeDefined();
         if (locatorInfo) {
@@ -41,21 +41,21 @@ describe('src/locator.ts', () => {
     it('should locate directories', async () => {
         let locatorInfo = await locateMany(['*'], {
             onlyDirectories: true,
-            path: path.join(import.meta.dirname, '..'),
+            cwd: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo.length).toEqual(2);
         expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
 
         locatorInfo = locateManySync(['*'], {
             onlyDirectories: true,
-            path: path.join(import.meta.dirname, '..'),
+            cwd: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo.length).toEqual(2);
         expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
     });
 
     it('should locate .[cm]js file', async () => {
-        let locatorInfo = await locate(['file.[cf]js'], { path: [basePath] });
+        let locatorInfo = await locate(['file.[cf]js'], { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             directory: basePath,
@@ -64,7 +64,7 @@ describe('src/locator.ts', () => {
             path: path.join(basePath, 'file.cjs'),
         } as LocatorInfo);
 
-        locatorInfo = locateSync(['file.[mf]js'], { path: [basePath] });
+        locatorInfo = locateSync(['file.[mf]js'], { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             directory: basePath,
@@ -89,17 +89,17 @@ describe('src/locator.ts', () => {
                 path: path.join(basePath, 'file.mts'),
             },
         ];
-        let locatorInfo = await locateMany(['file.[cm]ts'], { path: [basePath] });
+        let locatorInfo = await locateMany(['file.[cm]ts'], { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual(files);
 
-        locatorInfo = locateManySync(['file.[cm]ts'], { path: [basePath] });
+        locatorInfo = locateManySync(['file.[cm]ts'], { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual(files);
     });
 
     it('should locate .json file', async () => {
-        let locatorInfo = await locate('file.json', { path: [basePath] });
+        let locatorInfo = await locate('file.json', { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             directory: basePath,
@@ -108,7 +108,7 @@ describe('src/locator.ts', () => {
             path: path.join(basePath, 'file.json'),
         } as LocatorInfo);
 
-        locatorInfo = locateSync('file.json', { path: [basePath] });
+        locatorInfo = locateSync('file.json', { cwd: [basePath] });
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             directory: basePath,
@@ -119,20 +119,20 @@ describe('src/locator.ts', () => {
     });
 
     it('should not locate file', async () => {
-        const locatorInfo = await locate('file.foo', { path: [basePath] });
+        const locatorInfo = await locate('file.foo', { cwd: [basePath] });
         expect(locatorInfo).toBeUndefined();
     });
 
     it('should not locate file sync', () => {
-        const locatorInfo = locateSync('file.foo', { path: [basePath] });
+        const locatorInfo = locateSync('file.foo', { cwd: [basePath] });
         expect(locatorInfo).toBeUndefined();
     });
 
     it('should ignore dotfiles by default with wildcard patterns', async () => {
-        const asyncResult = await locateMany('*', { path: [basePath] });
+        const asyncResult = await locateMany('*', { cwd: [basePath] });
         expect(asyncResult.map((r) => r.name)).not.toContain('.hidden');
 
-        const syncResult = locateManySync('*', { path: [basePath] });
+        const syncResult = locateManySync('*', { cwd: [basePath] });
         expect(syncResult.map((r) => r.name)).not.toContain('.hidden');
     });
 
@@ -144,10 +144,10 @@ describe('src/locator.ts', () => {
             path: path.join(basePath, '.hidden'),
         };
 
-        const asyncResult = await locateMany('*', { path: [basePath], dot: true });
+        const asyncResult = await locateMany('*', { cwd: [basePath], dot: true });
         expect(asyncResult).toContainEqual(expected);
 
-        const syncResult = locateManySync('*', { path: [basePath], dot: true });
+        const syncResult = locateManySync('*', { cwd: [basePath], dot: true });
         expect(syncResult).toContainEqual(expected);
     });
 });

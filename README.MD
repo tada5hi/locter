@@ -97,13 +97,13 @@ A synchronous variant is also available: `locateSync`
 
 `locate` / `locateMany` (and their sync variants) accept an options object:
 
-| Option            | Type                    | Default       | Notes                                                  |
-|-------------------|-------------------------|---------------|--------------------------------------------------------|
-| `path`            | `string \| string[]`    | `process.cwd()` | Working directory (or directories) the pattern is resolved against |
-| `ignore`          | `string \| string[]`    | `[]`          | Patterns to exclude                                    |
-| `onlyFiles`       | `boolean`               | `true`        | Match files only                                       |
-| `onlyDirectories` | `boolean`               | `false`       | Match directories only                                 |
-| `dot`             | `boolean`               | `false`       | Match dotfiles (e.g. `.env`, `.npmrc`) for wildcard patterns |
+| Option            | Type                    | Default         | Notes                                                  |
+|-------------------|-------------------------|-----------------|--------------------------------------------------------|
+| `cwd`             | `string \| string[]`    | `process.cwd()` | Working directory (or directories) the pattern is resolved against |
+| `ignore`          | `string \| string[]`    | `[]`            | Patterns to exclude                                    |
+| `onlyFiles`       | `boolean`               | `true`          | Match files only                                       |
+| `onlyDirectories` | `boolean`               | `false`         | Match directories only                                 |
+| `dot`             | `boolean`               | `false`         | Match dotfiles (e.g. `.env`, `.npmrc`) for wildcard patterns |
 
 ### Loader
 

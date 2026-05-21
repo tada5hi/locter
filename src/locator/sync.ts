@@ -19,7 +19,7 @@ export function locateManySync(
     const items : LocatorInfo[] = [];
 
     for (const p of patterns) {
-        for (const cwd of opts.path) {
+        for (const cwd of opts.cwd) {
             const files = fg.sync(p, {
                 absolute: true,
                 cwd,
@@ -46,7 +46,7 @@ export function locateSync(
     const opts = buildLocatorOptions(options);
 
     for (const p of patterns) {
-        for (const cwd of opts.path) {
+        for (const cwd of opts.cwd) {
             const files = fg.sync(p, {
                 absolute: true,
                 cwd,

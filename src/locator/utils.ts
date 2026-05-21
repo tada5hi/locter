@@ -16,16 +16,16 @@ export function buildLocatorPatterns(pattern: string | string[]) : string[] {
 }
 
 export function buildLocatorOptions(options: LocatorOptionsInput = {}) : LocatorOptions {
-    const paths = options.path ?
-        toArray(options.path) :
+    const cwd = options.cwd ?
+        toArray(options.cwd) :
         [];
 
     const ignore = options.ignore ?
         toArray(options.ignore) :
         [];
 
-    if (paths.length === 0) {
-        paths.push(process.cwd());
+    if (cwd.length === 0) {
+        cwd.push(process.cwd());
     }
 
     let onlyFiles : boolean;
@@ -43,7 +43,7 @@ export function buildLocatorOptions(options: LocatorOptionsInput = {}) : Locator
     }
 
     return {
-        path: paths,
+        cwd,
         ignore,
         onlyDirectories,
         onlyFiles,

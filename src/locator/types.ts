@@ -13,14 +13,14 @@ export type LocatorInfo = {
 };
 
 export type LocatorOptions = {
-    path: string[],
+    cwd: string[],
     ignore: string[],
     onlyFiles: boolean,
     onlyDirectories: boolean,
     dot: boolean,
 };
 
-export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'path' | 'ignore'>> & {
-    path?: string | string[],
+export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'cwd' | 'ignore'>> & {
+    cwd?: string | string[],
     ignore?: string | string[],
 };

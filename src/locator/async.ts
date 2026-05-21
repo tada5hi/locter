@@ -19,7 +19,7 @@ export async function locateMany(
     const items : LocatorInfo[] = [];
 
     for (const p of patterns) {
-        for (const cwd of opts.path) {
+        for (const cwd of opts.cwd) {
             const files = await fg(p, {
                 absolute: true,
                 cwd,
@@ -46,7 +46,7 @@ export async function locate(
     const opts = buildLocatorOptions(options);
 
     for (const p of patterns) {
-        for (const cwd of opts.path) {
+        for (const cwd of opts.cwd) {
             const files = await fg(p, {
                 absolute: true,
                 cwd,
