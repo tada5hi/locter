@@ -5,6 +5,34 @@
 
 * **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
 
+## [3.0.0](https://github.com/tada5hi/locter/compare/v2.2.1...v3.0.0) (2026-05-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* locter now depends on `flat@^6` instead of `flat@^5`. Consumers that explicitly install `flat` themselves should update.
+* **locator:** `LocatorOptions.path` / `LocatorOptionsInput.path` are renamed to `cwd`. Update call sites:
+* **errors:** load() / loadSync() (and every built-in loader) now throw LocterError subclasses instead of generic Error / ebec BaseError. The ebec package is replaced by @ebec/core.
+* **locator:** `LocatorInfo.path` is removed; use `directory` for the containing directory or `filePath` for the full path to the file.
+* Package is now ESM-only. The CJS entry point (dist/index.cjs / require('locter')) has been removed.
+
+### Features
+
+* **errors:** cross-realm instanceof via @ebec/core markers ([117b670](https://github.com/tada5hi/locter/commit/117b670406dd4db7e7ad3049171fab05b5f73f77))
+* **errors:** typed error hierarchy for load() failures ([#833](https://github.com/tada5hi/locter/issues/833)) ([cccb95b](https://github.com/tada5hi/locter/commit/cccb95b0b0a35d2e54c986f3453fc897154d9a93))
+* **loader:** add `loadPackageField` helper ([#837](https://github.com/tada5hi/locter/issues/837)) ([9c2961b](https://github.com/tada5hi/locter/commit/9c2961b562ebb2bc55bd922839aed3004391be47))
+* **loader:** allow injecting a custom module load/loadSync (closes [#826](https://github.com/tada5hi/locter/issues/826)) ([#831](https://github.com/tada5hi/locter/issues/831)) ([939a777](https://github.com/tada5hi/locter/commit/939a77745fa9ee23f48d96d952b76d34057af5fc))
+* **locator:** add `dot` option to include dotfiles (closes [#481](https://github.com/tada5hi/locter/issues/481)) ([#834](https://github.com/tada5hi/locter/issues/834)) ([e10be90](https://github.com/tada5hi/locter/commit/e10be902d9fcdb52631ba3b3b60ffc429cbb902f))
+* **locator:** add `locateUp` for parent-directory walk discovery ([#835](https://github.com/tada5hi/locter/issues/835)) ([d26d754](https://github.com/tada5hi/locter/commit/d26d7540603f49baf6a283aac7bfd812310bee92))
+* **locator:** rename LocatorInfo.path to directory and add filePath ([#832](https://github.com/tada5hi/locter/issues/832)) ([1084a58](https://github.com/tada5hi/locter/commit/1084a58df3d419451b6e6c7364d55194087a99c8))
+* **locator:** rename LocatorOptions.path to .cwd ([c1bfef2](https://github.com/tada5hi/locter/commit/c1bfef254675a813c70450458f8a250c7aa57ed2))
+
+
+### Miscellaneous Chores
+
+* modernize toolchain (esm-only, tsdown, vitest, eslint 10) ([#827](https://github.com/tada5hi/locter/issues/827)) ([c38df1f](https://github.com/tada5hi/locter/commit/c38df1f207da46b26be9b1656b06b0b2a3f6c076))
+* v3 release prep — flat 6, YAMLLoader export, migration guide ([#838](https://github.com/tada5hi/locter/issues/838)) ([0e442da](https://github.com/tada5hi/locter/commit/0e442daa5e0e601a7c2bdbaf3b43f89ec11cb254))
+
 ## [2.2.1](https://github.com/tada5hi/locter/compare/v2.2.0...v2.2.1) (2025-11-24)
 
 
