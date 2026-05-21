@@ -5,6 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocterError } from './base';
+import { hasInstanceof, markInstanceof } from '@ebec/core';
+import { LocterError, type LocterErrorInput } from './base';
 
-export class LocterLoadError extends LocterError {}
+export const LOCTER_LOAD_ERROR_MARKER = Symbol.for('@locter/load-error');
+
+export class LocterLoadError extends LocterError {
+    static override [Symbol.hasInstance](input: unknown) : boolean {
+        return hasInstanceof(input, LOCTER_LOAD_ERROR_MARKER);
+    }
+
+    constructor(input: LocterErrorInput = {}) {
+        super(input);
+        markInstanceof(this, LOCTER_LOAD_ERROR_MARKER);
+    }
+}

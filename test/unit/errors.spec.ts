@@ -5,9 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { markInstanceof } from '@ebec/core';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+    LOCTER_ERROR_MARKER,
+    LOCTER_LOAD_ERROR_MARKER,
+    LOCTER_NOT_FOUND_ERROR_MARKER,
+    LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER,
     LoaderManager,
     LocterError,
     LocterLoadError,
@@ -92,6 +97,40 @@ describe('src/errors/**', () => {
 
         expect(wrapped).toBe(original);
         expect(wrapped.path).toEqual('/x');
+    });
+
+    it('should match via @ebec/core marker chain regardless of prototype chain', () => {
+        // Simulate an error originating from a different bundle of locter
+        // (e.g. duplicate npm install). Its prototype is unrelated to our
+        // LocterError class, but it carries the same `@instanceof` markers.
+        const alien = Object.create(Error.prototype) as object;
+        markInstanceof(alien, LOCTER_ERROR_MARKER);
+        markInstanceof(alien, LOCTER_NOT_FOUND_ERROR_MARKER);
+
+        expect(alien instanceof LocterError).toBe(true);
+        expect(alien instanceof LocterNotFoundError).toBe(true);
+        expect(alien instanceof LocterLoadError).toBe(false);
+        expect(alien instanceof LocterUnknownExtensionError).toBe(false);
+    });
+
+    it('should accumulate ancestor markers on subclass instances', () => {
+        const loadErr = new LocterLoadError('x');
+        const unknownExtErr = new LocterUnknownExtensionError('y');
+
+        // Each subclass instance carries its own marker AND the base marker —
+        // so a parent-class guard fast-paths a subclass.
+        expect(loadErr instanceof LocterError).toBe(true);
+        expect(loadErr instanceof LocterLoadError).toBe(true);
+        expect(loadErr instanceof LocterNotFoundError).toBe(false);
+
+        expect(unknownExtErr instanceof LocterError).toBe(true);
+        expect(unknownExtErr instanceof LocterUnknownExtensionError).toBe(true);
+        expect(unknownExtErr instanceof LocterLoadError).toBe(false);
+
+        // Markers are reachable from the call sites that import them
+        // (regression: keep them exported for cross-realm consumers).
+        expect(LOCTER_LOAD_ERROR_MARKER).toBe(Symbol.for('@locter/load-error'));
+        expect(LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER).toBe(Symbol.for('@locter/unknown-extension-error'));
     });
 
     it('should not fall back to jiti when the module load throws SyntaxError', async () => {
