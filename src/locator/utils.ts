@@ -47,6 +47,7 @@ export function buildLocatorOptions(options: LocatorOptionsInput = {}) : Locator
         ignore,
         onlyDirectories,
         onlyFiles,
+        dot: options.dot ?? false,
     };
 }
 

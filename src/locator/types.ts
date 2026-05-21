@@ -16,7 +16,8 @@ export type LocatorOptions = {
     path: string[],
     ignore: string[],
     onlyFiles: boolean,
-    onlyDirectories: boolean
+    onlyDirectories: boolean,
+    dot: boolean,
 };
 
 export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'path' | 'ignore'>> & {

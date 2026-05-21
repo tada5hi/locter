@@ -93,6 +93,18 @@ import { locate } from 'locter';
 
 A synchronous variant is also available: `locateSync`
 
+**Options**
+
+`locate` / `locateMany` (and their sync variants) accept an options object:
+
+| Option            | Type                    | Default       | Notes                                                  |
+|-------------------|-------------------------|---------------|--------------------------------------------------------|
+| `path`            | `string \| string[]`    | `process.cwd()` | Working directory (or directories) the pattern is resolved against |
+| `ignore`          | `string \| string[]`    | `[]`          | Patterns to exclude                                    |
+| `onlyFiles`       | `boolean`               | `true`        | Match files only                                       |
+| `onlyDirectories` | `boolean`               | `false`       | Match directories only                                 |
+| `dot`             | `boolean`               | `false`       | Match dotfiles (e.g. `.env`, `.npmrc`) for wildcard patterns |
+
 ### Loader
 
 The `load` method can be used to load a file/module in an asynchronous fashion.
