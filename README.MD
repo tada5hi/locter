@@ -189,9 +189,9 @@ Two loaders are predefined from scratch and already registered:
 import { loadPackageField } from 'locter';
 
 (async () => {
-    const value = await loadPackageField<{ entry: string }>('myapp', {
-        cwd: process.cwd(),
-    });
+    const cwd = process.cwd();
+
+    const value = await loadPackageField<{ entry: string }>('myapp', { cwd });
     // → the value of the `myapp` field, or undefined if package.json
     //   or the field is absent.
 
