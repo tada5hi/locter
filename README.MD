@@ -158,6 +158,38 @@ registerLoader(['.ext'], {
 })
 ```
 
+### Errors
+
+`load` / `loadSync` (and every built-in loader) throw a typed subclass of
+`LocterError`, so callers can distinguish failure modes without substring
+matching on `.message`:
+
+| Class                          | When it's thrown                                        |
+|--------------------------------|---------------------------------------------------------|
+| `LocterNotFoundError`          | File or module does not exist (`ENOENT`, `MODULE_NOT_FOUND`, `ERR_MODULE_NOT_FOUND`) |
+| `LocterLoadError`              | A loader threw — parse error, runtime/eval error, etc.  |
+| `LocterUnknownExtensionError`  | No rule matched the file's extension                    |
+| `LocterError`                  | Base class; matches all of the above                    |
+
+Each error exposes the offending `path` and preserves the underlying error
+on `cause`:
+
+```typescript
+import { load, LocterNotFoundError, LocterLoadError } from 'locter';
+
+try {
+    await load('config.json');
+} catch (err) {
+    if (err instanceof LocterNotFoundError) {
+        console.error(`Config file not found: ${err.path}`);
+    } else if (err instanceof LocterLoadError) {
+        console.error(`Failed to parse config: ${err.cause}`);
+    } else {
+        throw err;
+    }
+}
+```
+
 ### Runtime environments
 
 Locter ships with two runtime detection helpers:

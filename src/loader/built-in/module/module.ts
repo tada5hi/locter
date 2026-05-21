@@ -5,19 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BaseError } from 'ebec';
 import { createJiti } from 'jiti';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { LocterError, wrapLoaderError } from '../../../errors';
 import type { LocatorInfo } from '../../../locator';
 import {
     buildFilePath,
     isLocatorInfo,
 } from '../../../locator';
 import {
-    handleException,
     hasStringProperty,
-    isFilePath, 
+    isFilePath,
     isJestRuntimeEnvironment,
     isObject,
     isTsNodeRuntimeEnvironment,
@@ -35,6 +34,17 @@ import { toModuleRecord } from './utils';
 const require = createRequire(import.meta.url);
 
 type Jiti = ReturnType<typeof createJiti>;
+
+function originalPath(data: LocatorInfo | string) : string {
+    return typeof data === 'string' ? data : buildFilePath(data);
+}
+
+function isUnrecoverableError(error: unknown) : boolean {
+    const underlying = error instanceof LocterError ? error.cause : error;
+    return underlying instanceof SyntaxError ||
+        underlying instanceof ReferenceError ||
+        isTypeScriptError(underlying);
+}
 
 export class ModuleLoader implements Loader {
     protected instance : Jiti;
@@ -66,11 +76,7 @@ export class ModuleLoader implements Loader {
         try {
             output = await this.load(input);
         } catch (e) {
-            if (
-                e instanceof SyntaxError ||
-                e instanceof ReferenceError ||
-                isTypeScriptError(e)
-            ) {
+            if (isUnrecoverableError(e)) {
                 throw e;
             }
 
@@ -92,11 +98,7 @@ export class ModuleLoader implements Loader {
         try {
             output = this.loadSync(input);
         } catch (e) {
-            if (
-                e instanceof SyntaxError ||
-                e instanceof ReferenceError ||
-                isTypeScriptError(e)
-            ) {
+            if (isUnrecoverableError(e)) {
                 throw e;
             }
 
@@ -129,31 +131,21 @@ export class ModuleLoader implements Loader {
         } catch (e) {
             /* istanbul ignore next */
             if (
+                !options.withFilePrefix &&
                 isObject(e) &&
-                hasStringProperty(e, 'code')
+                hasStringProperty(e, 'code') &&
+                (
+                    e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                    e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                )
             ) {
-                if (
-                    !options.withFilePrefix &&
-                    (
-                        e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
-                        e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
-                    )
-                ) {
-                    return this.load(data, {
-                        ...options,
-                        withFilePrefix: true,
-                    });
-                }
-
-                throw new BaseError({
-                    code: e.code,
-                    message: hasStringProperty(e, 'message') ? e.message : undefined,
-                    stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
+                return this.load(data, {
+                    ...options,
+                    withFilePrefix: true,
                 });
             }
 
-            /* istanbul ignore next */
-            return handleException(e);
+            throw wrapLoaderError(e, originalPath(data));
         }
     }
 
@@ -170,19 +162,7 @@ export class ModuleLoader implements Loader {
 
             return require(id);
         } catch (e) {
-            /* istanbul ignore next */
-            if (
-                isObject(e) &&
-                hasStringProperty(e, 'code')
-            ) {
-                throw new BaseError({
-                    code: e.code,
-                    message: hasStringProperty(e, 'message') ? e.message : undefined,
-                    stack: hasStringProperty(e, 'stack') ? e.stack : undefined,
-                });
-            }
-
-            return handleException(e);
+            throw wrapLoaderError(e, originalPath(data));
         }
     }
 

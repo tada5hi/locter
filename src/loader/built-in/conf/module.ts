@@ -10,8 +10,9 @@
 import { destr } from 'destr';
 import flat from 'flat';
 import fs from 'node:fs';
+import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
-import { handleException, isSafeObjectKey } from '../../../utils';
+import { isSafeObjectKey } from '../../../utils';
 import type { Loader } from '../../type';
 
 export class ConfLoader implements Loader {
@@ -23,7 +24,7 @@ export class ConfLoader implements Loader {
 
             return this.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
@@ -35,7 +36,7 @@ export class ConfLoader implements Loader {
 
             return this.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
