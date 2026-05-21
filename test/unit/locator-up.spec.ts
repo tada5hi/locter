@@ -77,4 +77,25 @@ describe('src/locator/up.ts', () => {
         const syncResult = locateUpSync('definitely-not-here.json', { cwd: deep });
         expect(syncResult).toBeUndefined();
     });
+
+    it('should resolve a relative `stopAt` against `cwd`, not process.cwd()', async () => {
+        const expectedPath = path.join(upBase, 'up.config.json');
+
+        // `stopAt: '../..'` from `cwd: deep` should resolve to `upBase` and let
+        // the walk find the file. The previous implementation resolved against
+        // process.cwd() instead, which would cap at an unrelated directory.
+        const asyncResult = await locateUp('up.config.json', { cwd: deep, stopAt: '../..' });
+        expect(asyncResult?.path).toEqual(expectedPath);
+
+        const syncResult = locateUpSync('up.config.json', { cwd: deep, stopAt: '../..' });
+        expect(syncResult?.path).toEqual(expectedPath);
+
+        // `stopAt: '..'` resolves to `upBase/nested` → cap before reaching
+        // `upBase` → no match. Confirms the resolution is relative to `cwd`.
+        const asyncCapped = await locateUp('up.config.json', { cwd: deep, stopAt: '..' });
+        expect(asyncCapped).toBeUndefined();
+
+        const syncCapped = locateUpSync('up.config.json', { cwd: deep, stopAt: '..' });
+        expect(syncCapped).toBeUndefined();
+    });
 });

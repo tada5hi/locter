@@ -22,21 +22,19 @@ type WalkStep = {
 };
 
 function startWalk(options: LocatorUpOptionsInput) : WalkStep {
-    const current = path.resolve(options.cwd ?? process.cwd());
-    const stopAt = options.stopAt ?
-        path.resolve(options.stopAt) :
+    const {
+        cwd,
+        stopAt,
+        ...baseOptions
+    } = options;
+    const current = path.resolve(cwd ?? process.cwd());
+    const ceiling = stopAt ?
+        path.resolve(current, stopAt) :
         path.parse(current).root;
-
-    const baseOptions: Omit<LocatorOptionsInput, 'cwd'> = {
-        ignore: options.ignore,
-        onlyFiles: options.onlyFiles,
-        onlyDirectories: options.onlyDirectories,
-        dot: options.dot,
-    };
 
     return {
         current,
-        stopAt,
+        stopAt: ceiling,
         baseOptions,
     };
 }
