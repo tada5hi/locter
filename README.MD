@@ -253,6 +253,46 @@ try {
 }
 ```
 
+`LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `LocterNotFoundError`s thrown by the JSON loader) and a `toJSON()` for structured logging.
+
+Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARKER`, `LOCTER_NOT_FOUND_ERROR_MARKER`, …), which makes `instanceof` work across realms — useful when consumers end up with duplicate copies of locter in their dependency tree.
+
+### Migrating from 2.x
+
+The 3.0 release reshapes a few public surfaces. The list below is exhaustive — no other public APIs changed.
+
+```diff
+- import { load, locate } from 'locter';
++ import { load, locate, LocterNotFoundError, LocterLoadError } from 'locter';
+
+  // 1. LocatorOptions.path → cwd
+- await locate('config.json', { path: process.cwd() });
++ await locate('config.json', { cwd: process.cwd() });
+
+  // 2. LocatorInfo.path now holds the FULL file path (it was the
+  //    containing directory in 2.x). Use .directory for the containing dir.
+- const filePath = path.join(info.path, info.name + info.extension);
++ const filePath = info.path;            // full file path
++ const dir      = info.directory;       // containing directory
+
+  // 3. load() / loadSync() (and every built-in loader) now throw
+  //    LocterError subclasses instead of generic Error / ebec BaseError.
+  try {
+      await load('config.json');
+- } catch (err) {
+-     if (err.message.includes('ENOENT')) { /* … */ }
++ } catch (err) {
++     if (err instanceof LocterNotFoundError) { /* … */ }
++     else if (err instanceof LocterLoadError) { /* parse error: err.cause */ }
++     else throw err;
+  }
+```
+
+Additionally:
+
+- The `ebec` runtime dependency is replaced by `@ebec/core`. If you used to import `BaseError` from `ebec`, switch to `@ebec/core`.
+- The package is now ESM-only (no `require('locter')`). This change shipped in the 2.x→3.x toolchain modernization commit; mentioned here for completeness.
+
 ### Runtime environments
 
 Locter ships with two runtime detection helpers:
