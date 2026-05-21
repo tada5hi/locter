@@ -93,6 +93,30 @@ import { locate } from 'locter';
 
 A synchronous variant is also available: `locateSync`
 
+**Walking up**
+
+`locateUp` walks from a starting directory toward the filesystem root and returns the first match (useful for discovering config files at the repo root from any sub-directory):
+
+```typescript
+import { locateUp } from 'locter';
+
+(async () => {
+    const info = await locateUp('trapi.config.{ts,mts,cts,mjs,cjs,js,json}', {
+        cwd: process.cwd(),
+    });
+
+    console.log(info);
+    /*
+    { directory: '/repo', name: 'trapi.config', extension: '.ts', path: '/repo/trapi.config.ts' }
+    or `undefined` if nothing matched
+     */
+})
+```
+
+Pass `stopAt: '/repo'` to cap the walk at a known ceiling — inclusive, so the ceiling directory itself is still searched.
+
+A synchronous variant `locateUpSync` is also available.
+
 **Options**
 
 `locate` / `locateMany` (and their sync variants) accept an options object:
@@ -104,6 +128,8 @@ A synchronous variant is also available: `locateSync`
 | `onlyFiles`       | `boolean`               | `true`          | Match files only                                       |
 | `onlyDirectories` | `boolean`               | `false`         | Match directories only                                 |
 | `dot`             | `boolean`               | `false`         | Match dotfiles (e.g. `.env`, `.npmrc`) for wildcard patterns |
+
+`locateUp` / `locateUpSync` take the same options except `cwd` must be a single `string`, and additionally accept `stopAt?: string` (inclusive ceiling for the walk).
 
 ### Loader
 
