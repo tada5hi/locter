@@ -8,7 +8,7 @@
 // Based on https://github.com/unjs/rc9 (MIT)
 
 import { destr } from 'destr';
-import flat from 'flat';
+import { unflatten } from 'flat';
 import fs from 'node:fs';
 import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
@@ -69,6 +69,6 @@ export class ConfLoader implements Loader {
             config[key] = value;
         }
 
-        return flat.unflatten(config, { overwrite: true });
+        return unflatten(config, { overwrite: true });
     }
 }
