@@ -181,6 +181,31 @@ Two loaders are predefined from scratch and already registered:
 - **ModuleLoader**: This loader allows to load modules with
   `.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts` file extensions independent of the environment (cjs or esm).
 
+**Reading a `package.json` field**
+
+`loadPackageField` reads a top-level field from the nearest `package.json` — handy for the common `pkg.<your-config-key>` config-loading fallback (vite's `pkg.vite`, eslint's `pkg.eslintConfig`, etc.):
+
+```typescript
+import { loadPackageField } from 'locter';
+
+(async () => {
+    const value = await loadPackageField<{ entry: string }>('myapp', {
+        cwd: process.cwd(),
+    });
+    // → the value of the `myapp` field, or undefined if package.json
+    //   or the field is absent.
+
+    // Walk parent directories until a package.json is found:
+    const parentValue = await loadPackageField('myapp', {
+        cwd,
+        walkUp: true,
+        stopAt: '/repo', // optional ceiling, inclusive
+    });
+})
+```
+
+Throws `LocterLoadError` if the resolved `package.json` is malformed. A sync variant `loadPackageFieldSync` is also available.
+
 To register loader for other file types, the function `registerLoader` can be used.
 
 ```typescript

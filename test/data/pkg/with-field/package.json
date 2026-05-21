@@ -1,0 +1,7 @@
+{
+    "name": "with-field",
+    "version": "0.0.0",
+    "myapp": {
+        "foo": "bar"
+    }
+}
