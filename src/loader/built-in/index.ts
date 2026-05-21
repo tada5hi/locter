@@ -6,5 +6,6 @@
  */
 
 export * from './conf';
-export * from './module';
 export * from './json';
+export * from './module';
+export * from './yaml';
