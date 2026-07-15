@@ -16,6 +16,7 @@ describe('src/loader/**', () => {
         expect(loaderContent.bar).toBeDefined();
         expect(loaderContent.bar.a).toEqual('baz');
         expect(loaderContent.bar.b).toEqual('boz');
+        expect(loaderContent.default).toEqual({ foo: 'bar', bar: { a: 'baz', b: 'boz' } });
     });
 
     it('should load .conf file sync', async () => {
@@ -25,5 +26,6 @@ describe('src/loader/**', () => {
         expect(loaderContent.bar).toBeDefined();
         expect(loaderContent.bar.a).toEqual('baz');
         expect(loaderContent.bar.b).toEqual('boz');
+        expect(loaderContent.default).toEqual({ foo: 'bar', bar: { a: 'baz', b: 'boz' } });
     });
 });

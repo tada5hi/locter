@@ -13,11 +13,13 @@ describe('src/loader/**', () => {
         const loaderContent = await load('./test/data/file.json');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.default).toEqual({ foo: 'bar' });
     });
 
     it('should load .json file sync', async () => {
         const loaderContent = loadSync('./test/data/file.json');
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.default).toEqual({ foo: 'bar' });
     });
 });

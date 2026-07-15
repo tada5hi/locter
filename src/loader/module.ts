@@ -13,7 +13,12 @@ import {
 } from '../errors';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
 import { isFilePath } from '../utils';
-import { ConfLoader, JSONLoader, ModuleLoader } from './built-in';
+import { 
+    ConfLoader, 
+    JSONLoader, 
+    ModuleLoader, 
+    toModuleRecord, 
+} from './built-in';
 import { YAMLLoader } from './built-in/yaml';
 import { LoaderId } from './constants';
 import type { Loader, Rule } from './type';
@@ -57,7 +62,11 @@ export class LoaderManager implements Loader {
 
         const loader = this.resolve(id);
         try {
-            return await loader.execute(input);
+            // Normalize every loader's result to a module record, so `.default`
+            // is always the loaded value (and data-file top-level keys stay
+            // accessible as named exports). Idempotent for the module loader,
+            // which already returns a record.
+            return toModuleRecord(await loader.execute(input));
         } catch (e) {
             throw wrapLoaderError(e, input);
         }
@@ -71,7 +80,7 @@ export class LoaderManager implements Loader {
 
         const loader = this.resolve(id);
         try {
-            return loader.executeSync(input);
+            return toModuleRecord(loader.executeSync(input));
         } catch (e) {
             throw wrapLoaderError(e, input);
         }
