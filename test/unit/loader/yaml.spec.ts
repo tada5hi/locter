@@ -14,6 +14,8 @@ describe('src/loader/**', () => {
         expect(loaderContent).toBeDefined();
         expect(loaderContent.YAML).toBeDefined();
         expect(loaderContent.yaml).toBeDefined();
+        expect(loaderContent.default).toBeDefined();
+        expect(loaderContent.default.YAML).toEqual(loaderContent.YAML);
     });
 
     it('should load .yml file sync', () => {
@@ -21,5 +23,7 @@ describe('src/loader/**', () => {
         expect(loaderContent).toBeDefined();
         expect(loaderContent.YAML).toBeDefined();
         expect(loaderContent.yaml).toBeDefined();
+        expect(loaderContent.default).toBeDefined();
+        expect(loaderContent.default.YAML).toEqual(loaderContent.YAML);
     });
 });
