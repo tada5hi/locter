@@ -22,7 +22,8 @@ import {
     isTsNodeRuntimeEnvironment,
     isTypeScriptError,
 } from '../../../utils';
-import type { Loader } from '../../type';
+import type { ILoader } from '../../type';
+import { MODULE_FILE_EXTENSIONS } from './constants';
 import type {
     ModuleLoadFn,
     ModuleLoadOptions,
@@ -46,7 +47,7 @@ function isUnrecoverableError(error: unknown) : boolean {
         isTypeScriptError(underlying);
 }
 
-export class ModuleLoader implements Loader {
+export class ModuleLoader implements ILoader {
     protected instance : Jiti;
 
     protected loadFn?: ModuleLoadFn;
@@ -56,7 +57,7 @@ export class ModuleLoader implements Loader {
     constructor(options: ModuleLoaderOptions = {}) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        this.instance = createJiti(undefined, { extensions: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'] });
+        this.instance = createJiti(undefined, { extensions: [...MODULE_FILE_EXTENSIONS] });
         this.loadFn = options.load;
         this.loadSyncFn = options.loadSync;
     }

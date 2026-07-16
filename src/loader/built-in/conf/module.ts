@@ -13,9 +13,9 @@ import fs from 'node:fs';
 import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
 import { isSafeObjectKey } from '../../../utils';
-import type { Loader } from '../../type';
+import type { ILoader } from '../../type';
 
-export class ConfLoader implements Loader {
+export class ConfLoader implements ILoader {
     async execute(input: string) {
         const filePath = buildFilePath(input);
 

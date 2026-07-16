@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'node:path';
 import {
     LocterError,
     LocterUnknownExtensionError,
@@ -13,54 +12,82 @@ import {
 } from '../errors';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
 import { isFilePath } from '../utils';
-import { 
-    ConfLoader, 
-    JSONLoader, 
-    ModuleLoader, 
-    toModuleRecord, 
-} from './built-in';
-import { YAMLLoader } from './built-in/yaml';
-import { LoaderId } from './constants';
-import type { Loader, Rule } from './type';
+import { toModuleRecord } from './built-in';
+import type { BuiltInLoaderId, BuiltInLoaderOf } from './built-in/registry';
+import { BUILT_IN_PRESETS } from './built-in/registry';
+import type { ILoader, LoaderFactory, Rule } from './type';
 
-export class LoaderManager implements Loader {
-    protected loaders : Record<string, Loader>;
+export type LoaderManagerOptions = {
+    /**
+     * Seed user rules (matched before built-ins, in array order).
+     */
+    rules?: Rule[]
+};
 
-    protected rules : Rule[];
+/**
+ * A rule compiled to a memoizing accessor. Caller-owned Rule objects
+ * are never mutated; factory caching lives in the closure.
+ */
+type CompiledRule = {
+    test: RegExp | string[],
+    get: () => ILoader
+};
 
-    constructor() {
-        this.loaders = {};
-        this.rules = [
-            {
-                test: ['.js', '.mjs', '.mts', '.cjs', '.cts', '.ts'],
-                loader: LoaderId.MODULE,
-            },
-            { test: ['.conf'], loader: LoaderId.CONF },
-            { test: ['.json'], loader: LoaderId.JSON },
-            { test: ['.yml', '.yaml'], loader: LoaderId.YAML },
-        ];
+export class LoaderManager implements ILoader {
+    /**
+     * User rules only — built-ins live in the extension table instead.
+     */
+    protected rules : CompiledRule[];
+
+    /**
+     * Lazy per-instance cache of built-in loader instances.
+     */
+    protected builtInCache : Map<BuiltInLoaderId, ILoader>;
+
+    /**
+     * extension → built-in id, precomputed once from BUILT_IN_PRESETS.
+     */
+    protected builtInExtensions : Map<string, BuiltInLoaderId>;
+
+    constructor(options: LoaderManagerOptions = {}) {
+        this.rules = [];
+        this.builtInCache = new Map();
+        this.builtInExtensions = new Map();
+
+        const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInLoaderId[];
+        for (const id of ids) {
+            for (const extension of BUILT_IN_PRESETS[id].extensions) {
+                const existing = this.builtInExtensions.get(extension);
+                if (existing) {
+                    throw new LocterError({ message: `Extension ${extension} is claimed by two built-in loaders: ${existing}, ${id}.` });
+                }
+
+                this.builtInExtensions.set(extension, id);
+            }
+        }
+
+        if (options.rules) {
+            for (const rule of options.rules) {
+                this.register(rule);
+            }
+        }
     }
 
     register(rule: Rule) : void;
 
-    register(test: string[] | RegExp, loader: Loader) : void;
+    register(test: string[] | RegExp, loader: ILoader | LoaderFactory) : void;
 
-    register(test: any, loader?: Loader) : void {
-        if (typeof loader !== 'undefined') {
-            this.rules.push({ test, loader });
-            return;
-        }
-
-        this.rules.push(test);
+    register(test: any, loader?: ILoader | LoaderFactory) : void {
+        const rule : Rule = typeof loader === 'undefined' ? test : { test, loader };
+        this.rules.push(this.compile(rule));
     }
 
     async execute(input: string) : Promise<any> {
-        const id = this.findLoader(input);
-        if (!id) {
+        const loader = this.find(input);
+        if (!loader) {
             throw this.unknownExtensionError(input);
         }
 
-        const loader = this.resolve(id);
         try {
             // Normalize every loader's result to a module record, so `.default`
             // is always the loaded value (and data-file top-level keys stay
@@ -73,17 +100,67 @@ export class LoaderManager implements Loader {
     }
 
     executeSync(input: string) : any {
-        const id = this.findLoader(input);
-        if (!id) {
+        const loader = this.find(input);
+        if (!loader) {
             throw this.unknownExtensionError(input);
         }
 
-        const loader = this.resolve(id);
         try {
             return toModuleRecord(loader.executeSync(input));
         } catch (e) {
             throw wrapLoaderError(e, input);
         }
+    }
+
+    /**
+     * Typed accessor for the LIVE built-in loader instance (lazy, cached).
+     */
+    builtIn<K extends BuiltInLoaderId>(id: K) : BuiltInLoaderOf<K> {
+        let loader = this.builtInCache.get(id);
+        if (!loader) {
+            loader = BUILT_IN_PRESETS[id].create();
+            this.builtInCache.set(id, loader);
+        }
+
+        return loader as BuiltInLoaderOf<K>;
+    }
+
+    /**
+     * Dispatch order:
+     *   1. bare specifier (no extension)  → module loader, always
+     *   2. user rules, registration order → first match wins (can override built-ins)
+     *   3. built-in extension table
+     *   4. undefined → caller throws LocterUnknownExtensionError
+     */
+    find(input: string) : ILoader | undefined {
+        if (!isFilePath(input)) {
+            return this.builtIn('module');
+        }
+
+        const info = pathToLocatorInfo(input);
+
+        for (const rule of this.rules) {
+            const { test } = rule;
+            if (Array.isArray(test)) {
+                if (
+                    info.extension &&
+                    test.includes(info.extension)
+                ) {
+                    return rule.get();
+                }
+            } else if (test.test(buildFilePath(info))) {
+                return rule.get();
+            }
+        }
+
+        if (info.extension) {
+            const id = this.builtInExtensions.get(info.extension);
+            if (id) {
+                return this.builtIn(id);
+            }
+        }
+
+        return undefined;
     }
 
     protected unknownExtensionError(input: string) : LocterUnknownExtensionError {
@@ -94,96 +171,22 @@ export class LoaderManager implements Loader {
         });
     }
 
-    findLoader(input: string) : Loader | string | undefined {
-        if (!isFilePath(input)) {
-            return LoaderId.MODULE;
+    protected compile(rule: Rule) : CompiledRule {
+        const { test, loader } = rule;
+        if (typeof loader !== 'function') {
+            return { test, get: () => loader };
         }
 
-        const info = pathToLocatorInfo(input);
-        for (const rule of this.rules) {
-            const { test } = rule;
-            if (Array.isArray(test)) {
-                if (
-                    info.extension &&
-                    test.includes(info.extension)
-                ) {
-                    return rule.loader;
+        let cached : ILoader | undefined;
+        return {
+            test,
+            get: () => {
+                if (!cached) {
+                    cached = loader();
                 }
-            } else if (test.test(buildFilePath(info))) {
-                return rule.loader;
-            }
-        }
 
-        return undefined;
-    }
-
-    /**
-     * Resolve loader by id.
-     *
-     * @param id
-     */
-    resolve(id: string | Loader) : Loader {
-        if (typeof id !== 'string') {
-            return id;
-        }
-
-        if (Object.prototype.hasOwnProperty.call(this.loaders, id)) {
-            return this.loaders[id] as Loader;
-        }
-
-        let loader : Loader | undefined;
-
-        // built-in
-        switch (id) {
-            case LoaderId.CONF: {
-                loader = new ConfLoader();
-                break;
-            }
-            case LoaderId.MODULE: {
-                loader = new ModuleLoader();
-                break;
-            }
-            case LoaderId.JSON: {
-                loader = new JSONLoader();
-                break;
-            }
-            case LoaderId.YAML: {
-                loader = new YAMLLoader();
-                break;
-            }
-            /* istanbul ignore next */
-            default: {
-                const pluginPath = this.normalizePath(id);
-                const moduleLoader = this.resolve(LoaderId.MODULE);
-                loader = moduleLoader.executeSync(pluginPath);
-
-                break;
-            }
-        }
-
-        if (typeof loader !== 'undefined') {
-            this.loaders[id] = loader;
-
-            return loader;
-        }
-
-        throw new LocterError({ message: `The loader ${id} could not be resolved.` });
-    }
-
-    /* istanbul ignore next */
-    normalizePath(input: string) {
-        if (path.isAbsolute(input) || input.startsWith('./')) {
-            return input;
-        }
-
-        if (input.startsWith('module:')) {
-            return input.substring(0, 'module:'.length);
-        }
-
-        if (!input.startsWith('@')) {
-            return `@locter/${input}`;
-        }
-
-        return input;
+                return cached;
+            },
+        };
     }
 }

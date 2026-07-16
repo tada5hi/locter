@@ -8,9 +8,9 @@
 import fs from 'node:fs';
 import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
-import type { Loader } from '../../type';
+import type { ILoader } from '../../type';
 
-export class JSONLoader implements Loader {
+export class JSONLoader implements ILoader {
     async execute(input: string) {
         const filePath = buildFilePath(input);
 

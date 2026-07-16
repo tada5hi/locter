@@ -15,15 +15,17 @@ locter/
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
-│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module)
-│   │   ├── type.ts                 # Loader interface, Rule type
-│   │   ├── constants.ts            # LoaderId enum (MODULE | JSON | CONF | YAML)
+│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module, package-field, type)
+│   │   ├── type.ts                 # ILoader interface, Rule, LoaderFactory, LoaderPreset
 │   │   ├── singleton.ts            # useLoader() — lazy LoaderManager instance
-│   │   ├── module.ts               # LoaderManager class (dispatch, register, resolve)
-│   │   ├── helpers.ts              # registerLoader, load, loadSync (operate on the singleton)
+│   │   ├── module.ts               # LoaderManager class (dispatch: find, builtIn, register)
+│   │   ├── helpers.ts              # registerLoader, load, loadSync, setModuleLoader (operate on the singleton)
+│   │   ├── package-field.ts        # loadPackageField / loadPackageFieldSync
 │   │   └── built-in/
+│   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + factory); NOT in the barrel
 │   │       ├── module/             # ModuleLoader (jiti-backed JS/TS/ESM/CJS loader)
 │   │       │   ├── module.ts
+│   │       │   ├── constants.ts    # MODULE_FILE_EXTENSIONS (shared by registry + jiti config)
 │   │       │   ├── utils.ts        # toModuleRecord, isESModule, getModuleExport
 │   │       │   └── type.ts
 │   │       ├── json/module.ts      # JSONLoader (fs + JSON.parse)
@@ -56,7 +58,8 @@ locter/
 | Module                          | Purpose                                                                          |
 |---------------------------------|----------------------------------------------------------------------------------|
 | `src/locator/`                  | Wraps `fast-glob` and returns `{ path, name, extension }` records                |
-| `src/loader/module.ts`          | `LoaderManager` — dispatches `execute`/`executeSync` to a loader by extension/regex |
+| `src/loader/module.ts`          | `LoaderManager` — dispatches `execute`/`executeSync`: user rules first, then the built-in extension table |
+| `src/loader/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in loaders; `BuiltInLoaderId` is derived from its keys |
 | `src/loader/singleton.ts`       | Lazy global `LoaderManager` shared across `load`, `loadSync`, `registerLoader`   |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |
 | `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; normalizes module records via `toModuleRecord` |
@@ -74,7 +77,7 @@ locter/
 | `yaml`           | YAML parsing inside `YAMLLoader`                                              |
 | `destr`          | Safe `JSON.parse`-like value coercion in `ConfLoader`                         |
 | `flat`           | Unflattens dot-separated `.conf` keys into nested objects                     |
-| `ebec`           | `BaseError` class used to wrap thrown errors with `code`/`message`/`stack`    |
+| `@ebec/core`     | `BaseError` base for the `LocterError` hierarchy (`code`/`message`/`cause`)   |
 
 ## Package Exports
 

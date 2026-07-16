@@ -15,7 +15,6 @@ import {
     loadSync,
     setModuleLoader,
 } from '../../../src';
-import { LoaderId } from '../../../src/loader/constants';
 
 describe('src/loader/**', () => {
     it('should filter file', async () => {
@@ -54,7 +53,7 @@ describe('src/loader/**', () => {
         expect(yaml.default.parse).toBeDefined();
     });
 
-    it('should register loader', () => {
+    it('should register loader', async () => {
         const manager = new LoaderManager();
         manager.register(['.foo'], {
             async execute(input) {
@@ -64,12 +63,84 @@ describe('src/loader/**', () => {
                 return input;
             },
         });
+
+        const record = await manager.execute('file.foo');
+        expect(record.default).toEqual('file.foo');
+
+        const recordSync = manager.executeSync('file.foo');
+        expect(recordSync.default).toEqual('file.foo');
+    });
+
+    it('should register loader with regexp test', async () => {
+        const manager = new LoaderManager();
+        manager.register(/\.foo$/, {
+            async execute() {
+                return { matched: true };
+            },
+            executeSync() {
+                return { matched: true };
+            },
+        });
+
+        const record = await manager.execute('file.foo');
+        expect(record.matched).toBe(true);
+
+        const recordSync = manager.executeSync('file.foo');
+        expect(recordSync.matched).toBe(true);
+    });
+
+    it('should register loader lazily via factory', async () => {
+        let constructed = 0;
+        const manager = new LoaderManager();
+        manager.register(['.foo'], () => {
+            constructed++;
+            return {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            };
+        });
+
+        expect(constructed).toEqual(0);
+
+        const record = await manager.execute('file.foo');
+        expect(record.default).toEqual('file.foo');
+
+        const recordSync = manager.executeSync('file.foo');
+        expect(recordSync.default).toEqual('file.foo');
+
+        expect(constructed).toEqual(1);
+    });
+
+    it('should override a built-in loader', async () => {
+        const manager = new LoaderManager();
+        manager.register(['.json'], {
+            async execute() {
+                return { sentinel: true };
+            },
+            executeSync() {
+                return { sentinel: true };
+            },
+        });
+
+        const record = await manager.execute('./test/data/file.json');
+        expect(record.sentinel).toBe(true);
+
+        const recordSync = manager.executeSync('./test/data/file.json');
+        expect(recordSync.sentinel).toBe(true);
+    });
+
+    it('should cache built-in loader instances', () => {
+        const manager = new LoaderManager();
+        expect(manager.builtIn('json')).toBe(manager.builtIn('json'));
     });
 
     it('should use module loader as fallback', () => {
         const manager = new LoaderManager();
-        const loader = manager.findLoader('foo');
-        expect(loader).toEqual(LoaderId.MODULE);
+        expect(manager.find('foo')).toBe(manager.builtIn('module'));
     });
 
     it('should use injected load / loadSync functions', async () => {

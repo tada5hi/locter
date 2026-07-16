@@ -5,7 +5,7 @@
 Locter is structured as two cooperating subsystems plus a utility layer:
 
 1. **Locator** (`src/locator/`) — pure file discovery over `fast-glob`. Takes a glob pattern + options, returns `LocatorInfo` records `{ path, name, extension? }`. Has parallel sync/async surfaces.
-2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderManager` keeps an ordered list of `Rule`s mapping file extensions (or a regex over the path) to `Loader` implementations. A process-wide singleton (`useLoader`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
+2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderManager` dispatches to `ILoader` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`). A process-wide singleton (`useLoader`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
 3. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
 
 The two subsystems are loosely coupled: `loader/` depends on `locator/` only for `pathToLocatorInfo` and `buildFilePath` (to derive the extension and the on-disk path from a `LocatorInfo`). `locator/` does not import from `loader/`.
@@ -30,31 +30,33 @@ When adding a new loader or locator function, implement **both** variants. Tests
 
 ### Loader port + registry
 
-The core abstraction is the `Loader` interface (`src/loader/type.ts`):
+The core abstraction is the `ILoader` interface (`src/loader/type.ts`):
 
 ```typescript
-export type Loader = {
+export interface ILoader {
     execute: (input: string) => Promise<any>,
     executeSync: (input: string) => any
-};
+}
+
+export type LoaderFactory = () => ILoader;   // lazy; invoked once on first match, cached
 
 export type Rule = {
-    test: RegExp | string[],   // string[] = file extensions like ['.json']
-    loader: Loader | string    // string = LoaderId for a built-in, or module specifier for a plugin
+    test: RegExp | string[],       // string[] = file extensions like ['.json']
+    loader: ILoader | LoaderFactory
 };
 ```
 
 A typical implementation (`JSONLoader`):
 
 ```typescript
-export class JSONLoader implements Loader {
+export class JSONLoader implements ILoader {
     async execute(input: string) {
         const filePath = buildFilePath(input);
         try {
             const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
             return JSON.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
@@ -64,28 +66,42 @@ export class JSONLoader implements Loader {
             const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
             return JSON.parse(file);
         } catch (e) {
-            return handleException(e);
+            throw wrapLoaderError(e, filePath);
         }
     }
 }
+```
+
+Built-ins live in a single declarative registry (`src/loader/built-in/registry.ts`) — one entry couples routing and construction; the id union (`BuiltInLoaderId`), the extension table, lazy caching, and the typed `builtIn()` accessor are all derived from it:
+
+```typescript
+export const BUILT_IN_PRESETS = {
+    module: { extensions: MODULE_FILE_EXTENSIONS, create: () => new ModuleLoader() },
+    conf: { extensions: ['.conf'], create: () => new ConfLoader() },
+    json: { extensions: ['.json'], create: () => new JSONLoader() },
+    yaml: { extensions: ['.yml', '.yaml'], create: () => new YAMLLoader() },
+} as const satisfies Record<string, LoaderPreset>;
 ```
 
 Conventions for new loaders:
 
 - Class name: `<Format>Loader` (e.g. `TomlLoader`).
 - File location: `src/loader/built-in/<format>/module.ts`, with a barrel `index.ts` in the same directory.
-- Wrap I/O in `try/catch` and rethrow via `handleException(e)` to normalize non-`Error` throws.
+- Wrap I/O in `try/catch` and rethrow via `wrapLoaderError(e, filePath)` to produce typed `LocterError` subclasses.
 - Use `buildFilePath(input)` so the loader accepts both raw paths and `LocatorInfo` objects (the dispatcher already converts, but loaders should not assume the form).
-- If the loader is meant to be built-in: add an entry to `LoaderId` (`src/loader/constants.ts`), register a default `Rule` in the `LoaderManager` constructor, and add a `case` in `LoaderManager.resolve()`.
-- If the loader is external/plugin: consumers register it at runtime via `registerLoader`.
+- If the loader is meant to be built-in: add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`) — the id, extensions, and factory live there together; the type system derives everything else. Export the class from `src/loader/built-in/index.ts` to make it public.
+- If the loader is external/plugin: consumers register it at runtime via `registerLoader` — either an `ILoader` instance or a lazy `LoaderFactory`.
 
 ### Dispatcher: `LoaderManager`
 
-`LoaderManager.findLoader(input)` walks the `rules` array in registration order:
+`LoaderManager.find(input)` resolves an input to a live `ILoader` (or `undefined`) in an explicit order:
 
-- Bare module specifiers (no extension, per `isFilePath`) fall through to `LoaderId.MODULE` so `load('yaml')` works like `require('yaml')`.
-- Otherwise, the file's extension is matched against `test: string[]` rules first, then against `test: RegExp` rules.
-- The first matching rule wins. **Rules added later via `registerLoader` are matched after the built-ins** — they cannot override `.json`/`.yml`/`.conf` or the JS/TS extension set unless you mutate the rule list directly.
+1. Bare module specifiers (no extension, per `isFilePath`) always route to `builtIn('module')` so `load('yaml')` works like `require('yaml')`.
+2. User rules, in registration order — first match wins. **User rules are matched before the built-in table**, so registering `.json` overrides the built-in JSON loader.
+3. The built-in extension table (O(1) map derived from `BUILT_IN_PRESETS`).
+4. `undefined` — `execute`/`executeSync` then throw `LocterUnknownExtensionError`.
+
+`builtIn(id)` lazily instantiates and caches built-in loaders per manager instance; `builtIn('module')` is statically typed as `ModuleLoader` (used by `setModuleLoader`, no cast needed).
 
 ### Singleton helper layer
 
@@ -115,9 +131,10 @@ Locate:
 
 Load:
   1. buildFilePath(input)                 → string (LocatorInfo → path or pass-through)
-  2. LoaderManager.findLoader(input)      → LoaderId | Loader | undefined
-  3. LoaderManager.resolve(id)            → cached Loader instance
-  4. loader.execute(input)                → parsed value
+  2. LoaderManager.find(input)            → ILoader | undefined
+     (bare specifier → module loader; user rules; built-in extension table)
+  3. loader.execute(input)                → parsed value
+  4. toModuleRecord(value)                → normalized module record
 
 Output:
   └── LocatorInfo[] / LocatorInfo / parsed module/JSON/YAML/conf record
@@ -125,12 +142,11 @@ Output:
 
 ## Error Handling
 
-- I/O and parsing errors inside built-in loaders are routed through `handleException(e)` (`src/utils/error.ts`), which rethrows real `Error`s as-is and normalizes non-`Error` throws into a real `Error` (copying `message`/`stack` if present).
+- I/O and parsing errors inside built-in loaders are routed through `wrapLoaderError(e, path)` (`src/errors/wrap.ts`), which maps them to typed `LocterError` subclasses (`LocterNotFoundError`, `LocterLoadError`) preserving the underlying error on `cause`.
 - `ModuleLoader` additionally:
     - Rethrows `SyntaxError`, `ReferenceError`, and TypeScript compile errors (detected by `isTypeScriptError`) without retry.
-    - Wraps native loader errors with `BaseError` from `ebec`, preserving `code`/`message`/`stack`.
     - Retries with `withFilePrefix: true` (pathToFileURL) on `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
-- `LoaderManager.execute` throws `Error("No loader registered for extension: ...")` when no rule matches and the input looks like a file path.
+- `LoaderManager.execute` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
 
 ## File Structure
 

@@ -7,15 +7,13 @@
 
 import { buildFilePath } from '../locator';
 import type { LocatorInfo } from '../locator';
-import type { ModuleLoader } from './built-in/module';
 import type { ModuleLoaderOptions } from './built-in/module/type';
-import { LoaderId } from './constants';
 import { useLoader } from './singleton';
-import type { Loader, Rule } from './type';
+import type { ILoader, LoaderFactory, Rule } from './type';
 
 export function registerLoader(rule: Rule) : void;
-export function registerLoader(test: string[] | RegExp, loader: Loader) : void;
-export function registerLoader(test: any, loader?: Loader) : void {
+export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : void;
+export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : void {
     const manager = useLoader();
     if (typeof loader !== 'undefined') {
         manager.register(test, loader);
@@ -63,7 +61,5 @@ export function loadSync(input: LocatorInfo | string) : any {
  * ```
  */
 export function setModuleLoader(options: ModuleLoaderOptions) : void {
-    const manager = useLoader();
-    const loader = manager.resolve(LoaderId.MODULE) as ModuleLoader;
-    loader.configure(options);
+    useLoader().builtIn('module').configure(options);
 }
