@@ -11,8 +11,9 @@ export interface ILoader {
 }
 
 /**
- * Lazy loader construction. Invoked at most once, on the first input
- * that matches the rule it was registered for; the result is cached.
+ * Lazy loader construction. Invoked on the first input that matches the
+ * rule it was registered for; the first successfully constructed loader
+ * is cached (a factory that throws is retried on the next match).
  */
 export type LoaderFactory = () => ILoader;
 

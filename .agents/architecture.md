@@ -38,7 +38,7 @@ export interface ILoader {
     executeSync: (input: string) => any
 }
 
-export type LoaderFactory = () => ILoader;   // lazy; invoked once on first match, cached
+export type LoaderFactory = () => ILoader;   // lazy; first successful construction is cached
 
 export type Rule = {
     test: RegExp | string[],       // string[] = file extensions like ['.json']

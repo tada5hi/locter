@@ -225,7 +225,9 @@ registerLoader(['.ext'], {
 ```
 
 Instead of a loader instance (the `ILoader` interface), a factory function can be
-passed — it is invoked lazily on the first matching input and the result is cached:
+passed — it is invoked lazily on the first matching input and the first
+successfully constructed loader is cached (a factory that throws is retried on
+the next match):
 
 ```typescript
 import { registerLoader } from 'locter';

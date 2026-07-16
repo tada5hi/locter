@@ -238,8 +238,16 @@ export class LoaderManager implements ILoader {
                 ) {
                     return rule.get();
                 }
-            } else if (test.test(buildFilePath(info))) {
-                return rule.get();
+            } else {
+                // reset before AND after: a g/y regex mutates lastIndex on
+                // test(), which would make repeated dispatch alternate and
+                // leak state back into the caller-owned RegExp
+                test.lastIndex = 0;
+                const matched = test.test(buildFilePath(info));
+                test.lastIndex = 0;
+                if (matched) {
+                    return rule.get();
+                }
             }
         }
 

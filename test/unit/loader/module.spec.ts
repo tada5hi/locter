@@ -89,6 +89,28 @@ describe('src/loader/**', () => {
         expect(recordSync.matched).toBe(true);
     });
 
+    it('should dispatch a stateful (global) regexp rule consistently', async () => {
+        const manager = new LoaderManager();
+        manager.register(/\.foo$/g, {
+            async execute() {
+                return { matched: true };
+            },
+            executeSync() {
+                return { matched: true };
+            },
+        });
+
+        // a g-flagged regex mutates lastIndex on test(); repeated identical
+        // inputs must not alternate between matching and falling through
+        for (let i = 0; i < 3; i++) {
+            const record = await manager.execute('file.foo');
+            expect(record.matched).toBe(true);
+
+            const recordSync = manager.executeSync('file.foo');
+            expect(recordSync.matched).toBe(true);
+        }
+    });
+
     it('should register loader lazily via factory', async () => {
         let constructed = 0;
         const manager = new LoaderManager();
