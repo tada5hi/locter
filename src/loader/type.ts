@@ -23,8 +23,27 @@ export type LoaderFactory = () => ILoader;
  * are always routed to the module loader first.
  */
 export type Rule = {
+    /**
+     * Stable identity. Registering an existing id REPLACES that rule in
+     * place (position preserved, cached instance evicted). Built-in ids
+     * ('module', 'conf', 'json', 'yaml') are reserved. Omitted → auto-generated.
+     */
+    id?: string,
     test: RegExp | string[],
     loader: ILoader | LoaderFactory
+};
+
+/**
+ * Normalized registration record — returned by register()/entries().
+ */
+export type LoaderRegistration = {
+    id: string,
+    test: RegExp | string[],
+    /**
+     * true for entries derived from the built-in registry; those cannot
+     * be unregistered (but can be shadowed by user rules).
+     */
+    builtIn: boolean
 };
 
 /**

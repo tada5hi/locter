@@ -233,6 +233,29 @@ import { registerLoader } from 'locter';
 registerLoader(['.toml'], () => new TomlLoader());
 ```
 
+Every rule has a stable id (auto-generated, or set explicitly via the object form).
+Registering an existing id replaces that rule in place; built-in ids
+(`module`, `conf`, `json`, `yaml`) are reserved. The registry can be inspected
+and unwound:
+
+```typescript
+import { registerLoader, unregisterLoader, useLoader } from 'locter';
+
+const registration = registerLoader(['.json5'], json5Loader);
+unregisterLoader(registration.id);          // remove it again
+
+registerLoader({ id: 'json5', test: ['.json5'], loader: otherLoader }); // replace by id
+
+const manager = useLoader();                // the process-global LoaderManager
+manager.entries();                          // [{ id, test, builtIn }, ...] in match order
+manager.has('json');                        // true (built-in)
+manager.reset();                            // drop all user rules + cached loader instances
+```
+
+The global registry belongs to the **application**. Libraries that need custom
+loaders should create their own isolated instance instead of mutating the
+singleton: `new LoaderManager({ rules: [...] })`.
+
 ### Errors
 
 `load` / `loadSync` (and every built-in loader) throw a typed subclass of
@@ -363,6 +386,15 @@ import { setModuleLoader } from 'locter';
 setModuleLoader({
     load: (id) => import(id),
 });
+```
+
+`setModuleLoader` returns a restore function that re-applies the previous
+configuration — useful for scoped overrides:
+
+```typescript
+const restore = setModuleLoader({ load: (id) => import(id) });
+// ...
+restore();
 ```
 
 Alternatively, the same effect can be achieved by inlining locter in

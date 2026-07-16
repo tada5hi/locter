@@ -11,11 +11,16 @@ import {
     wrapLoaderError,
 } from '../errors';
 import { buildFilePath, pathToLocatorInfo } from '../locator';
-import { isFilePath } from '../utils';
+import { hasOwnProperty, isFilePath } from '../utils';
 import { toModuleRecord } from './built-in';
 import type { BuiltInLoaderId, BuiltInLoaderOf } from './built-in/registry';
 import { BUILT_IN_PRESETS } from './built-in/registry';
-import type { ILoader, LoaderFactory, Rule } from './type';
+import type {
+    ILoader, 
+    LoaderFactory, 
+    LoaderRegistration, 
+    Rule,
+} from './type';
 
 export type LoaderManagerOptions = {
     /**
@@ -29,6 +34,7 @@ export type LoaderManagerOptions = {
  * are never mutated; factory caching lives in the closure.
  */
 type CompiledRule = {
+    id: string,
     test: RegExp | string[],
     get: () => ILoader
 };
@@ -49,10 +55,13 @@ export class LoaderManager implements ILoader {
      */
     protected builtInExtensions : Map<string, BuiltInLoaderId>;
 
+    protected ruleCounter : number;
+
     constructor(options: LoaderManagerOptions = {}) {
         this.rules = [];
         this.builtInCache = new Map();
         this.builtInExtensions = new Map();
+        this.ruleCounter = 0;
 
         const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInLoaderId[];
         for (const id of ids) {
@@ -73,13 +82,94 @@ export class LoaderManager implements ILoader {
         }
     }
 
-    register(rule: Rule) : void;
+    register(rule: Rule) : LoaderRegistration;
 
-    register(test: string[] | RegExp, loader: ILoader | LoaderFactory) : void;
+    register(test: string[] | RegExp, loader: ILoader | LoaderFactory) : LoaderRegistration;
 
-    register(test: any, loader?: ILoader | LoaderFactory) : void {
+    register(test: any, loader?: ILoader | LoaderFactory) : LoaderRegistration {
         const rule : Rule = typeof loader === 'undefined' ? test : { test, loader };
-        this.rules.push(this.compile(rule));
+
+        if (
+            typeof rule.id !== 'undefined' &&
+            hasOwnProperty(BUILT_IN_PRESETS, rule.id)
+        ) {
+            throw new LocterError({ message: `The id ${rule.id} is reserved by a built-in loader.` });
+        }
+
+        const id = rule.id ?? this.generateRuleId();
+        const entry = this.compile(id, rule);
+
+        const index = this.rules.findIndex((item) => item.id === id);
+        if (index === -1) {
+            this.rules.push(entry);
+        } else {
+            // replace in place: position preserved, cached instance evicted
+            this.rules[index] = entry;
+        }
+
+        return {
+            id, 
+            test: rule.test, 
+            builtIn: false, 
+        };
+    }
+
+    /**
+     * Remove a user-registered rule by id. Built-in ids cannot be
+     * unregistered (returns false).
+     */
+    unregister(id: string) : boolean {
+        const index = this.rules.findIndex((item) => item.id === id);
+        if (index === -1) {
+            return false;
+        }
+
+        this.rules.splice(index, 1);
+        return true;
+    }
+
+    has(id: string) : boolean {
+        if (this.rules.some((item) => item.id === id)) {
+            return true;
+        }
+
+        return hasOwnProperty(BUILT_IN_PRESETS, id);
+    }
+
+    /**
+     * All registrations in effective match order: user rules
+     * (registration order) first, then the built-ins.
+     */
+    entries() : LoaderRegistration[] {
+        const output : LoaderRegistration[] = this.rules.map(
+            (item) => ({
+                id: item.id, 
+                test: item.test, 
+                builtIn: false, 
+            }),
+        );
+
+        const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInLoaderId[];
+        for (const id of ids) {
+            output.push({
+                id,
+                test: [...BUILT_IN_PRESETS[id].extensions],
+                builtIn: true,
+            });
+        }
+
+        return output;
+    }
+
+    /**
+     * Restore the manager to its construction state: drop all user rules
+     * and evict every cached loader instance (including a module loader
+     * configured via setModuleLoader / configure).
+     */
+    reset() : void {
+        this.rules = [];
+        this.builtInCache.clear();
+        this.ruleCounter = 0;
     }
 
     async execute(input: string) : Promise<any> {
@@ -171,14 +261,19 @@ export class LoaderManager implements ILoader {
         });
     }
 
-    protected compile(rule: Rule) : CompiledRule {
+    protected compile(id: string, rule: Rule) : CompiledRule {
         const { test, loader } = rule;
         if (typeof loader !== 'function') {
-            return { test, get: () => loader };
+            return {
+                id, 
+                test, 
+                get: () => loader, 
+            };
         }
 
         let cached : ILoader | undefined;
         return {
+            id,
             test,
             get: () => {
                 if (!cached) {
@@ -188,5 +283,15 @@ export class LoaderManager implements ILoader {
                 return cached;
             },
         };
+    }
+
+    protected generateRuleId() : string {
+        let id : string;
+        do {
+            this.ruleCounter++;
+            id = `rule:${this.ruleCounter}`;
+        } while (this.rules.some((item) => item.id === id));
+
+        return id;
     }
 }

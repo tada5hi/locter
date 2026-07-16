@@ -15,11 +15,11 @@ locter/
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
-│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module, package-field, type)
-│   │   ├── type.ts                 # ILoader interface, Rule, LoaderFactory, LoaderPreset
-│   │   ├── singleton.ts            # useLoader() — lazy LoaderManager instance
-│   │   ├── module.ts               # LoaderManager class (dispatch: find, builtIn, register)
-│   │   ├── helpers.ts              # registerLoader, load, loadSync, setModuleLoader (operate on the singleton)
+│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module, package-field, singleton, type)
+│   │   ├── type.ts                 # ILoader interface, Rule, LoaderFactory, LoaderRegistration, LoaderPreset
+│   │   ├── singleton.ts            # useLoader() — lazy process-global LoaderManager instance
+│   │   ├── module.ts               # LoaderManager class (dispatch: find, builtIn; lifecycle: register, unregister, entries, has, reset)
+│   │   ├── helpers.ts              # registerLoader, unregisterLoader, load, loadSync, setModuleLoader (operate on the singleton)
 │   │   ├── package-field.ts        # loadPackageField / loadPackageFieldSync
 │   │   └── built-in/
 │   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + factory); NOT in the barrel

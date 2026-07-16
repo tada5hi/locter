@@ -62,13 +62,23 @@ export class ModuleLoader implements ILoader {
         this.loadSyncFn = options.loadSync;
     }
 
-    configure(options: ModuleLoaderOptions) : void {
+    /**
+     * Returns the previous configuration, so callers can restore it.
+     */
+    configure(options: ModuleLoaderOptions) : ModuleLoaderOptions {
+        const previous : ModuleLoaderOptions = {
+            load: this.loadFn,
+            loadSync: this.loadSyncFn,
+        };
+
         if ('load' in options) {
             this.loadFn = options.load;
         }
         if ('loadSync' in options) {
             this.loadSyncFn = options.loadSync;
         }
+
+        return previous;
     }
 
     async execute(input: string) {

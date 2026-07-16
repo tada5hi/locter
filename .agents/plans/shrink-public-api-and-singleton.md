@@ -1,11 +1,13 @@
-# Plan: Shrink accidental public API + give the singleton a lifecycle
+# Plan: Shrink accidental public API
 
 Status: proposed (not started). Origin: architecture exploration, 2026-07-16.
+Scope note: the singleton-lifecycle half of this plan (reset, unregister-by-id, registry
+introspection, `setModuleLoader` restore) shipped with the loader-registry refactor
+([#855](https://github.com/tada5hi/locter/pull/855)). What remains is the API-surface curation.
 
 ## Problem
 
-`src/index.ts` does `export *` over four barrels, which recursively publishes every internal helper
-— while omitting the types the API asks users to build.
+`src/index.ts` does `export *` over four barrels, which recursively publishes every internal helper.
 
 **Accidentally public** (undocumented, internal plumbing):
 
@@ -17,23 +19,11 @@ Status: proposed (not started). Origin: architecture exploration, 2026-07-16.
 - From `src/loader/built-in/module/`: `isESModule`, `toModuleRecord`, `getModuleExport`
   (`getModuleExport` has no production caller — only a test uses it).
 
-**Accidentally missing:** `Loader` and `Rule` (`src/loader/type.ts`) are not re-exported anywhere,
-yet `registerLoader` takes them and the README documents building them. A TS consumer cannot
-`import { Loader, Rule } from 'locter'`. `LoaderId` is likewise unexported (forcing a deep-path
-import in `test/unit/loader/module.spec.ts:18`).
-
-**Singleton lifecycle:** `useLoader()` (`src/loader/singleton.ts`) is process-global, append-only
-(no un-register, no reset). Tests hand-restore state in `finally` blocks
-(`module.spec.ts`, `errors.spec.ts` both call `setModuleLoader({ load: undefined, loadSync: undefined })`)
-and any `registerLoader` call in a test leaks a rule permanently.
-
 ## Direction
 
 Curate the barrels: explicit named exports in `src/index.ts` (or per-directory `index.ts`) so
-internal helpers stay internal; export `Loader`, `Rule`, `LoaderId`. Add a lifecycle to the
-singleton (reset, or make `LoaderManager` trivially constructable/scoped for tests and document it).
-This is a **semver-major** cleanup — removing public symbols is breaking; batch it for the next
-major.
+internal helpers stay internal. This is a **semver-major** cleanup — removing public symbols is
+breaking; batch it with the next major (or fold into the in-flight 4.0 if it lands before release).
 
 ## Dependency category
 
@@ -41,10 +31,10 @@ In-process.
 
 ## Test impact
 
-- Removes the deep-path `LoaderId` import in `module.spec.ts`.
-- A resettable/scoped manager kills the manual `finally`-teardown pattern.
 - Add a public-API snapshot test (exported symbol list) to make surface changes deliberate.
 
 ## Related
 
-- [[deepen-loader-registry]] — decides what `Loader`/`Rule`/`LoaderId` look like before exporting.
+- [[deepen-loader-registry]] — shipped ([#855](https://github.com/tada5hi/locter/pull/855));
+  exported `ILoader`/`Rule`/`LoaderFactory`/`LoaderRegistration` and gave the singleton its
+  lifecycle, resolving the other half of this plan.

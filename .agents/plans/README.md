@@ -13,8 +13,8 @@ the rest are parked here.
   rule for locator options (fixes the contradictory `onlyFiles`/`onlyDirectories` bug) and one
   canonical input-normalization entry point.
 - [shrink-public-api-and-singleton.md](shrink-public-api-and-singleton.md) — curate `export *`
-  barrels (semver-major), export the missing `Loader`/`Rule`/`LoaderId` types, give the singleton a
-  lifecycle.
+  barrels (semver-major). (The type exports and singleton lifecycle shipped with the registry
+  refactor, [#855](https://github.com/tada5hi/locter/pull/855).)
 
 ## Standalone bug (not owned by any plan)
 

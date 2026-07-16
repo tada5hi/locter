@@ -115,7 +115,9 @@ export async function load(input: LocatorInfo | string) : Promise<any> {
 }
 ```
 
-`load`, `loadSync`, and `registerLoader` are zero-state wrappers — the only state is in the singleton. When writing new top-level helpers, follow the same pattern: get the singleton, normalize `LocatorInfo` → string, delegate.
+`load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state wrappers — the only state is in the singleton (`useLoader()`, exported). When writing new top-level helpers, follow the same pattern: get the singleton, normalize `LocatorInfo` → string, delegate.
+
+The registry has a lifecycle: every rule has a stable id (`register` returns a `LoaderRegistration`; re-registering an id replaces in place, built-in ids are reserved), `unregister(id)` removes a user rule, `entries()`/`has(id)` introspect the effective match order, and `reset()` restores construction state (drops user rules and every cached instance, including a `setModuleLoader`-configured module loader). `setModuleLoader` returns a restore function re-applying the previous configuration. The global registry belongs to the application; libraries should isolate via `new LoaderManager({ rules })`.
 
 ## Data Flow
 

@@ -137,7 +137,7 @@ describe('src/errors/**', () => {
         const syntaxErr = new SyntaxError('bad code');
         const refErr = new ReferenceError('missing');
 
-        setModuleLoader({
+        const restore = setModuleLoader({
             load: () => { throw syntaxErr; },
             loadSync: () => { throw refErr; },
         });
@@ -163,7 +163,7 @@ describe('src/errors/**', () => {
             expect((syncError as LocterLoadError).cause).toBe(refErr);
             expect((syncError as LocterLoadError).path).toEqual('any-id');
         } finally {
-            setModuleLoader({ load: undefined, loadSync: undefined });
+            restore();
         }
     });
 });

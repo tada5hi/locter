@@ -9,19 +9,30 @@ import { buildFilePath } from '../locator';
 import type { LocatorInfo } from '../locator';
 import type { ModuleLoaderOptions } from './built-in/module/type';
 import { useLoader } from './singleton';
-import type { ILoader, LoaderFactory, Rule } from './type';
+import type {
+    ILoader, 
+    LoaderFactory, 
+    LoaderRegistration, 
+    Rule,
+} from './type';
 
-export function registerLoader(rule: Rule) : void;
-export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : void;
-export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : void {
+export function registerLoader(rule: Rule) : LoaderRegistration;
+export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : LoaderRegistration;
+export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : LoaderRegistration {
     const manager = useLoader();
     if (typeof loader !== 'undefined') {
-        manager.register(test, loader);
-
-        return;
+        return manager.register(test, loader);
     }
 
-    manager.register(test);
+    return manager.register(test);
+}
+
+/**
+ * Remove a rule from the process-global registry by its id
+ * (as returned by registerLoader). Built-in ids cannot be unregistered.
+ */
+export function unregisterLoader(id: string) : boolean {
+    return useLoader().unregister(id);
 }
 
 export async function load(input: LocatorInfo | string) : Promise<any> {
@@ -50,6 +61,9 @@ export function loadSync(input: LocatorInfo | string) : any {
  * from user code (e.g. a Vitest setup file) lets the runner rewrite the
  * `import()` so loaded modules share identity with statically imported ones.
  *
+ * Returns a restore function that re-applies the previous configuration —
+ * handy for scoped overrides (e.g. test teardown).
+ *
  * @example
  * ```ts
  * // vitest setup file
@@ -60,6 +74,11 @@ export function loadSync(input: LocatorInfo | string) : any {
  * });
  * ```
  */
-export function setModuleLoader(options: ModuleLoaderOptions) : void {
-    useLoader().builtIn('module').configure(options);
+export function setModuleLoader(options: ModuleLoaderOptions) : () => void {
+    const loader = useLoader().builtIn('module');
+    const previous = loader.configure(options);
+
+    return () => {
+        loader.configure(previous);
+    };
 }

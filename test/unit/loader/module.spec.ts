@@ -138,6 +138,131 @@ describe('src/loader/**', () => {
         expect(manager.builtIn('json')).toBe(manager.builtIn('json'));
     });
 
+    it('should unregister loader by id', async () => {
+        const manager = new LoaderManager();
+        const registration = manager.register(['.foo'], {
+            async execute(input) {
+                return input;
+            },
+            executeSync(input: string) {
+                return input;
+            },
+        });
+
+        expect(manager.has(registration.id)).toBe(true);
+
+        expect(manager.unregister(registration.id)).toBe(true);
+        expect(manager.has(registration.id)).toBe(false);
+        expect(manager.unregister(registration.id)).toBe(false);
+
+        await expect(manager.execute('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.executeSync('file.foo')).toThrow(LocterUnknownExtensionError);
+    });
+
+    it('should replace loader registered with an existing id', async () => {
+        const manager = new LoaderManager();
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute() {
+                    return { version: 1 };
+                },
+                executeSync() {
+                    return { version: 1 };
+                },
+            },
+        });
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute() {
+                    return { version: 2 };
+                },
+                executeSync() {
+                    return { version: 2 };
+                },
+            },
+        });
+
+        const record = await manager.execute('file.foo');
+        expect(record.version).toEqual(2);
+
+        const recordSync = manager.executeSync('file.foo');
+        expect(recordSync.version).toEqual(2);
+
+        const ids = manager.entries().map((entry) => entry.id);
+        expect(ids.filter((id) => id === 'custom')).toHaveLength(1);
+    });
+
+    it('should reject rules with a built-in id', () => {
+        const manager = new LoaderManager();
+        expect(() => manager.register({
+            id: 'json',
+            test: ['.foo'],
+            loader: {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            },
+        })).toThrow('reserved');
+    });
+
+    it('should list registrations in match order', () => {
+        const manager = new LoaderManager();
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            },
+        });
+
+        const entries = manager.entries();
+        expect(entries[0]).toEqual({
+            id: 'custom', 
+            test: ['.foo'], 
+            builtIn: false, 
+        });
+
+        const builtIns = entries.filter((entry) => entry.builtIn);
+        expect(builtIns.map((entry) => entry.id)).toEqual(['module', 'conf', 'json', 'yaml']);
+        expect(manager.has('json')).toBe(true);
+    });
+
+    it('should reset to construction state', async () => {
+        let constructed = 0;
+        const manager = new LoaderManager();
+        manager.register(['.foo'], () => {
+            constructed++;
+            return {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            };
+        });
+
+        await manager.execute('file.foo');
+        expect(constructed).toEqual(1);
+
+        manager.reset();
+
+        await expect(manager.execute('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(manager.entries().every((entry) => entry.builtIn)).toBe(true);
+    });
+
     it('should use module loader as fallback', () => {
         const manager = new LoaderManager();
         expect(manager.find('foo')).toBe(manager.builtIn('module'));
@@ -200,7 +325,7 @@ describe('src/loader/**', () => {
         const seenAsync: string[] = [];
         const seenSync: string[] = [];
 
-        setModuleLoader({
+        const restore = setModuleLoader({
             load: (id) => {
                 seenAsync.push(id);
                 return {
@@ -231,7 +356,7 @@ describe('src/loader/**', () => {
             expect(syncResult.id).toEqual('yaml');
         } finally {
             // restore singleton so we don't leak state to later tests in this file
-            setModuleLoader({ load: undefined, loadSync: undefined });
+            restore();
         }
 
         // verify the singleton is fully restored
