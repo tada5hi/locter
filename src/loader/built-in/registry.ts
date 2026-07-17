@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LoaderPreset } from '../type';
+import type { LoaderPreset } from '../registry/type';
 import { ConfLoader } from './conf';
 import { JSONLoader } from './json';
 import { ModuleLoader } from './module';

@@ -64,10 +64,10 @@ describe('src/loader/**', () => {
             },
         });
 
-        const record = await manager.execute('file.foo');
+        const record = await manager.load('file.foo');
         expect(record.default).toEqual('file.foo');
 
-        const recordSync = manager.executeSync('file.foo');
+        const recordSync = manager.loadSync('file.foo');
         expect(recordSync.default).toEqual('file.foo');
     });
 
@@ -82,10 +82,10 @@ describe('src/loader/**', () => {
             },
         });
 
-        const record = await manager.execute('file.foo');
+        const record = await manager.load('file.foo');
         expect(record.matched).toBe(true);
 
-        const recordSync = manager.executeSync('file.foo');
+        const recordSync = manager.loadSync('file.foo');
         expect(recordSync.matched).toBe(true);
     });
 
@@ -103,10 +103,10 @@ describe('src/loader/**', () => {
         // a g-flagged regex mutates lastIndex on test(); repeated identical
         // inputs must not alternate between matching and falling through
         for (let i = 0; i < 3; i++) {
-            const record = await manager.execute('file.foo');
+            const record = await manager.load('file.foo');
             expect(record.matched).toBe(true);
 
-            const recordSync = manager.executeSync('file.foo');
+            const recordSync = manager.loadSync('file.foo');
             expect(recordSync.matched).toBe(true);
         }
     });
@@ -128,10 +128,10 @@ describe('src/loader/**', () => {
 
         expect(constructed).toEqual(0);
 
-        const record = await manager.execute('file.foo');
+        const record = await manager.load('file.foo');
         expect(record.default).toEqual('file.foo');
 
-        const recordSync = manager.executeSync('file.foo');
+        const recordSync = manager.loadSync('file.foo');
         expect(recordSync.default).toEqual('file.foo');
 
         expect(constructed).toEqual(1);
@@ -148,10 +148,10 @@ describe('src/loader/**', () => {
             },
         });
 
-        const record = await manager.execute('./test/data/file.json');
+        const record = await manager.load('./test/data/file.json');
         expect(record.sentinel).toBe(true);
 
-        const recordSync = manager.executeSync('./test/data/file.json');
+        const recordSync = manager.loadSync('./test/data/file.json');
         expect(recordSync.sentinel).toBe(true);
     });
 
@@ -177,8 +177,8 @@ describe('src/loader/**', () => {
         expect(manager.has(registration.id)).toBe(false);
         expect(manager.unregister(registration.id)).toBe(false);
 
-        await expect(manager.execute('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.executeSync('file.foo')).toThrow(LocterUnknownExtensionError);
+        await expect(manager.load('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.loadSync('file.foo')).toThrow(LocterUnknownExtensionError);
     });
 
     it('should replace loader registered with an existing id', async () => {
@@ -208,10 +208,10 @@ describe('src/loader/**', () => {
             },
         });
 
-        const record = await manager.execute('file.foo');
+        const record = await manager.load('file.foo');
         expect(record.version).toEqual(2);
 
-        const recordSync = manager.executeSync('file.foo');
+        const recordSync = manager.loadSync('file.foo');
         expect(recordSync.version).toEqual(2);
 
         const ids = manager.entries().map((entry) => entry.id);
@@ -276,12 +276,12 @@ describe('src/loader/**', () => {
             };
         });
 
-        await manager.execute('file.foo');
+        await manager.load('file.foo');
         expect(constructed).toEqual(1);
 
         manager.reset();
 
-        await expect(manager.execute('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        await expect(manager.load('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
         expect(manager.entries().every((entry) => entry.builtIn)).toBe(true);
     });
 

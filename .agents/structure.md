@@ -15,11 +15,14 @@ locter/
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
-│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module, package-field, singleton, type)
-│   │   ├── type.ts                 # ILoader interface, Rule, LoaderFactory, LoaderRegistration, LoaderPreset
+│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, singleton, type)
+│   │   ├── type.ts                 # ILoader interface — the port every loader implements
 │   │   ├── singleton.ts            # useLoader() — lazy process-global LoaderRegistry instance
-│   │   ├── module.ts               # LoaderRegistry class (dispatch: find, builtIn; lifecycle: register, unregister, entries, has, reset)
-│   │   ├── helpers.ts              # registerLoader, unregisterLoader, load, loadSync, setModuleLoader (operate on the singleton)
+│   │   ├── registry/               # LoaderRegistry + its vocabulary
+│   │   │   ├── module.ts           # LoaderRegistry class (dispatch: load, loadSync, find, builtIn; lifecycle: register, unregister, entries, has, reset)
+│   │   │   ├── type.ts             # Rule, LoaderFactory, LoaderRegistration, LoaderPreset
+│   │   │   └── index.ts            # Barrel
+│   │   ├── helpers.ts              # registerLoader, unregisterLoader, load, loadSync, setModuleLoader (delegate to the singleton)
 │   │   ├── package-field.ts        # loadPackageField / loadPackageFieldSync
 │   │   └── built-in/
 │   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + factory); NOT in the barrel
@@ -58,7 +61,7 @@ locter/
 | Module                          | Purpose                                                                          |
 |---------------------------------|----------------------------------------------------------------------------------|
 | `src/locator/`                  | Wraps `fast-glob` and returns `{ path, name, extension }` records                |
-| `src/loader/module.ts`          | `LoaderRegistry` — dispatches `execute`/`executeSync`: user rules first, then the built-in extension table |
+| `src/loader/registry/`          | `LoaderRegistry` — dispatches `load`/`loadSync`: user rules first, then the built-in extension table; owns `Rule`/`LoaderRegistration`/`LoaderFactory`/`LoaderPreset` |
 | `src/loader/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in loaders; `BuiltInLoaderId` is derived from its keys |
 | `src/loader/singleton.ts`       | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader`   |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |

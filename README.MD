@@ -310,12 +310,16 @@ The 4.0 release reworks loader registration and dispatch. The list below is exha
 + import { TomlLoader } from '@locter/toml';
 + registerLoader(['.toml'], () => new TomlLoader());
 
-  // 3. LoaderManager is renamed to LoaderRegistry;
+  // 3. LoaderManager is renamed to LoaderRegistry and no longer implements
+  //    the loader interface: execute() / executeSync() become
+  //    load() / loadSync() (accepting LocatorInfo | string), and
   //    findLoader() / resolve() are replaced by find() / builtIn().
 - const manager = new LoaderManager();
+- await manager.execute('file.json');
 - manager.findLoader('file.json');       // Loader | string | undefined
 - manager.resolve('module');             // required an id-to-loader round-trip
 + const registry = new LoaderRegistry();
++ await registry.load('file.json');      // mirrors the global load() helper
 + registry.find('file.json');            // ILoader | undefined
 + registry.builtIn('module');            // statically typed as ModuleLoader
 ```

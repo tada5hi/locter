@@ -31,11 +31,11 @@ describe('src/errors/**', () => {
         const manager = new LoaderRegistry();
         const missing = path.join(basePath, 'file.foo');
 
-        await expect(manager.execute(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.executeSync(missing)).toThrow(LocterUnknownExtensionError);
+        await expect(manager.load(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.loadSync(missing)).toThrow(LocterUnknownExtensionError);
 
         try {
-            await manager.execute(missing);
+            await manager.load(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
             expect((e as LocterUnknownExtensionError).path).toEqual(missing);

@@ -9,16 +9,17 @@ import {
     LocterError,
     LocterUnknownExtensionError,
     wrapLoaderError,
-} from '../errors';
-import { buildFilePath, pathToLocatorInfo } from '../locator';
-import { hasOwnProperty, isFilePath } from '../utils';
-import { toModuleRecord } from './built-in';
-import type { BuiltInLoaderId, BuiltInLoaderOf } from './built-in/registry';
-import { BUILT_IN_PRESETS } from './built-in/registry';
+} from '../../errors';
+import type { LocatorInfo } from '../../locator';
+import { buildFilePath, pathToLocatorInfo } from '../../locator';
+import { hasOwnProperty, isFilePath } from '../../utils';
+import { toModuleRecord } from '../built-in';
+import type { BuiltInLoaderId, BuiltInLoaderOf } from '../built-in/registry';
+import { BUILT_IN_PRESETS } from '../built-in/registry';
+import type { ILoader } from '../type';
 import type {
-    ILoader, 
-    LoaderFactory, 
-    LoaderRegistration, 
+    LoaderFactory,
+    LoaderRegistration,
     Rule,
 } from './type';
 
@@ -39,7 +40,7 @@ type CompiledRule = {
     get: () => ILoader
 };
 
-export class LoaderRegistry implements ILoader {
+export class LoaderRegistry {
     /**
      * User rules only — built-ins live in the extension table instead.
      */
@@ -108,9 +109,9 @@ export class LoaderRegistry implements ILoader {
         }
 
         return {
-            id, 
-            test: rule.test, 
-            builtIn: false, 
+            id,
+            test: rule.test,
+            builtIn: false,
         };
     }
 
@@ -143,9 +144,9 @@ export class LoaderRegistry implements ILoader {
     entries() : LoaderRegistration[] {
         const output : LoaderRegistration[] = this.rules.map(
             (item) => ({
-                id: item.id, 
-                test: item.test, 
-                builtIn: false, 
+                id: item.id,
+                test: item.test,
+                builtIn: false,
             }),
         );
 
@@ -162,7 +163,7 @@ export class LoaderRegistry implements ILoader {
     }
 
     /**
-     * Restore the manager to its construction state: drop all user rules
+     * Restore the registry to its construction state: drop all user rules
      * and evict every cached loader instance (including a module loader
      * configured via setModuleLoader / configure).
      */
@@ -172,10 +173,11 @@ export class LoaderRegistry implements ILoader {
         this.ruleCounter = 0;
     }
 
-    async execute(input: string) : Promise<any> {
-        const loader = this.find(input);
+    async load(input: LocatorInfo | string) : Promise<any> {
+        const filePath = buildFilePath(input);
+        const loader = this.find(filePath);
         if (!loader) {
-            throw this.unknownExtensionError(input);
+            throw this.unknownExtensionError(filePath);
         }
 
         try {
@@ -183,22 +185,23 @@ export class LoaderRegistry implements ILoader {
             // is always the loaded value (and data-file top-level keys stay
             // accessible as named exports). Idempotent for the module loader,
             // which already returns a record.
-            return toModuleRecord(await loader.execute(input));
+            return toModuleRecord(await loader.execute(filePath));
         } catch (e) {
-            throw wrapLoaderError(e, input);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
-    executeSync(input: string) : any {
-        const loader = this.find(input);
+    loadSync(input: LocatorInfo | string) : any {
+        const filePath = buildFilePath(input);
+        const loader = this.find(filePath);
         if (!loader) {
-            throw this.unknownExtensionError(input);
+            throw this.unknownExtensionError(filePath);
         }
 
         try {
-            return toModuleRecord(loader.executeSync(input));
+            return toModuleRecord(loader.executeSync(filePath));
         } catch (e) {
-            throw wrapLoaderError(e, input);
+            throw wrapLoaderError(e, filePath);
         }
     }
 
@@ -220,7 +223,7 @@ export class LoaderRegistry implements ILoader {
      *   1. bare specifier (no extension)  → module loader, always
      *   2. user rules, registration order → first match wins (can override built-ins)
      *   3. built-in extension table
-     *   4. undefined → caller throws LocterUnknownExtensionError
+     *   4. undefined → load/loadSync throw LocterUnknownExtensionError
      */
     find(input: string) : ILoader | undefined {
         if (!isFilePath(input)) {

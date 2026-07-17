@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFilePath } from '../locator';
 import type { LocatorInfo } from '../locator';
 import type { ModuleLoaderOptions } from './built-in/module/type';
-import { useLoader } from './singleton';
 import type {
-    ILoader, 
-    LoaderFactory, 
-    LoaderRegistration, 
+    LoaderFactory,
+    LoaderRegistration,
     Rule,
-} from './type';
+} from './registry';
+import { useLoader } from './singleton';
+import type { ILoader } from './type';
 
 export function registerLoader(rule: Rule) : LoaderRegistration;
 export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : LoaderRegistration;
@@ -36,21 +35,11 @@ export function unregisterLoader(id: string) : boolean {
 }
 
 export async function load(input: LocatorInfo | string) : Promise<any> {
-    const manager = useLoader();
-    if (typeof input === 'string') {
-        return manager.execute(input);
-    }
-
-    return manager.execute(buildFilePath(input));
+    return useLoader().load(input);
 }
 
 export function loadSync(input: LocatorInfo | string) : any {
-    const manager = useLoader();
-    if (typeof input === 'string') {
-        return manager.executeSync(input);
-    }
-
-    return manager.executeSync(buildFilePath(input));
+    return useLoader().loadSync(input);
 }
 
 /**

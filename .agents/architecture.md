@@ -99,7 +99,9 @@ Conventions for new loaders:
 1. Bare module specifiers (no extension, per `isFilePath`) always route to `builtIn('module')` so `load('yaml')` works like `require('yaml')`.
 2. User rules, in registration order — first match wins. **User rules are matched before the built-in table**, so registering `.json` overrides the built-in JSON loader.
 3. The built-in extension table (O(1) map derived from `BUILT_IN_PRESETS`).
-4. `undefined` — `execute`/`executeSync` then throw `LocterUnknownExtensionError`.
+4. `undefined` — `load`/`loadSync` then throw `LocterUnknownExtensionError`.
+
+The registry does **not** implement `ILoader` — it is a dispatcher over loaders, not a loader itself. Its `load`/`loadSync` accept `LocatorInfo | string` (normalizing via `buildFilePath`), wrap results in `toModuleRecord`, and wrap errors — semantics a leaf loader's `execute` deliberately does not have.
 
 `builtIn(id)` lazily instantiates and caches built-in loaders per manager instance; `builtIn('module')` is statically typed as `ModuleLoader` (used by `setModuleLoader`, no cast needed).
 
@@ -107,15 +109,11 @@ Conventions for new loaders:
 
 ```typescript
 export async function load(input: LocatorInfo | string) : Promise<any> {
-    const manager = useLoader();
-    if (typeof input === 'string') {
-        return manager.execute(input);
-    }
-    return manager.execute(buildFilePath(input));
+    return useLoader().load(input);
 }
 ```
 
-`load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state wrappers — the only state is in the singleton (`useLoader()`, exported). When writing new top-level helpers, follow the same pattern: get the singleton, normalize `LocatorInfo` → string, delegate.
+`load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state, pure delegations — the only state is in the singleton (`useLoader()`, exported), and input normalization (`LocatorInfo` → path) lives inside the registry. When writing new top-level helpers, follow the same pattern: get the singleton, delegate.
 
 The registry has a lifecycle: every rule has a stable id (`register` returns a `LoaderRegistration`; re-registering an id replaces in place, built-in ids are reserved), `unregister(id)` removes a user rule, `entries()`/`has(id)` introspect the effective match order, and `reset()` restores construction state (drops user rules and every cached instance, including a `setModuleLoader`-configured module loader). `setModuleLoader` returns a restore function re-applying the previous configuration. The global registry belongs to the application; libraries should isolate via `new LoaderRegistry({ rules })`.
 
@@ -131,11 +129,11 @@ Locate:
   3. fast-glob runs each pattern × cwd
   4. pathToLocatorInfo(absolutePath)      → { path, name, extension? }
 
-Load:
+Load (LoaderRegistry.load / loadSync):
   1. buildFilePath(input)                 → string (LocatorInfo → path or pass-through)
-  2. LoaderRegistry.find(input)            → ILoader | undefined
+  2. find(path)                           → ILoader | undefined
      (bare specifier → module loader; user rules; built-in extension table)
-  3. loader.execute(input)                → parsed value
+  3. loader.execute(path)                 → parsed value
   4. toModuleRecord(value)                → normalized module record
 
 Output:
@@ -148,7 +146,7 @@ Output:
 - `ModuleLoader` additionally:
     - Rethrows `SyntaxError`, `ReferenceError`, and TypeScript compile errors (detected by `isTypeScriptError`) without retry.
     - Retries with `withFilePrefix: true` (pathToFileURL) on `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
-- `LoaderRegistry.execute` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
+- `LoaderRegistry.load` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
 
 ## File Structure
 

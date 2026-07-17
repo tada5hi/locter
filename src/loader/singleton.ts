@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LoaderRegistry } from './module';
+import { LoaderRegistry } from './registry';
 
 let instance : LoaderRegistry;
 export function useLoader() {
