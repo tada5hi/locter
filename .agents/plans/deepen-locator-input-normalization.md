@@ -19,7 +19,7 @@ the bugs hide at the call sites, not in the pure functions:
   to the locator module for nothing. `originalPath` in `built-in/module/module.ts:38` re-implements
   the same branch.
 - **`isFilePath` is a syntactic guess:** `path.extname(input) !== ''` decides module-specifier vs
-  file-path routing in `LoaderManager.findLoader`. Extensionless file paths silently route to the
+  file-path routing in `LoaderRegistry.findLoader`. Extensionless file paths silently route to the
   module loader.
 
 ## Direction

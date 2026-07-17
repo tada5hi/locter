@@ -22,7 +22,7 @@ import type {
     Rule,
 } from './type';
 
-export type LoaderManagerOptions = {
+export type LoaderRegistryOptions = {
     /**
      * Seed user rules (matched before built-ins, in array order).
      */
@@ -39,7 +39,7 @@ type CompiledRule = {
     get: () => ILoader
 };
 
-export class LoaderManager implements ILoader {
+export class LoaderRegistry implements ILoader {
     /**
      * User rules only — built-ins live in the extension table instead.
      */
@@ -57,7 +57,7 @@ export class LoaderManager implements ILoader {
 
     protected ruleCounter : number;
 
-    constructor(options: LoaderManagerOptions = {}) {
+    constructor(options: LoaderRegistryOptions = {}) {
         this.rules = [];
         this.builtInCache = new Map();
         this.builtInExtensions = new Map();

@@ -5,7 +5,7 @@
 Locter is structured as two cooperating subsystems plus a utility layer:
 
 1. **Locator** (`src/locator/`) — pure file discovery over `fast-glob`. Takes a glob pattern + options, returns `LocatorInfo` records `{ path, name, extension? }`. Has parallel sync/async surfaces.
-2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderManager` dispatches to `ILoader` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`). A process-wide singleton (`useLoader`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
+2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderRegistry` dispatches to `ILoader` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`). A process-wide singleton (`useLoader`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
 3. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
 
 The two subsystems are loosely coupled: `loader/` depends on `locator/` only for `pathToLocatorInfo` and `buildFilePath` (to derive the extension and the on-disk path from a `LocatorInfo`). `locator/` does not import from `loader/`.
@@ -14,13 +14,13 @@ The two subsystems are loosely coupled: `loader/` depends on `locator/` only for
 
 ### 1. Parallel sync + async surfaces
 
-Every public operation has two variants: `locate` / `locateSync`, `locateMany` / `locateManySync`, `load` / `loadSync`, and the `Loader` interface itself requires both `execute(input)` and `executeSync(input)`. This is a deliberate constraint — consumers (config loaders, CLIs, plugin systems) frequently can't `await`.
+Every public operation has two variants: `locate` / `locateSync`, `locateMany` / `locateManySync`, `load` / `loadSync`, and the `ILoader` interface itself requires both `execute(input)` and `executeSync(input)`. This is a deliberate constraint — consumers (config loaders, CLIs, plugin systems) frequently can't `await`.
 
 When adding a new loader or locator function, implement **both** variants. Tests in `test/unit/` typically cover both in the same `it()` block.
 
 ### 2. Singleton loader registry
 
-`registerLoader` and `load` operate on a single lazily-created `LoaderManager` instance held in `src/loader/singleton.ts`. This means loader registration is process-global. Tests that need isolated state instantiate `new LoaderManager()` directly (see `test/unit/loader/module.spec.ts`).
+`registerLoader` and `load` operate on a single lazily-created `LoaderRegistry` instance held in `src/loader/singleton.ts`. This means loader registration is process-global. Tests that need isolated state instantiate `new LoaderRegistry()` directly (see `test/unit/loader/module.spec.ts`).
 
 ### 3. `jiti` for TypeScript/ESM/CJS module loading
 
@@ -92,9 +92,9 @@ Conventions for new loaders:
 - If the loader is meant to be built-in: add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`) — the id, extensions, and factory live there together; the type system derives everything else. Export the class from `src/loader/built-in/index.ts` to make it public.
 - If the loader is external/plugin: consumers register it at runtime via `registerLoader` — either an `ILoader` instance or a lazy `LoaderFactory`.
 
-### Dispatcher: `LoaderManager`
+### Dispatcher: `LoaderRegistry`
 
-`LoaderManager.find(input)` resolves an input to a live `ILoader` (or `undefined`) in an explicit order:
+`LoaderRegistry.find(input)` resolves an input to a live `ILoader` (or `undefined`) in an explicit order:
 
 1. Bare module specifiers (no extension, per `isFilePath`) always route to `builtIn('module')` so `load('yaml')` works like `require('yaml')`.
 2. User rules, in registration order — first match wins. **User rules are matched before the built-in table**, so registering `.json` overrides the built-in JSON loader.
@@ -117,7 +117,7 @@ export async function load(input: LocatorInfo | string) : Promise<any> {
 
 `load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state wrappers — the only state is in the singleton (`useLoader()`, exported). When writing new top-level helpers, follow the same pattern: get the singleton, normalize `LocatorInfo` → string, delegate.
 
-The registry has a lifecycle: every rule has a stable id (`register` returns a `LoaderRegistration`; re-registering an id replaces in place, built-in ids are reserved), `unregister(id)` removes a user rule, `entries()`/`has(id)` introspect the effective match order, and `reset()` restores construction state (drops user rules and every cached instance, including a `setModuleLoader`-configured module loader). `setModuleLoader` returns a restore function re-applying the previous configuration. The global registry belongs to the application; libraries should isolate via `new LoaderManager({ rules })`.
+The registry has a lifecycle: every rule has a stable id (`register` returns a `LoaderRegistration`; re-registering an id replaces in place, built-in ids are reserved), `unregister(id)` removes a user rule, `entries()`/`has(id)` introspect the effective match order, and `reset()` restores construction state (drops user rules and every cached instance, including a `setModuleLoader`-configured module loader). `setModuleLoader` returns a restore function re-applying the previous configuration. The global registry belongs to the application; libraries should isolate via `new LoaderRegistry({ rules })`.
 
 ## Data Flow
 
@@ -133,7 +133,7 @@ Locate:
 
 Load:
   1. buildFilePath(input)                 → string (LocatorInfo → path or pass-through)
-  2. LoaderManager.find(input)            → ILoader | undefined
+  2. LoaderRegistry.find(input)            → ILoader | undefined
      (bare specifier → module loader; user rules; built-in extension table)
   3. loader.execute(input)                → parsed value
   4. toModuleRecord(value)                → normalized module record
@@ -148,7 +148,7 @@ Output:
 - `ModuleLoader` additionally:
     - Rethrows `SyntaxError`, `ReferenceError`, and TypeScript compile errors (detected by `isTypeScriptError`) without retry.
     - Retries with `withFilePrefix: true` (pathToFileURL) on `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
-- `LoaderManager.execute` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
+- `LoaderRegistry.execute` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
 
 ## File Structure
 

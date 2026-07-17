@@ -13,7 +13,7 @@ import {
     LOCTER_LOAD_ERROR_MARKER,
     LOCTER_NOT_FOUND_ERROR_MARKER,
     LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER,
-    LoaderManager,
+    LoaderRegistry,
     LocterError,
     LocterLoadError,
     LocterNotFoundError,
@@ -28,7 +28,7 @@ const basePath = path.join(import.meta.dirname, '..', 'data');
 
 describe('src/errors/**', () => {
     it('should throw LocterUnknownExtensionError when no rule matches', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         const missing = path.join(basePath, 'file.foo');
 
         await expect(manager.execute(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);

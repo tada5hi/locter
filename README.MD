@@ -248,7 +248,7 @@ unregisterLoader(registration.id);          // remove it again
 
 registerLoader({ id: 'json5', test: ['.json5'], loader: otherLoader }); // replace by id
 
-const manager = useLoader();                // the process-global LoaderManager
+const manager = useLoader();                // the process-global LoaderRegistry
 manager.entries();                          // [{ id, test, builtIn }, ...] in match order
 manager.has('json');                        // true (built-in)
 manager.reset();                            // drop all user rules + cached loader instances
@@ -256,7 +256,7 @@ manager.reset();                            // drop all user rules + cached load
 
 The global registry belongs to the **application**. Libraries that need custom
 loaders should create their own isolated instance instead of mutating the
-singleton: `new LoaderManager({ rules: [...] })`.
+singleton: `new LoaderRegistry({ rules: [...] })`.
 
 ### Errors
 
@@ -310,11 +310,14 @@ The 4.0 release reworks loader registration and dispatch. The list below is exha
 + import { TomlLoader } from '@locter/toml';
 + registerLoader(['.toml'], () => new TomlLoader());
 
-  // 3. LoaderManager: findLoader() / resolve() are replaced by find() / builtIn().
-- manager.findLoader('file.json');      // Loader | string | undefined
-+ manager.find('file.json');            // ILoader | undefined
-- manager.resolve('module');            // required an id-to-loader round-trip
-+ manager.builtIn('module');            // statically typed as ModuleLoader
+  // 3. LoaderManager is renamed to LoaderRegistry;
+  //    findLoader() / resolve() are replaced by find() / builtIn().
+- const manager = new LoaderManager();
+- manager.findLoader('file.json');       // Loader | string | undefined
+- manager.resolve('module');             // required an id-to-loader round-trip
++ const registry = new LoaderRegistry();
++ registry.find('file.json');            // ILoader | undefined
++ registry.builtIn('module');            // statically typed as ModuleLoader
 ```
 
 Additionally:

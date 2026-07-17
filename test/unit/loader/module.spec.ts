@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    LoaderManager,
+    LoaderRegistry,
     LocterUnknownExtensionError,
     ModuleLoader,
     getModuleExport,
@@ -54,7 +54,7 @@ describe('src/loader/**', () => {
     });
 
     it('should register loader', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(['.foo'], {
             async execute(input) {
                 return input;
@@ -72,7 +72,7 @@ describe('src/loader/**', () => {
     });
 
     it('should register loader with regexp test', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(/\.foo$/, {
             async execute() {
                 return { matched: true };
@@ -90,7 +90,7 @@ describe('src/loader/**', () => {
     });
 
     it('should dispatch a stateful (global) regexp rule consistently', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(/\.foo$/g, {
             async execute() {
                 return { matched: true };
@@ -113,7 +113,7 @@ describe('src/loader/**', () => {
 
     it('should register loader lazily via factory', async () => {
         let constructed = 0;
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(['.foo'], () => {
             constructed++;
             return {
@@ -138,7 +138,7 @@ describe('src/loader/**', () => {
     });
 
     it('should override a built-in loader', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(['.json'], {
             async execute() {
                 return { sentinel: true };
@@ -156,12 +156,12 @@ describe('src/loader/**', () => {
     });
 
     it('should cache built-in loader instances', () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         expect(manager.builtIn('json')).toBe(manager.builtIn('json'));
     });
 
     it('should unregister loader by id', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         const registration = manager.register(['.foo'], {
             async execute(input) {
                 return input;
@@ -182,7 +182,7 @@ describe('src/loader/**', () => {
     });
 
     it('should replace loader registered with an existing id', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register({
             id: 'custom',
             test: ['.foo'],
@@ -219,7 +219,7 @@ describe('src/loader/**', () => {
     });
 
     it('should reject rules with a built-in id', () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         expect(() => manager.register({
             id: 'json',
             test: ['.foo'],
@@ -235,7 +235,7 @@ describe('src/loader/**', () => {
     });
 
     it('should list registrations in match order', () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register({
             id: 'custom',
             test: ['.foo'],
@@ -263,7 +263,7 @@ describe('src/loader/**', () => {
 
     it('should reset to construction state', async () => {
         let constructed = 0;
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         manager.register(['.foo'], () => {
             constructed++;
             return {
@@ -286,7 +286,7 @@ describe('src/loader/**', () => {
     });
 
     it('should use module loader as fallback', () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         expect(manager.find('foo')).toBe(manager.builtIn('module'));
     });
 

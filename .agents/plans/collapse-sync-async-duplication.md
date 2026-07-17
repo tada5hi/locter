@@ -13,7 +13,7 @@ are near-verbatim twins that differ only in `await` / `fg.sync` / `fs.readFileSy
 | walk-up | `locateUp` (`src/locator/up.ts`) | `locateUpSync` (same file, identical loop) |
 | load | `load` (`src/loader/helpers.ts`) | `loadSync` |
 | package field | `loadPackageField` (`src/loader/package-field.ts`) | sync variant, ~30 lines duplicated |
-| manager exec | `LoaderManager.execute` | `executeSync` |
+| manager exec | `LoaderRegistry.execute` | `executeSync` |
 | module loader exec | `ModuleLoader.execute` | `executeSync` (asymmetric — see below) |
 | json/yaml/conf | each `execute` | each `executeSync` |
 
@@ -40,4 +40,4 @@ In-process / local-substitutable — fs effects are already covered by `test/dat
 
 ## Related
 
-- [[deepen-loader-registry]] — reshapes `LoaderManager.execute`/`executeSync`; coordinate.
+- [[deepen-loader-registry]] — reshapes `LoaderRegistry.execute`/`executeSync`; coordinate.

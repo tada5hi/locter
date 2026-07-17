@@ -5,15 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LoaderManager } from './module';
+import { LoaderRegistry } from './module';
 
-let instance : LoaderManager;
+let instance : LoaderRegistry;
 export function useLoader() {
     if (typeof instance !== 'undefined') {
         return instance;
     }
 
-    instance = new LoaderManager();
+    instance = new LoaderRegistry();
 
     return instance;
 }

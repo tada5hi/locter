@@ -54,6 +54,6 @@ export type LoaderRegistration = {
 export type LoaderPreset = {
     /** Extensions (with leading dot) routed to this loader. Must be disjoint across presets. */
     extensions: readonly string[],
-    /** Lazy factory — invoked at most once per LoaderManager instance. */
+    /** Lazy factory — invoked at most once per LoaderRegistry instance. */
     create: () => ILoader
 };

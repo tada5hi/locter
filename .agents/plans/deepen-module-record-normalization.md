@@ -8,7 +8,7 @@ The "normalize a loaded value into a module record" concept has no single owner:
 
 - `toModuleRecord` (`src/loader/built-in/module/utils.ts`) is applied **twice**: once by
   `ModuleLoader.execute`/`executeSync` (`src/loader/built-in/module/module.ts:92,108`) and again by
-  `LoaderManager.execute`/`executeSync` (`src/loader/module.ts:69,83`). It only works because the
+  `LoaderRegistry.execute`/`executeSync` (`src/loader/module.ts:69,83`). It only works because the
   function happens to be idempotent for module-shaped values.
 - `isESModule` (`src/loader/built-in/module/utils.ts`) decides "is this already a module record" by
   sniffing for an `__esModule` key on **any** object. A data file whose top level contains
@@ -22,7 +22,7 @@ The "normalize a loaded value into a module record" concept has no single owner:
 
 ## Direction
 
-Normalize in exactly **one** place (the `LoaderManager` boundary) and gate the "already a module
+Normalize in exactly **one** place (the `LoaderRegistry` boundary) and gate the "already a module
 record" shortcut on **provenance** (the value came from the module loader) instead of sniffing
 arbitrary parsed data. `loadPackageField` should read the raw parsed value (or the record's
 `.default`), never the synthetic keys.
@@ -40,5 +40,5 @@ In-process — pure data-shape logic; merge and test directly.
 
 ## Related
 
-- [[deepen-loader-registry]] — chosen first; touches the same `LoaderManager.execute` seam, land it
+- [[deepen-loader-registry]] — chosen first; touches the same `LoaderRegistry.execute` seam, land it
   before or together with this.
