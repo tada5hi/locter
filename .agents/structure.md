@@ -15,11 +15,11 @@ locter/
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
-│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, singleton, type)
+│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, type)
 │   │   ├── type.ts                 # ILoader interface — the port every loader implements
-│   │   ├── singleton.ts            # useLoaderRegistry() — lazy process-global LoaderRegistry instance
-│   │   ├── registry/               # LoaderRegistry + its vocabulary
+│   │   ├── registry/               # LoaderRegistry + its vocabulary + the process-global singleton
 │   │   │   ├── module.ts           # LoaderRegistry class (dispatch: load, loadSync, find, builtIn; lifecycle: register, unregister, entries, has, reset)
+│   │   │   ├── singleton.ts        # useLoaderRegistry() — lazy process-global LoaderRegistry instance
 │   │   │   ├── type.ts             # Rule, LoaderFactory, LoaderRegistration, LoaderPreset
 │   │   │   └── index.ts            # Barrel
 │   │   ├── helpers.ts              # registerLoader, unregisterLoader, load, loadSync, setModuleLoader (delegate to the singleton)
@@ -63,7 +63,7 @@ locter/
 | `src/locator/`                  | Wraps `fast-glob` and returns `{ path, name, extension }` records                |
 | `src/loader/registry/`          | `LoaderRegistry` — dispatches `load`/`loadSync`: user rules first, then the built-in extension table; owns `Rule`/`LoaderRegistration`/`LoaderFactory`/`LoaderPreset` |
 | `src/loader/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in loaders; `BuiltInLoaderId` is derived from its keys |
-| `src/loader/singleton.ts`       | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader`   |
+| `src/loader/registry/singleton.ts` | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader` |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |
 | `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; normalizes module records via `toModuleRecord` |
 | `src/loader/built-in/json/`     | `fs.readFile` + `JSON.parse`                                                     |

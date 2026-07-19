@@ -9,5 +9,4 @@ export * from './built-in';
 export * from './helpers';
 export * from './package-field';
 export * from './registry';
-export * from './singleton';
 export * from './type';

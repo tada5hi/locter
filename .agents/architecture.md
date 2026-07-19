@@ -20,7 +20,7 @@ When adding a new loader or locator function, implement **both** variants. Tests
 
 ### 2. Singleton loader registry
 
-`registerLoader` and `load` operate on a single lazily-created `LoaderRegistry` instance held in `src/loader/singleton.ts`. This means loader registration is process-global. Tests that need isolated state instantiate `new LoaderRegistry()` directly (see `test/unit/loader/module.spec.ts`).
+`registerLoader` and `load` operate on a single lazily-created `LoaderRegistry` instance held in `src/loader/registry/singleton.ts`. This means loader registration is process-global. Tests that need isolated state instantiate `new LoaderRegistry()` directly (see `test/unit/loader/module.spec.ts`).
 
 ### 3. `jiti` for TypeScript/ESM/CJS module loading
 

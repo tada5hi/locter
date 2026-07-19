@@ -7,12 +7,12 @@
 
 import type { LocatorInfo } from '../locator';
 import type { ModuleLoaderOptions } from './built-in/module/type';
-import type {
-    LoaderFactory,
-    LoaderRegistration,
-    Rule,
+import {
+    type LoaderFactory,
+    type LoaderRegistration,
+    type Rule,
+    useLoaderRegistry,
 } from './registry';
-import { useLoaderRegistry } from './singleton';
 import type { ILoader } from './type';
 
 export function registerLoader(rule: Rule) : LoaderRegistration;
