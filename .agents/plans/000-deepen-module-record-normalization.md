@@ -1,6 +1,23 @@
 # Plan: Deepen module-record normalization (one owner, provenance-aware)
 
-Status: proposed (not started). Origin: architecture exploration, 2026-07-16.
+Status: implemented 2026-07-19. Origin: architecture exploration, 2026-07-16.
+
+## Outcome
+
+- `createModuleRecord` (unconditional wrap) split out of `toModuleRecord`
+  (`src/loader/built-in/module/utils.ts`).
+- `ModuleLoader.execute`/`executeSync` return the raw module value; normalization happens
+  exactly once, in `LoaderRegistry.toRecord` (`src/loader/registry/module.ts`), gated on
+  `loader instanceof ModuleLoader` — data-loader output is always wrapped, even when it
+  contains an `__esModule` key.
+- `loadPackageField`/`loadPackageFieldSync` read the raw parsed `package.json` via the
+  built-in JSON loader; synthetic record keys (`default`, `__esModule`) no longer resolve.
+- Tests: `test/data/file-es-module.{json,yml}` fixtures, a registry boundary contract test
+  over all built-in extensions, a provenance-gate test for user loaders, and synthetic-key
+  assertions in `package-field.spec.ts`.
+
+(Note: file references below predate the #855 registry refactor — `LoaderRegistry` moved
+from `src/loader/module.ts` to `src/loader/registry/module.ts`.)
 
 ## Problem
 

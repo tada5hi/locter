@@ -101,7 +101,7 @@ Conventions for new loaders:
 3. The built-in extension table (O(1) map derived from `BUILT_IN_PRESETS`).
 4. `undefined` — `load`/`loadSync` then throw `LocterUnknownExtensionError`.
 
-The registry does **not** implement `ILoader` — it is a dispatcher over loaders, not a loader itself. Its `load`/`loadSync` accept `LocatorInfo | string` (normalizing via `buildFilePath`), wrap results in `toModuleRecord`, and wrap errors — semantics a leaf loader's `execute` deliberately does not have.
+The registry does **not** implement `ILoader` — it is a dispatcher over loaders, not a loader itself. Its `load`/`loadSync` accept `LocatorInfo | string` (normalizing via `buildFilePath`), normalize results to a module record, and wrap errors — semantics a leaf loader's `execute` deliberately does not have. Normalization happens **only** here and is provenance-aware: output of a `ModuleLoader` goes through `toModuleRecord` (the `__esModule` marker is trustworthy for values a module system produced), while every other loader's output is arbitrary parsed data and is always wrapped via `createModuleRecord` — even if it happens to contain an `__esModule` key.
 
 `builtIn(id)` lazily instantiates and caches built-in loaders per manager instance; `builtIn('module')` is statically typed as `ModuleLoader` (used by `setModuleLoader`, no cast needed).
 
@@ -134,7 +134,8 @@ Load (LoaderRegistry.load / loadSync):
   2. find(path)                           → ILoader | undefined
      (bare specifier → module loader; user rules; built-in extension table)
   3. loader.execute(path)                 → parsed value
-  4. toModuleRecord(value)                → normalized module record
+  4. toRecord(value, loader)              → normalized module record
+     (module loader → toModuleRecord; any other loader → createModuleRecord)
 
 Output:
   └── LocatorInfo[] / LocatorInfo / parsed module/JSON/YAML/conf record

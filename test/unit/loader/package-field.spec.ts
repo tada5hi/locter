@@ -44,6 +44,18 @@ describe('src/loader/package-field.ts', () => {
         expect(syncResult).toBeUndefined();
     });
 
+    it('should not resolve synthetic module-record keys as fields', async () => {
+        // `default` / `__esModule` exist on the record load() returns, but
+        // not in the raw package.json — they must read as absent fields
+        for (const field of ['default', '__esModule']) {
+            const asyncResult = await loadPackageField(field, { cwd: withField });
+            expect(asyncResult, field).toBeUndefined();
+
+            const syncResult = loadPackageFieldSync(field, { cwd: withField });
+            expect(syncResult, field).toBeUndefined();
+        }
+    });
+
     it('should return undefined when package.json is absent (no walkUp)', async () => {
         const asyncResult = await loadPackageField('name', { cwd: emptyDir });
         expect(asyncResult).toBeUndefined();

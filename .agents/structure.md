@@ -29,7 +29,7 @@ locter/
 │   │       ├── module/             # ModuleLoader (jiti-backed JS/TS/ESM/CJS loader)
 │   │       │   ├── module.ts
 │   │       │   ├── constants.ts    # MODULE_FILE_EXTENSIONS (shared by registry + jiti config)
-│   │       │   ├── utils.ts        # toModuleRecord, isESModule, getModuleExport
+│   │       │   ├── utils.ts        # toModuleRecord, createModuleRecord, isESModule, getModuleExport
 │   │       │   └── type.ts
 │   │       ├── json/module.ts      # JSONLoader (fs + JSON.parse)
 │   │       ├── yaml/module.ts      # YAMLLoader (yaml.parse)
@@ -65,7 +65,7 @@ locter/
 | `src/loader/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in loaders; `BuiltInLoaderId` is derived from its keys |
 | `src/loader/registry/singleton.ts` | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader` |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |
-| `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; normalizes module records via `toModuleRecord` |
+| `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; returns the raw module value (the registry normalizes) |
 | `src/loader/built-in/json/`     | `fs.readFile` + `JSON.parse`                                                     |
 | `src/loader/built-in/yaml/`     | `fs.readFile` + `yaml.parse`                                                     |
 | `src/loader/built-in/conf/`     | Line-based `key=value` parser, `destr` value coercion, `flat.unflatten` for nesting |

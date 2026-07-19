@@ -8,13 +8,14 @@
 import { LocterNotFoundError } from '../errors';
 import type { LocatorInfo } from '../locator';
 import {
+    buildFilePath,
     locate,
     locateSync,
     locateUp,
     locateUpSync,
 } from '../locator';
 import { hasOwnProperty, isObject } from '../utils';
-import { load, loadSync } from './helpers';
+import { useLoaderRegistry } from './registry';
 
 export type LoadPackageFieldOptions = {
     cwd?: string,
@@ -48,7 +49,10 @@ export async function loadPackageField<T = unknown>(
     }
 
     try {
-        const pkg = await load(info);
+        // Read the raw parsed package.json via the built-in JSON loader —
+        // not the normalized record load() returns — so synthetic record
+        // keys (`default`, `__esModule`) can never resolve as package fields.
+        const pkg = await useLoaderRegistry().builtIn('json').execute(buildFilePath(info));
         return extractField<T>(pkg, field);
     } catch (e) {
         if (e instanceof LocterNotFoundError) {
@@ -77,7 +81,7 @@ export function loadPackageFieldSync<T = unknown>(
     }
 
     try {
-        const pkg = loadSync(info);
+        const pkg = useLoaderRegistry().builtIn('json').executeSync(buildFilePath(info));
         return extractField<T>(pkg, field);
     } catch (e) {
         if (e instanceof LocterNotFoundError) {
