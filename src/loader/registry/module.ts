@@ -13,7 +13,7 @@ import {
 import type { LocatorInfo } from '../../locator';
 import { buildFilePath, pathToLocatorInfo } from '../../locator';
 import { hasOwnProperty, isFilePath } from '../../utils';
-import { toModuleRecord } from '../built-in';
+import { ModuleLoader, createModuleRecord, toModuleRecord } from '../built-in';
 import type { BuiltInLoaderId, BuiltInLoaderOf } from '../built-in/registry';
 import { BUILT_IN_PRESETS } from '../built-in/registry';
 import type { ILoader } from '../type';
@@ -181,11 +181,7 @@ export class LoaderRegistry {
         }
 
         try {
-            // Normalize every loader's result to a module record, so `.default`
-            // is always the loaded value (and data-file top-level keys stay
-            // accessible as named exports). Idempotent for the module loader,
-            // which already returns a record.
-            return toModuleRecord(await loader.execute(filePath));
+            return this.toRecord(await loader.execute(filePath), loader);
         } catch (e) {
             throw wrapLoaderError(e, filePath);
         }
@@ -199,10 +195,26 @@ export class LoaderRegistry {
         }
 
         try {
-            return toModuleRecord(loader.executeSync(filePath));
+            return this.toRecord(loader.executeSync(filePath), loader);
         } catch (e) {
             throw wrapLoaderError(e, filePath);
         }
+    }
+
+    /**
+     * The single normalization boundary: every load result becomes a module
+     * record (`.default` is always the loaded value, top-level keys stay
+     * accessible as named exports). Provenance decides how: module-loader
+     * output may legitimately already be a record (`__esModule` is meaningful
+     * there); any other loader returns arbitrary parsed data, which is always
+     * wrapped — even if it happens to contain an `__esModule` key.
+     */
+    protected toRecord(output: unknown, loader: ILoader) : any {
+        if (loader instanceof ModuleLoader) {
+            return toModuleRecord(output);
+        }
+
+        return createModuleRecord(output);
     }
 
     /**

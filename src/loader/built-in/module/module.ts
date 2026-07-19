@@ -30,7 +30,6 @@ import type {
     ModuleLoadSyncFn,
     ModuleLoaderOptions,
 } from './type';
-import { toModuleRecord } from './utils';
 
 const require = createRequire(import.meta.url);
 
@@ -81,11 +80,14 @@ export class ModuleLoader implements ILoader {
         return previous;
     }
 
+    /**
+     * Returns the raw module value (import / require / jiti output) —
+     * normalization to a module record happens once, at the
+     * LoaderRegistry boundary.
+     */
     async execute(input: string) {
-        let output : any;
-
         try {
-            output = await this.load(input);
+            return await this.load(input);
         } catch (e) {
             if (isUnrecoverableError(e)) {
                 throw e;
@@ -94,29 +96,23 @@ export class ModuleLoader implements ILoader {
             // jiti + ts-node
             // issue: https://github.com/nuxt/bridge/issues/228
             if (isTsNodeRuntimeEnvironment()) {
-                output = this.loadSync(input);
-            } else {
-                output = this.instance(input);
+                return this.loadSync(input);
             }
-        }
 
-        return toModuleRecord(output);
+            return this.instance(input);
+        }
     }
 
     executeSync(input: string) {
-        let output : any;
-
         try {
-            output = this.loadSync(input);
+            return this.loadSync(input);
         } catch (e) {
             if (isUnrecoverableError(e)) {
                 throw e;
             }
 
-            output = this.instance(input);
+            return this.instance(input);
         }
-
-        return toModuleRecord(output);
     }
 
     // ---------------------------------------------------------------------------

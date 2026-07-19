@@ -26,4 +26,14 @@ describe('src/loader/**', () => {
         expect(loaderContent.default).toBeDefined();
         expect(loaderContent.default.YAML).toEqual(loaderContent.YAML);
     });
+
+    it('should wrap data containing an __esModule key', async () => {
+        const loaderContent = await load('./test/data/file-es-module.yml');
+        expect(loaderContent.foo).toEqual('bar');
+        expect(loaderContent.default).toEqual({ __esModule: true, foo: 'bar' });
+
+        const loaderContentSync = loadSync('./test/data/file-es-module.yml');
+        expect(loaderContentSync.foo).toEqual('bar');
+        expect(loaderContentSync.default).toEqual({ __esModule: true, foo: 'bar' });
+    });
 });

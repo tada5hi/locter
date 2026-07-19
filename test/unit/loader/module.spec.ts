@@ -18,6 +18,48 @@ import {
 } from '../../../src';
 
 describe('src/loader/**', () => {
+    it('should normalize every built-in loader result to a module record', async () => {
+        const fixtures = [
+            'file.json',
+            'file.yml',
+            'file.conf',
+            'file.cjs',
+            'file.mjs',
+            'file.cts',
+            'file.mts',
+        ];
+
+        for (const fixture of fixtures) {
+            const record = await load(`./test/data/${fixture}`);
+            expect(record.__esModule, fixture).toBe(true);
+            expect(record.default, fixture).toBeDefined();
+
+            const recordSync = loadSync(`./test/data/${fixture}`);
+            expect(recordSync.__esModule, fixture).toBe(true);
+            expect(recordSync.default, fixture).toBeDefined();
+        }
+    });
+
+    it('should wrap user-loader output even when it carries an __esModule key', async () => {
+        const manager = new LoaderRegistry();
+        manager.register(['.foo'], {
+            async execute() {
+                return { __esModule: true, foo: 'bar' };
+            },
+            executeSync() {
+                return { __esModule: true, foo: 'bar' };
+            },
+        });
+
+        const record = await manager.load('file.foo');
+        expect(record.foo).toEqual('bar');
+        expect(record.default).toEqual({ __esModule: true, foo: 'bar' });
+
+        const recordSync = manager.loadSync('file.foo');
+        expect(recordSync.foo).toEqual('bar');
+        expect(recordSync.default).toEqual({ __esModule: true, foo: 'bar' });
+    });
+
     it('should filter file', async () => {
         let loaderContent = await load('./test/data/file.mts');
         loaderContent = getModuleExport(loaderContent, (key) => key === 'bar');
