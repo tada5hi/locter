@@ -12,13 +12,13 @@ import type {
     LoaderRegistration,
     Rule,
 } from './registry';
-import { useLoader } from './singleton';
+import { useLoaderRegistry } from './singleton';
 import type { ILoader } from './type';
 
 export function registerLoader(rule: Rule) : LoaderRegistration;
 export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : LoaderRegistration;
 export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : LoaderRegistration {
-    const manager = useLoader();
+    const manager = useLoaderRegistry();
     if (typeof loader !== 'undefined') {
         return manager.register(test, loader);
     }
@@ -31,15 +31,15 @@ export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : Lo
  * (as returned by registerLoader). Built-in ids cannot be unregistered.
  */
 export function unregisterLoader(id: string) : boolean {
-    return useLoader().unregister(id);
+    return useLoaderRegistry().unregister(id);
 }
 
 export async function load(input: LocatorInfo | string) : Promise<any> {
-    return useLoader().load(input);
+    return useLoaderRegistry().load(input);
 }
 
 export function loadSync(input: LocatorInfo | string) : any {
-    return useLoader().loadSync(input);
+    return useLoaderRegistry().loadSync(input);
 }
 
 /**
@@ -51,7 +51,10 @@ export function loadSync(input: LocatorInfo | string) : any {
  * `import()` so loaded modules share identity with statically imported ones.
  *
  * Returns a restore function that re-applies the previous configuration —
- * handy for scoped overrides (e.g. test teardown).
+ * handy for scoped overrides (e.g. test teardown). The restore function is
+ * scoped to the exact loader instance it configured: after a registry
+ * reset() (which discards that instance) it becomes a no-op instead of
+ * re-applying stale configuration to the fresh instance.
  *
  * @example
  * ```ts
@@ -64,7 +67,7 @@ export function loadSync(input: LocatorInfo | string) : any {
  * ```
  */
 export function setModuleLoader(options: ModuleLoaderOptions) : () => void {
-    const loader = useLoader().builtIn('module');
+    const loader = useLoaderRegistry().builtIn('module');
     const previous = loader.configure(options);
 
     return () => {

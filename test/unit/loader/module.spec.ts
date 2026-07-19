@@ -14,6 +14,7 @@ import {
     load,
     loadSync,
     setModuleLoader,
+    useLoaderRegistry,
 } from '../../../src';
 
 describe('src/loader/**', () => {
@@ -385,5 +386,27 @@ describe('src/loader/**', () => {
         const restored = await load('yaml');
         expect(restored).toBeDefined();
         expect(restored.parse).toBeDefined();
+    });
+
+    it('should scope setModuleLoader restore to the configured instance (no-op after reset)', async () => {
+        const restore = setModuleLoader({
+            load: (id) => ({
+                __esModule: true,
+                from: 'pre-reset',
+                id,
+            }),
+        });
+
+        const configured = await load('yaml');
+        expect(configured.from).toEqual('pre-reset');
+
+        // reset() discards the configured module loader instance; a stale
+        // restore() must NOT re-apply pre-reset configuration to the fresh one
+        useLoaderRegistry().reset();
+        restore();
+
+        const fresh = await load('yaml');
+        expect(fresh.from).toBeUndefined();
+        expect(fresh.parse).toBeDefined();
     });
 });

@@ -8,7 +8,7 @@
 import { LoaderRegistry } from './registry';
 
 let instance : LoaderRegistry;
-export function useLoader() {
+export function useLoaderRegistry() {
     if (typeof instance !== 'undefined') {
         return instance;
     }

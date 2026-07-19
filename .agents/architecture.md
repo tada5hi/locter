@@ -5,7 +5,7 @@
 Locter is structured as two cooperating subsystems plus a utility layer:
 
 1. **Locator** (`src/locator/`) — pure file discovery over `fast-glob`. Takes a glob pattern + options, returns `LocatorInfo` records `{ path, name, extension? }`. Has parallel sync/async surfaces.
-2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderRegistry` dispatches to `ILoader` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`). A process-wide singleton (`useLoader`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
+2. **Loader** (`src/loader/`) — pluggable file loading. A `LoaderRegistry` dispatches to `ILoader` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`). A process-wide singleton (`useLoaderRegistry`) is exposed via the `load` / `loadSync` / `registerLoader` helpers.
 3. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
 
 The two subsystems are loosely coupled: `loader/` depends on `locator/` only for `pathToLocatorInfo` and `buildFilePath` (to derive the extension and the on-disk path from a `LocatorInfo`). `locator/` does not import from `loader/`.
@@ -109,11 +109,11 @@ The registry does **not** implement `ILoader` — it is a dispatcher over loader
 
 ```typescript
 export async function load(input: LocatorInfo | string) : Promise<any> {
-    return useLoader().load(input);
+    return useLoaderRegistry().load(input);
 }
 ```
 
-`load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state, pure delegations — the only state is in the singleton (`useLoader()`, exported), and input normalization (`LocatorInfo` → path) lives inside the registry. When writing new top-level helpers, follow the same pattern: get the singleton, delegate.
+`load`, `loadSync`, `registerLoader`, and `unregisterLoader` are zero-state, pure delegations — the only state is in the singleton (`useLoaderRegistry()`, exported), and input normalization (`LocatorInfo` → path) lives inside the registry. When writing new top-level helpers, follow the same pattern: get the singleton, delegate.
 
 The registry has a lifecycle: every rule has a stable id (`register` returns a `LoaderRegistration`; re-registering an id replaces in place, built-in ids are reserved), `unregister(id)` removes a user rule, `entries()`/`has(id)` introspect the effective match order, and `reset()` restores construction state (drops user rules and every cached instance, including a `setModuleLoader`-configured module loader). `setModuleLoader` returns a restore function re-applying the previous configuration. The global registry belongs to the application; libraries should isolate via `new LoaderRegistry({ rules })`.
 

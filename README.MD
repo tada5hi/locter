@@ -241,14 +241,14 @@ Registering an existing id replaces that rule in place; built-in ids
 and unwound:
 
 ```typescript
-import { registerLoader, unregisterLoader, useLoader } from 'locter';
+import { registerLoader, unregisterLoader, useLoaderRegistry } from 'locter';
 
 const registration = registerLoader(['.json5'], json5Loader);
 unregisterLoader(registration.id);          // remove it again
 
 registerLoader({ id: 'json5', test: ['.json5'], loader: otherLoader }); // replace by id
 
-const manager = useLoader();                // the process-global LoaderRegistry
+const manager = useLoaderRegistry();                // the process-global LoaderRegistry
 manager.entries();                          // [{ id, test, builtIn }, ...] in match order
 manager.has('json');                        // true (built-in)
 manager.reset();                            // drop all user rules + cached loader instances

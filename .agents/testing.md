@@ -44,7 +44,7 @@ Specs are ESM (`"type": "module"` in `package.json`). `__dirname` is not defined
 
 - All fixture files live under `test/data/`. Add a new fixture file when introducing a new extension or testing a new edge case.
 - `test/data/file-default.{cts,mts,cjs,mjs}` exist specifically to exercise the `default.default` unwrap in `toModuleRecord` (`src/loader/built-in/module/utils.ts`).
-- For loader-registry isolation, instantiate `new LoaderRegistry()` directly instead of going through `useLoader()` — see `test/unit/loader/module.spec.ts` ("should register loader", "should use module loader as fallback").
+- For loader-registry isolation, instantiate `new LoaderRegistry()` directly instead of going through `useLoaderRegistry()` — see `test/unit/loader/module.spec.ts` ("should register loader", "should use module loader as fallback").
 
 ## Testing Philosophy
 

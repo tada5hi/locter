@@ -17,7 +17,7 @@ locter/
 │   ├── loader/                     # Pluggable file/module loaders
 │   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, singleton, type)
 │   │   ├── type.ts                 # ILoader interface — the port every loader implements
-│   │   ├── singleton.ts            # useLoader() — lazy process-global LoaderRegistry instance
+│   │   ├── singleton.ts            # useLoaderRegistry() — lazy process-global LoaderRegistry instance
 │   │   ├── registry/               # LoaderRegistry + its vocabulary
 │   │   │   ├── module.ts           # LoaderRegistry class (dispatch: load, loadSync, find, builtIn; lifecycle: register, unregister, entries, has, reset)
 │   │   │   ├── type.ts             # Rule, LoaderFactory, LoaderRegistration, LoaderPreset
