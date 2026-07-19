@@ -9,9 +9,9 @@ import { parse } from 'yaml';
 import fs from 'node:fs';
 import { wrapLoaderError } from '../../../errors';
 import { buildFilePath } from '../../../locator';
-import type { Loader } from '../../type';
+import type { ILoader } from '../../type';
 
-export class YAMLLoader implements Loader {
+export class YAMLLoader implements ILoader {
     async execute(input: string) {
         const filePath = buildFilePath(input);
 

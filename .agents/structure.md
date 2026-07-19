@@ -15,15 +15,20 @@ locter/
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
-│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, module)
-│   │   ├── type.ts                 # Loader interface, Rule type
-│   │   ├── constants.ts            # LoaderId enum (MODULE | JSON | CONF | YAML)
-│   │   ├── singleton.ts            # useLoader() — lazy LoaderManager instance
-│   │   ├── module.ts               # LoaderManager class (dispatch, register, resolve)
-│   │   ├── helpers.ts              # registerLoader, load, loadSync (operate on the singleton)
+│   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, type)
+│   │   ├── type.ts                 # ILoader interface — the port every loader implements
+│   │   ├── registry/               # LoaderRegistry + its vocabulary + the process-global singleton
+│   │   │   ├── module.ts           # LoaderRegistry class (dispatch: load, loadSync, find, builtIn; lifecycle: register, unregister, entries, has, reset)
+│   │   │   ├── singleton.ts        # useLoaderRegistry() — lazy process-global LoaderRegistry instance
+│   │   │   ├── type.ts             # Rule, LoaderFactory, LoaderRegistration, LoaderPreset
+│   │   │   └── index.ts            # Barrel
+│   │   ├── helpers.ts              # registerLoader, unregisterLoader, load, loadSync, setModuleLoader (delegate to the singleton)
+│   │   ├── package-field.ts        # loadPackageField / loadPackageFieldSync
 │   │   └── built-in/
+│   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + factory); NOT in the barrel
 │   │       ├── module/             # ModuleLoader (jiti-backed JS/TS/ESM/CJS loader)
 │   │       │   ├── module.ts
+│   │       │   ├── constants.ts    # MODULE_FILE_EXTENSIONS (shared by registry + jiti config)
 │   │       │   ├── utils.ts        # toModuleRecord, isESModule, getModuleExport
 │   │       │   └── type.ts
 │   │       ├── json/module.ts      # JSONLoader (fs + JSON.parse)
@@ -56,8 +61,9 @@ locter/
 | Module                          | Purpose                                                                          |
 |---------------------------------|----------------------------------------------------------------------------------|
 | `src/locator/`                  | Wraps `fast-glob` and returns `{ path, name, extension }` records                |
-| `src/loader/module.ts`          | `LoaderManager` — dispatches `execute`/`executeSync` to a loader by extension/regex |
-| `src/loader/singleton.ts`       | Lazy global `LoaderManager` shared across `load`, `loadSync`, `registerLoader`   |
+| `src/loader/registry/`          | `LoaderRegistry` — dispatches `load`/`loadSync`: user rules first, then the built-in extension table; owns `Rule`/`LoaderRegistration`/`LoaderFactory`/`LoaderPreset` |
+| `src/loader/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in loaders; `BuiltInLoaderId` is derived from its keys |
+| `src/loader/registry/singleton.ts` | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader` |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |
 | `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; normalizes module records via `toModuleRecord` |
 | `src/loader/built-in/json/`     | `fs.readFile` + `JSON.parse`                                                     |
@@ -74,7 +80,7 @@ locter/
 | `yaml`           | YAML parsing inside `YAMLLoader`                                              |
 | `destr`          | Safe `JSON.parse`-like value coercion in `ConfLoader`                         |
 | `flat`           | Unflattens dot-separated `.conf` keys into nested objects                     |
-| `ebec`           | `BaseError` class used to wrap thrown errors with `code`/`message`/`stack`    |
+| `@ebec/core`     | `BaseError` base for the `LocterError` hierarchy (`code`/`message`/`cause`)   |
 
 ## Package Exports
 

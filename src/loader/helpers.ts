@@ -5,43 +5,41 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildFilePath } from '../locator';
 import type { LocatorInfo } from '../locator';
-import type { ModuleLoader } from './built-in/module';
 import type { ModuleLoaderOptions } from './built-in/module/type';
-import { LoaderId } from './constants';
-import { useLoader } from './singleton';
-import type { Loader, Rule } from './type';
+import {
+    type LoaderFactory,
+    type LoaderRegistration,
+    type Rule,
+    useLoaderRegistry,
+} from './registry';
+import type { ILoader } from './type';
 
-export function registerLoader(rule: Rule) : void;
-export function registerLoader(test: string[] | RegExp, loader: Loader) : void;
-export function registerLoader(test: any, loader?: Loader) : void {
-    const manager = useLoader();
+export function registerLoader(rule: Rule) : LoaderRegistration;
+export function registerLoader(test: string[] | RegExp, loader: ILoader | LoaderFactory) : LoaderRegistration;
+export function registerLoader(test: any, loader?: ILoader | LoaderFactory) : LoaderRegistration {
+    const manager = useLoaderRegistry();
     if (typeof loader !== 'undefined') {
-        manager.register(test, loader);
-
-        return;
+        return manager.register(test, loader);
     }
 
-    manager.register(test);
+    return manager.register(test);
+}
+
+/**
+ * Remove a rule from the process-global registry by its id
+ * (as returned by registerLoader). Built-in ids cannot be unregistered.
+ */
+export function unregisterLoader(id: string) : boolean {
+    return useLoaderRegistry().unregister(id);
 }
 
 export async function load(input: LocatorInfo | string) : Promise<any> {
-    const manager = useLoader();
-    if (typeof input === 'string') {
-        return manager.execute(input);
-    }
-
-    return manager.execute(buildFilePath(input));
+    return useLoaderRegistry().load(input);
 }
 
 export function loadSync(input: LocatorInfo | string) : any {
-    const manager = useLoader();
-    if (typeof input === 'string') {
-        return manager.executeSync(input);
-    }
-
-    return manager.executeSync(buildFilePath(input));
+    return useLoaderRegistry().loadSync(input);
 }
 
 /**
@@ -51,6 +49,12 @@ export function loadSync(input: LocatorInfo | string) : any {
  * `node_modules/locter` would bypass the runner's module graph. Calling this
  * from user code (e.g. a Vitest setup file) lets the runner rewrite the
  * `import()` so loaded modules share identity with statically imported ones.
+ *
+ * Returns a restore function that re-applies the previous configuration —
+ * handy for scoped overrides (e.g. test teardown). The restore function is
+ * scoped to the exact loader instance it configured: after a registry
+ * reset() (which discards that instance) it becomes a no-op instead of
+ * re-applying stale configuration to the fresh instance.
  *
  * @example
  * ```ts
@@ -62,8 +66,11 @@ export function loadSync(input: LocatorInfo | string) : any {
  * });
  * ```
  */
-export function setModuleLoader(options: ModuleLoaderOptions) : void {
-    const manager = useLoader();
-    const loader = manager.resolve(LoaderId.MODULE) as ModuleLoader;
-    loader.configure(options);
+export function setModuleLoader(options: ModuleLoaderOptions) : () => void {
+    const loader = useLoaderRegistry().builtIn('module');
+    const previous = loader.configure(options);
+
+    return () => {
+        loader.configure(previous);
+    };
 }

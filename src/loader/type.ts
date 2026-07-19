@@ -5,12 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type Loader = {
+export interface ILoader {
     execute: (input: string) => Promise<any>,
     executeSync: (input: string) => any
-};
-
-export type Rule = {
-    test: RegExp | string[],
-    loader: Loader | string
-};
+}

@@ -207,19 +207,56 @@ import { loadPackageField } from 'locter';
 Throws `LocterLoadError` if the resolved `package.json` is malformed. A sync variant `loadPackageFieldSync` is also available.
 
 To register loader for other file types, the function `registerLoader` can be used.
+Rules are matched in registration order, **before** the built-in loaders — registering
+an extension a built-in claims (e.g. `.json`) overrides it. Bare module specifiers
+(no file extension) always use the module loader.
 
 ```typescript
 import { registerLoader } from 'locter';
 
 registerLoader(['.ext'], {
-    execute(input: string) {
-
+    async execute(input: string) {
+        // ...
     },
     executeSync(input: string) {
-
+        // ...
     }
 })
 ```
+
+Instead of a loader instance (the `ILoader` interface), a factory function can be
+passed — it is invoked lazily on the first matching input and the first
+successfully constructed loader is cached (a factory that throws is retried on
+the next match):
+
+```typescript
+import { registerLoader } from 'locter';
+
+registerLoader(['.toml'], () => new TomlLoader());
+```
+
+Every rule has a stable id (auto-generated, or set explicitly via the object form).
+Registering an existing id replaces that rule in place; built-in ids
+(`module`, `conf`, `json`, `yaml`) are reserved. The registry can be inspected
+and unwound:
+
+```typescript
+import { registerLoader, unregisterLoader, useLoaderRegistry } from 'locter';
+
+const registration = registerLoader(['.json5'], json5Loader);
+unregisterLoader(registration.id);          // remove it again
+
+registerLoader({ id: 'json5', test: ['.json5'], loader: otherLoader }); // replace by id
+
+const manager = useLoaderRegistry();                // the process-global LoaderRegistry
+manager.entries();                          // [{ id, test, builtIn }, ...] in match order
+manager.has('json');                        // true (built-in)
+manager.reset();                            // drop all user rules + cached loader instances
+```
+
+The global registry belongs to the **application**. Libraries that need custom
+loaders should create their own isolated instance instead of mutating the
+singleton: `new LoaderRegistry({ rules: [...] })`.
 
 ### Errors
 
@@ -256,6 +293,41 @@ try {
 `LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `LocterNotFoundError`s thrown by the JSON loader) and a `toJSON()` for structured logging.
 
 Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARKER`, `LOCTER_NOT_FOUND_ERROR_MARKER`, …), which makes `instanceof` work across realms — useful when consumers end up with duplicate copies of locter in their dependency tree.
+
+### Migrating from 3.x
+
+The 4.0 release reworks loader registration and dispatch. The list below is exhaustive — no other public APIs changed.
+
+```diff
+  // 1. User rules now override built-ins. Registering an extension a
+  //    built-in claims (e.g. `.json`) previously had NO effect — the
+  //    built-in rule always matched first. It now takes precedence.
+  registerLoader(['.json'], myJson5Loader); // 3.x: silent no-op — 4.x: overrides the built-in
+
+  // 2. Plugin-string loaders are removed. Import the loader yourself and
+  //    register it (optionally lazily, via a factory).
+- registerLoader({ test: ['.toml'], loader: 'toml' }); // resolved to @locter/toml, sync require()
++ import { TomlLoader } from '@locter/toml';
++ registerLoader(['.toml'], () => new TomlLoader());
+
+  // 3. LoaderManager is renamed to LoaderRegistry and no longer implements
+  //    the loader interface: execute() / executeSync() become
+  //    load() / loadSync() (accepting LocatorInfo | string), and
+  //    findLoader() / resolve() are replaced by find() / builtIn().
+- const manager = new LoaderManager();
+- await manager.execute('file.json');
+- manager.findLoader('file.json');       // Loader | string | undefined
+- manager.resolve('module');             // required an id-to-loader round-trip
++ const registry = new LoaderRegistry();
++ await registry.load('file.json');      // mirrors the global load() helper
++ registry.find('file.json');            // ILoader | undefined
++ registry.builtIn('module');            // statically typed as ModuleLoader
+```
+
+Additionally:
+
+- The loader port is now exported as the `ILoader` interface (previously an unexported `Loader` type), alongside `Rule` and `LoaderFactory` — so custom loaders can finally be typed against the package: `import type { ILoader } from 'locter'`.
+- The extensions handled by the module loader are exported as `MODULE_FILE_EXTENSIONS`.
 
 ### Migrating from 2.x
 
@@ -323,6 +395,15 @@ import { setModuleLoader } from 'locter';
 setModuleLoader({
     load: (id) => import(id),
 });
+```
+
+`setModuleLoader` returns a restore function that re-applies the previous
+configuration — useful for scoped overrides:
+
+```typescript
+const restore = setModuleLoader({ load: (id) => import(id) });
+// ...
+restore();
 ```
 
 Alternatively, the same effect can be achieved by inlining locter in

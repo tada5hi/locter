@@ -32,8 +32,8 @@
 ## Naming Conventions
 
 - Loader classes: `<Format>Loader` (e.g. `JSONLoader`, `YAMLLoader`, `ConfLoader`, `ModuleLoader`).
-- Built-in loader IDs: `LoaderId.<FORMAT>` enum members in `src/loader/constants.ts`.
-- Types: `PascalCase` (no `I`-prefix for interfaces — use plain `Loader`, `Rule`, `LocatorInfo`).
+- Built-in loader ids: keys of the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`); the `BuiltInLoaderId` union is derived from it (there is no enum).
+- Interfaces implemented by classes: `I`-prefixed `PascalCase` (`ILoader`). Plain data shapes / type aliases stay unprefixed (`Rule`, `LocatorInfo`, `LoaderPreset`).
 - Functions: `camelCase`, often verb-prefixed (`buildFilePath`, `pathToLocatorInfo`, `isLocatorInfo`, `handleException`).
 - Predicate helpers: `is*` (`isFilePath`, `isObject`, `isESModule`, `isTypeScriptError`).
 - Sync variants: append `Sync` to the async name (`locate` / `locateSync`, `load` / `loadSync`).
@@ -113,7 +113,7 @@ Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-ty
 ## Best Practices
 
 - Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
-- When adding a new file format: create `src/loader/built-in/<format>/{module.ts,index.ts}`, add a `LoaderId.<FORMAT>` enum entry, register a default `Rule` in `LoaderManager`'s constructor, add a `case` in `LoaderManager.resolve()`, export from `src/loader/built-in/index.ts`, and add a corresponding `test/unit/loader/<format>.spec.ts` + fixture in `test/data/`.
+- When adding a new file format: create `src/loader/built-in/<format>/{module.ts,index.ts}`, add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`), export the class from `src/loader/built-in/index.ts`, and add a corresponding `test/unit/loader/<format>.spec.ts` + fixture in `test/data/`. The id union, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
 - Always implement both sync and async variants of a public function.
 - Use `handleException(e)` (from `src/utils/error.ts`) inside loader `catch` blocks to normalize non-`Error` throws.
 - In source files that need `require` (e.g. for `loadSync` semantics), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.

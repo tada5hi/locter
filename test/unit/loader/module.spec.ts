@@ -7,15 +7,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    LoaderManager,
+    LoaderRegistry,
     LocterUnknownExtensionError,
     ModuleLoader,
     getModuleExport,
     load,
     loadSync,
     setModuleLoader,
+    useLoaderRegistry,
 } from '../../../src';
-import { LoaderId } from '../../../src/loader/constants';
 
 describe('src/loader/**', () => {
     it('should filter file', async () => {
@@ -54,8 +54,8 @@ describe('src/loader/**', () => {
         expect(yaml.default.parse).toBeDefined();
     });
 
-    it('should register loader', () => {
-        const manager = new LoaderManager();
+    it('should register loader', async () => {
+        const manager = new LoaderRegistry();
         manager.register(['.foo'], {
             async execute(input) {
                 return input;
@@ -64,12 +64,231 @@ describe('src/loader/**', () => {
                 return input;
             },
         });
+
+        const record = await manager.load('file.foo');
+        expect(record.default).toEqual('file.foo');
+
+        const recordSync = manager.loadSync('file.foo');
+        expect(recordSync.default).toEqual('file.foo');
+    });
+
+    it('should register loader with regexp test', async () => {
+        const manager = new LoaderRegistry();
+        manager.register(/\.foo$/, {
+            async execute() {
+                return { matched: true };
+            },
+            executeSync() {
+                return { matched: true };
+            },
+        });
+
+        const record = await manager.load('file.foo');
+        expect(record.matched).toBe(true);
+
+        const recordSync = manager.loadSync('file.foo');
+        expect(recordSync.matched).toBe(true);
+    });
+
+    it('should dispatch a stateful (global) regexp rule consistently', async () => {
+        const manager = new LoaderRegistry();
+        manager.register(/\.foo$/g, {
+            async execute() {
+                return { matched: true };
+            },
+            executeSync() {
+                return { matched: true };
+            },
+        });
+
+        // a g-flagged regex mutates lastIndex on test(); repeated identical
+        // inputs must not alternate between matching and falling through
+        for (let i = 0; i < 3; i++) {
+            const record = await manager.load('file.foo');
+            expect(record.matched).toBe(true);
+
+            const recordSync = manager.loadSync('file.foo');
+            expect(recordSync.matched).toBe(true);
+        }
+    });
+
+    it('should register loader lazily via factory', async () => {
+        let constructed = 0;
+        const manager = new LoaderRegistry();
+        manager.register(['.foo'], () => {
+            constructed++;
+            return {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            };
+        });
+
+        expect(constructed).toEqual(0);
+
+        const record = await manager.load('file.foo');
+        expect(record.default).toEqual('file.foo');
+
+        const recordSync = manager.loadSync('file.foo');
+        expect(recordSync.default).toEqual('file.foo');
+
+        expect(constructed).toEqual(1);
+    });
+
+    it('should override a built-in loader', async () => {
+        const manager = new LoaderRegistry();
+        manager.register(['.json'], {
+            async execute() {
+                return { sentinel: true };
+            },
+            executeSync() {
+                return { sentinel: true };
+            },
+        });
+
+        const record = await manager.load('./test/data/file.json');
+        expect(record.sentinel).toBe(true);
+
+        const recordSync = manager.loadSync('./test/data/file.json');
+        expect(recordSync.sentinel).toBe(true);
+    });
+
+    it('should cache built-in loader instances', () => {
+        const manager = new LoaderRegistry();
+        expect(manager.builtIn('json')).toBe(manager.builtIn('json'));
+    });
+
+    it('should unregister loader by id', async () => {
+        const manager = new LoaderRegistry();
+        const registration = manager.register(['.foo'], {
+            async execute(input) {
+                return input;
+            },
+            executeSync(input: string) {
+                return input;
+            },
+        });
+
+        expect(manager.has(registration.id)).toBe(true);
+
+        expect(manager.unregister(registration.id)).toBe(true);
+        expect(manager.has(registration.id)).toBe(false);
+        expect(manager.unregister(registration.id)).toBe(false);
+
+        await expect(manager.load('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.loadSync('file.foo')).toThrow(LocterUnknownExtensionError);
+    });
+
+    it('should replace loader registered with an existing id', async () => {
+        const manager = new LoaderRegistry();
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute() {
+                    return { version: 1 };
+                },
+                executeSync() {
+                    return { version: 1 };
+                },
+            },
+        });
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute() {
+                    return { version: 2 };
+                },
+                executeSync() {
+                    return { version: 2 };
+                },
+            },
+        });
+
+        const record = await manager.load('file.foo');
+        expect(record.version).toEqual(2);
+
+        const recordSync = manager.loadSync('file.foo');
+        expect(recordSync.version).toEqual(2);
+
+        const ids = manager.entries().map((entry) => entry.id);
+        expect(ids.filter((id) => id === 'custom')).toHaveLength(1);
+    });
+
+    it('should reject rules with a built-in id', () => {
+        const manager = new LoaderRegistry();
+        expect(() => manager.register({
+            id: 'json',
+            test: ['.foo'],
+            loader: {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            },
+        })).toThrow('reserved');
+    });
+
+    it('should list registrations in match order', () => {
+        const manager = new LoaderRegistry();
+        manager.register({
+            id: 'custom',
+            test: ['.foo'],
+            loader: {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            },
+        });
+
+        const entries = manager.entries();
+        expect(entries[0]).toEqual({
+            id: 'custom', 
+            test: ['.foo'], 
+            builtIn: false, 
+        });
+
+        const builtIns = entries.filter((entry) => entry.builtIn);
+        expect(builtIns.map((entry) => entry.id)).toEqual(['module', 'conf', 'json', 'yaml']);
+        expect(manager.has('json')).toBe(true);
+    });
+
+    it('should reset to construction state', async () => {
+        let constructed = 0;
+        const manager = new LoaderRegistry();
+        manager.register(['.foo'], () => {
+            constructed++;
+            return {
+                async execute(input) {
+                    return input;
+                },
+                executeSync(input: string) {
+                    return input;
+                },
+            };
+        });
+
+        await manager.load('file.foo');
+        expect(constructed).toEqual(1);
+
+        manager.reset();
+
+        await expect(manager.load('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(manager.entries().every((entry) => entry.builtIn)).toBe(true);
     });
 
     it('should use module loader as fallback', () => {
-        const manager = new LoaderManager();
-        const loader = manager.findLoader('foo');
-        expect(loader).toEqual(LoaderId.MODULE);
+        const manager = new LoaderRegistry();
+        expect(manager.find('foo')).toBe(manager.builtIn('module'));
     });
 
     it('should use injected load / loadSync functions', async () => {
@@ -129,7 +348,7 @@ describe('src/loader/**', () => {
         const seenAsync: string[] = [];
         const seenSync: string[] = [];
 
-        setModuleLoader({
+        const restore = setModuleLoader({
             load: (id) => {
                 seenAsync.push(id);
                 return {
@@ -160,12 +379,34 @@ describe('src/loader/**', () => {
             expect(syncResult.id).toEqual('yaml');
         } finally {
             // restore singleton so we don't leak state to later tests in this file
-            setModuleLoader({ load: undefined, loadSync: undefined });
+            restore();
         }
 
         // verify the singleton is fully restored
         const restored = await load('yaml');
         expect(restored).toBeDefined();
         expect(restored.parse).toBeDefined();
+    });
+
+    it('should scope setModuleLoader restore to the configured instance (no-op after reset)', async () => {
+        const restore = setModuleLoader({
+            load: (id) => ({
+                __esModule: true,
+                from: 'pre-reset',
+                id,
+            }),
+        });
+
+        const configured = await load('yaml');
+        expect(configured.from).toEqual('pre-reset');
+
+        // reset() discards the configured module loader instance; a stale
+        // restore() must NOT re-apply pre-reset configuration to the fresh one
+        useLoaderRegistry().reset();
+        restore();
+
+        const fresh = await load('yaml');
+        expect(fresh.from).toBeUndefined();
+        expect(fresh.parse).toBeDefined();
     });
 });

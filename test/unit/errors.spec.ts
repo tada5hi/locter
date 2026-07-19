@@ -13,7 +13,7 @@ import {
     LOCTER_LOAD_ERROR_MARKER,
     LOCTER_NOT_FOUND_ERROR_MARKER,
     LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER,
-    LoaderManager,
+    LoaderRegistry,
     LocterError,
     LocterLoadError,
     LocterNotFoundError,
@@ -28,14 +28,14 @@ const basePath = path.join(import.meta.dirname, '..', 'data');
 
 describe('src/errors/**', () => {
     it('should throw LocterUnknownExtensionError when no rule matches', async () => {
-        const manager = new LoaderManager();
+        const manager = new LoaderRegistry();
         const missing = path.join(basePath, 'file.foo');
 
-        await expect(manager.execute(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.executeSync(missing)).toThrow(LocterUnknownExtensionError);
+        await expect(manager.load(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.loadSync(missing)).toThrow(LocterUnknownExtensionError);
 
         try {
-            await manager.execute(missing);
+            await manager.load(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
             expect((e as LocterUnknownExtensionError).path).toEqual(missing);
@@ -137,7 +137,7 @@ describe('src/errors/**', () => {
         const syntaxErr = new SyntaxError('bad code');
         const refErr = new ReferenceError('missing');
 
-        setModuleLoader({
+        const restore = setModuleLoader({
             load: () => { throw syntaxErr; },
             loadSync: () => { throw refErr; },
         });
@@ -163,7 +163,7 @@ describe('src/errors/**', () => {
             expect((syncError as LocterLoadError).cause).toBe(refErr);
             expect((syncError as LocterLoadError).path).toEqual('any-id');
         } finally {
-            setModuleLoader({ load: undefined, loadSync: undefined });
+            restore();
         }
     });
 });
