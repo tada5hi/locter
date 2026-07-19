@@ -1,6 +1,24 @@
 # Plan: Collapse sync/async twin duplication
 
-Status: proposed (not started). Origin: architecture exploration, 2026-07-16.
+Status: implemented 2026-07-19. Origin: architecture exploration, 2026-07-16.
+
+## Outcome
+
+Chose the generator/CPS-style shared body ("twin protocol", `src/utils/twin.ts`, internal):
+a body yields effect pairs via `yield* op(asyncThunk, syncThunk)`; `runTwinAsync` /
+`runTwinSync` drive the matching side, re-entering effect errors via `Generator.throw` so
+in-body `try/catch` behaves identically in both variants.
+
+- `locate`/`locateMany` × sync/async → `locateBody`/`locateManyBody` (`src/locator/core.ts`).
+- `locateUp`/`locateUpSync` → `locateUpBody`, composing via `yield* locateBody(...)`.
+- json/yaml/conf loaders → abstract `TextFileLoader` (`src/loader/text-file.ts`, public):
+  one body (read → parse → wrap); subclasses implement `parse` only.
+- `LoaderRegistry.load`/`loadSync` → `loadBody` (dispatch → execute → normalize → wrap).
+- `loadPackageField`/`Sync` → `loadPackageFieldBody`.
+- `ModuleLoader.execute`/`executeSync` stay hand-written (deliberate divergence), documented
+  on `execute` and pinned by four explicit fallback tests (jiti fallback async+sync, ts-node
+  branch, unrecoverable-error rethrow).
+- Tests: `expectParity` helper (`test/helpers/parity.ts`); twin `it()` pairs consolidated.
 
 ## Problem
 

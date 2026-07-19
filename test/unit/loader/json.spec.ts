@@ -7,29 +7,25 @@
 
 import { describe, expect, it } from 'vitest';
 import { load, loadSync } from '../../../src';
+import { expectParity } from '../../helpers/parity';
 
 describe('src/loader/**', () => {
     it('should load .json file', async () => {
-        const loaderContent = await load('./test/data/file.json');
-        expect(loaderContent).toBeDefined();
-        expect(loaderContent.foo).toEqual('bar');
-        expect(loaderContent.default).toEqual({ foo: 'bar' });
-    });
-
-    it('should load .json file sync', async () => {
-        const loaderContent = loadSync('./test/data/file.json');
+        const loaderContent = await expectParity(
+            () => load('./test/data/file.json'),
+            () => loadSync('./test/data/file.json'),
+        );
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
         expect(loaderContent.default).toEqual({ foo: 'bar' });
     });
 
     it('should wrap data containing an __esModule key', async () => {
-        const loaderContent = await load('./test/data/file-es-module.json');
+        const loaderContent = await expectParity(
+            () => load('./test/data/file-es-module.json'),
+            () => loadSync('./test/data/file-es-module.json'),
+        );
         expect(loaderContent.foo).toEqual('bar');
         expect(loaderContent.default).toEqual({ __esModule: true, foo: 'bar' });
-
-        const loaderContentSync = loadSync('./test/data/file-es-module.json');
-        expect(loaderContentSync.foo).toEqual('bar');
-        expect(loaderContentSync.default).toEqual({ __esModule: true, foo: 'bar' });
     });
 });

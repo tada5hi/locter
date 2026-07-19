@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
     LoaderRegistry,
+    LocterError,
     LocterUnknownExtensionError,
     ModuleLoader,
     getModuleExport,
@@ -16,6 +18,9 @@ import {
     setModuleLoader,
     useLoaderRegistry,
 } from '../../../src';
+import { expectParity } from '../../helpers/parity';
+
+const dataDir = path.join(import.meta.dirname, '..', '..', 'data');
 
 describe('src/loader/**', () => {
     it('should normalize every built-in loader result to a module record', async () => {
@@ -61,20 +66,15 @@ describe('src/loader/**', () => {
     });
 
     it('should filter file', async () => {
-        let loaderContent = await load('./test/data/file.mts');
-        loaderContent = getModuleExport(loaderContent, (key) => key === 'bar');
+        const record = await expectParity(
+            () => load('./test/data/file.mts'),
+            () => loadSync('./test/data/file.mts'),
+        );
 
+        const loaderContent = getModuleExport(record, (key) => key === 'bar');
         expect(loaderContent).toBeDefined();
-        expect(loaderContent.key).toEqual('bar');
-        expect(loaderContent.value).toEqual('baz');
-    });
-
-    it('should filter file sync', () => {
-        let loaderContent = loadSync('./test/data/file.mts');
-        loaderContent = getModuleExport(loaderContent, (key) => key === 'bar');
-        expect(loaderContent).toBeDefined();
-        expect(loaderContent.key).toEqual('bar');
-        expect(loaderContent.value).toEqual('baz');
+        expect(loaderContent?.key).toEqual('bar');
+        expect(loaderContent?.value).toEqual('baz');
     });
 
     it('should not load file', async () => {
@@ -450,5 +450,83 @@ describe('src/loader/**', () => {
         const fresh = await load('yaml');
         expect(fresh.from).toBeUndefined();
         expect(fresh.parse).toBeDefined();
+    });
+
+    // The execute/executeSync fallback paths deliberately diverge (see the
+    // note on ModuleLoader.execute) — each branch is pinned explicitly here.
+
+    it('should fall back to jiti when the primary async load fails recoverably', async () => {
+        const moduleLoader = new ModuleLoader({
+            load: () => {
+                throw new Error('recoverable');
+            },
+        });
+
+        const result = await moduleLoader.execute(path.join(dataDir, 'file.cjs'));
+        expect(result.foo).toEqual('bar');
+    });
+
+    it('should fall back to jiti when the primary sync load fails recoverably', () => {
+        const moduleLoader = new ModuleLoader({
+            loadSync: () => {
+                throw new Error('recoverable');
+            },
+        });
+
+        const result = moduleLoader.executeSync(path.join(dataDir, 'file.cjs'));
+        expect(result.foo).toEqual('bar');
+    });
+
+    it('should fall back to loadSync under ts-node when the async load fails recoverably', async () => {
+        const tsNodeSymbol = Symbol.for('ts-node.register.instance');
+        const proc = process as unknown as Record<symbol, unknown>;
+        proc[tsNodeSymbol] = {};
+
+        try {
+            const moduleLoader = new ModuleLoader({
+                load: () => {
+                    throw new Error('recoverable');
+                },
+                loadSync: () => ({ from: 'load-sync-fallback' }),
+            });
+
+            const result = await moduleLoader.execute('virtual-module-id');
+            expect(result.from).toEqual('load-sync-fallback');
+        } finally {
+            delete proc[tsNodeSymbol];
+        }
+    });
+
+    it('should rethrow unrecoverable errors without falling back', async () => {
+        // file.cjs IS loadable by jiti — a surfaced error proves no fallback ran
+        const asyncLoader = new ModuleLoader({
+            load: () => {
+                throw new SyntaxError('broken');
+            },
+        });
+
+        let asyncError : unknown;
+        try {
+            await asyncLoader.execute(path.join(dataDir, 'file.cjs'));
+        } catch (e) {
+            asyncError = e;
+        }
+        expect(asyncError).toBeInstanceOf(LocterError);
+        expect((asyncError as LocterError).cause).toBeInstanceOf(SyntaxError);
+
+        const syncLoader = new ModuleLoader({
+            loadSync: () => {
+                throw new SyntaxError('broken');
+            },
+        });
+
+        let syncError : unknown;
+        try {
+            syncLoader.executeSync(path.join(dataDir, 'file.cjs'));
+        } catch (e) {
+            syncError = e;
+        }
+        expect(syncError).toBeInstanceOf(LocterError);
+        expect((syncError as LocterError).cause).toBeInstanceOf(SyntaxError);
     });
 });

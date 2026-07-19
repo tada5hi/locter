@@ -5,32 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { parse } from 'yaml';
-import fs from 'node:fs';
-import { wrapLoaderError } from '../../../errors';
-import { buildFilePath } from '../../../locator';
-import type { ILoader } from '../../type';
+import { parse as parseYAML } from 'yaml';
+import { TextFileLoader } from '../../text-file';
 
-export class YAMLLoader implements ILoader {
-    async execute(input: string) {
-        const filePath = buildFilePath(input);
-
-        try {
-            const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
-            return parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
-    }
-
-    executeSync(input: string) {
-        const filePath = buildFilePath(input);
-
-        try {
-            const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
-            return parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
+export class YAMLLoader extends TextFileLoader {
+    parse(content: string) {
+        return parseYAML(content);
     }
 }

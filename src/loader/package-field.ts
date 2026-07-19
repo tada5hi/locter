@@ -15,6 +15,8 @@ import {
     locateUpSync,
 } from '../locator';
 import { hasOwnProperty, isObject } from '../utils';
+import type { TwinBody } from '../utils/twin';
+import { op, runTwinAsync, runTwinSync } from '../utils/twin';
 import { useLoaderRegistry } from './registry';
 
 export type LoadPackageFieldOptions = {
@@ -30,29 +32,39 @@ function extractField<T>(pkg: unknown, field: string) : T | undefined {
     return pkg[field] as T;
 }
 
-export async function loadPackageField<T = unknown>(
+function* loadPackageFieldBody<T>(
     field: string,
-    options: LoadPackageFieldOptions = {},
-) : Promise<T | undefined> {
-    let info: LocatorInfo | undefined;
+    options: LoadPackageFieldOptions,
+) : TwinBody<T | undefined> {
+    let info : LocatorInfo | undefined;
     if (options.walkUp) {
-        info = await locateUp('package.json', {
-            cwd: options.cwd,
-            stopAt: options.stopAt,
-        });
+        info = yield* op(
+            () => locateUp('package.json', { cwd: options.cwd, stopAt: options.stopAt }),
+            () => locateUpSync('package.json', { cwd: options.cwd, stopAt: options.stopAt }),
+        );
     } else {
-        info = await locate('package.json', { cwd: options.cwd });
+        info = yield* op(
+            () => locate('package.json', { cwd: options.cwd }),
+            () => locateSync('package.json', { cwd: options.cwd }),
+        );
     }
 
     if (!info) {
         return undefined;
     }
 
+    // Read the raw parsed package.json via the built-in JSON loader —
+    // not the normalized record load() returns — so synthetic record
+    // keys (`default`, `__esModule`) can never resolve as package fields.
+    const loader = useLoaderRegistry().builtIn('json');
+    const filePath = buildFilePath(info);
+
     try {
-        // Read the raw parsed package.json via the built-in JSON loader —
-        // not the normalized record load() returns — so synthetic record
-        // keys (`default`, `__esModule`) can never resolve as package fields.
-        const pkg = await useLoaderRegistry().builtIn('json').execute(buildFilePath(info));
+        const pkg = yield* op(
+            () => loader.execute(filePath),
+            () => loader.executeSync(filePath),
+        );
+
         return extractField<T>(pkg, field);
     } catch (e) {
         if (e instanceof LocterNotFoundError) {
@@ -62,31 +74,16 @@ export async function loadPackageField<T = unknown>(
     }
 }
 
+export async function loadPackageField<T = unknown>(
+    field: string,
+    options: LoadPackageFieldOptions = {},
+) : Promise<T | undefined> {
+    return runTwinAsync(loadPackageFieldBody<T>(field, options));
+}
+
 export function loadPackageFieldSync<T = unknown>(
     field: string,
     options: LoadPackageFieldOptions = {},
 ) : T | undefined {
-    let info: LocatorInfo | undefined;
-    if (options.walkUp) {
-        info = locateUpSync('package.json', {
-            cwd: options.cwd,
-            stopAt: options.stopAt,
-        });
-    } else {
-        info = locateSync('package.json', { cwd: options.cwd });
-    }
-
-    if (!info) {
-        return undefined;
-    }
-
-    try {
-        const pkg = useLoaderRegistry().builtIn('json').executeSync(buildFilePath(info));
-        return extractField<T>(pkg, field);
-    } catch (e) {
-        if (e instanceof LocterNotFoundError) {
-            return undefined;
-        }
-        throw e;
-    }
+    return runTwinSync(loadPackageFieldBody<T>(field, options));
 }

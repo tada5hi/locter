@@ -84,6 +84,14 @@ export class ModuleLoader implements ILoader {
      * Returns the raw module value (import / require / jiti output) —
      * normalization to a module record happens once, at the
      * LoaderRegistry boundary.
+     *
+     * execute/executeSync are deliberately NOT derived from a shared
+     * body (unlike every other sync/async twin in this package): their
+     * recovery paths differ. The async variant falls back to loadSync
+     * under ts-node (jiti's async path does not cooperate with ts-node)
+     * and to the jiti instance otherwise; the sync variant only has the
+     * jiti fallback. The divergence is pinned by the fallback tests in
+     * test/unit/loader/module.spec.ts.
      */
     async execute(input: string) {
         try {
