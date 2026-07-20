@@ -52,7 +52,6 @@ locter/
 │   │           └── index.ts
 │   └── utils/                      # Shared helpers (no internal deps)
 │       ├── twin.ts                 # sync/async twin protocol: op, runTwinAsync, runTwinSync (internal, NOT in barrel)
-│       ├── error.ts                # handleException (normalizes thrown values to Error)
 │       ├── file-name.ts            # getFileNameExtension, removeFileNameExtension
 │       ├── file-path.ts            # isFilePath
 │       ├── has-property.ts         # hasOwnProperty, hasStringProperty
@@ -69,7 +68,7 @@ locter/
 ├── tsconfig.json                   # Extends @tada5hi/tsconfig (ESNext / bundler / noEmit)
 ├── eslint.config.js                # Flat ESLint config (@tada5hi/eslint-config)
 ├── commitlint.config.mjs           # Extends @tada5hi/commitlint-config
-├── release-please-config.json      # release-please (alpha prereleases, node release-type)
+├── release-please-config.json      # release-please (GitHub releases marked prerelease, node release-type)
 └── package.json
 ```
 
@@ -115,7 +114,7 @@ locter/
 
 The package is ESM-only (`"type": "module"`). There is no CJS entry point.
 
-Everything re-exported from `src/index.ts` is public API. The barrel re-exports `./errors`, `./format`, `./locator`, and `./utils` — so any symbol exported from a leaf module under those directories is part of the public API. Add new internal-only symbols by keeping them out of the relevant `index.ts` files (e.g. `built-in/registry.ts` and `utils/twin.ts` are deliberately unexported).
+The public API is the curated, NAMED export list in `src/index.ts` — pinned by `test/unit/public-api.spec.ts`. Per-directory barrels remain full (internal convenience for source and tests), but a symbol is only public once it is named in `src/index.ts`; adding one is a deliberate act that must update the snapshot test and the README.
 
 ## Separation of Concerns
 

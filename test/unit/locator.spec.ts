@@ -138,4 +138,59 @@ describe('src/locator.ts', () => {
         );
         expect(result).toContainEqual(expected);
     });
+
+    it('should resolve onlyFiles/onlyDirectories combinations by documented precedence', async () => {
+        // `onlyDirectories: true` wins over `onlyFiles` (default true);
+        // when neither restricts, files AND directories match.
+        const cases: {
+            options: { onlyFiles?: boolean, onlyDirectories?: boolean },
+            files: boolean,
+            directories: boolean,
+        }[] = [
+            {
+                options: {}, 
+                files: true, 
+                directories: false, 
+            },
+            {
+                options: { onlyFiles: true }, 
+                files: true, 
+                directories: false, 
+            },
+            {
+                options: { onlyDirectories: true }, 
+                files: false, 
+                directories: true, 
+            },
+            // the formerly contradictory pair: onlyDirectories wins
+            {
+                options: { onlyFiles: true, onlyDirectories: true }, 
+                files: false, 
+                directories: true, 
+            },
+            // no restriction requested: everything matches
+            {
+                options: { onlyFiles: false }, 
+                files: true, 
+                directories: true, 
+            },
+            {
+                options: { onlyFiles: false, onlyDirectories: false }, 
+                files: true, 
+                directories: true, 
+            },
+        ];
+
+        for (const item of cases) {
+            const label = JSON.stringify(item.options);
+            const result = await expectParity(
+                () => locateMany('*', { cwd: [basePath], ...item.options }),
+                () => locateManySync('*', { cwd: [basePath], ...item.options }),
+            );
+
+            const names = result.map((r) => r.name);
+            expect(names.includes('file'), `${label} files`).toBe(item.files);
+            expect(names.includes('pkg'), `${label} directories`).toBe(item.directories);
+        }
+    });
 });

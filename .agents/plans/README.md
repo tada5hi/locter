@@ -19,8 +19,10 @@ the rest are parked here.
 
 ## Standalone bug (not owned by any plan)
 
-`ConfLoader.parse` (`src/loader/built-in/conf/module.ts:57`) guards keys with `isSafeObjectKey`,
+`ConfReader.parse` (now `src/format/built-in/conf/reader.ts`) guards keys with `isSafeObjectKey`,
 which only rejects a key *equal to* `__proto__`/`prototype`/`constructor` — but the key is then
 handed to `flat.unflatten`, which splits on `.`. A line like `__proto__.polluted = x` passes the
-guard and reaches `unflatten` as a nested path. Verify `flat`'s own guarding; add a fixture test
-either way.
+guard and reaches `unflatten` as a nested path. **Resolved 2026-07-20** — verified that `flat`
+drops `__proto__` path segments entirely and lands `constructor.prototype` paths as harmless own
+keys; pinned by "should not pollute Object.prototype via dotted keys" in
+`test/unit/format/conf.spec.ts`.

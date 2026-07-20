@@ -7,7 +7,6 @@
 
 import fs from 'node:fs';
 import { wrapLoaderError } from '../../errors';
-import { buildFilePath } from '../../locator';
 import type { TwinBody } from '../../utils/twin';
 import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
 import type { IReader } from '../type';
@@ -30,17 +29,15 @@ export abstract class TextFileReader implements IReader {
     }
 
     protected* body(input: string) : TwinBody<any> {
-        const filePath = buildFilePath(input);
-
         try {
             const content = yield* op(
-                () => fs.promises.readFile(filePath, { encoding: 'utf-8' }),
-                () => fs.readFileSync(filePath, { encoding: 'utf-8' }),
+                () => fs.promises.readFile(input, { encoding: 'utf-8' }),
+                () => fs.readFileSync(input, { encoding: 'utf-8' }),
             );
 
             return this.parse(content);
         } catch (e) {
-            throw wrapLoaderError(e, filePath);
+            throw wrapLoaderError(e, input);
         }
     }
 }
