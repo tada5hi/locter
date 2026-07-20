@@ -11,7 +11,7 @@ import { ConfReader, ConfWriter } from './conf';
 import { JSONReader, JSONWriter } from './json';
 import { ModuleReader } from './module';
 import { MODULE_FILE_EXTENSIONS } from './module/constants';
-import { YAMLReader } from './yaml';
+import { YAMLReader, YAMLWriter } from './yaml';
 
 /**
  * Every built-in format, in one place. Keys are the format ids; each entry
@@ -33,7 +33,11 @@ export const BUILT_IN_PRESETS = {
         reader: () => new JSONReader(),
         writer: () => new JSONWriter(),
     },
-    yaml: { extensions: ['.yml', '.yaml'], reader: () => new YAMLReader() },
+    yaml: {
+        extensions: ['.yml', '.yaml'],
+        reader: () => new YAMLReader(),
+        writer: () => new YAMLWriter(),
+    },
 } as const satisfies Record<string, FormatPreset>;
 
 export type BuiltInFormatId = keyof typeof BUILT_IN_PRESETS;
