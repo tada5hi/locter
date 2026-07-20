@@ -28,6 +28,17 @@ The 4.0 line renames the loader subsystem around the **format** concept and adds
 * **loader:** normalize module records once at the registry boundary ([#856](https://github.com/tada5hi/locter/issues/856)) ([4ed3cdb](https://github.com/tada5hi/locter/commit/4ed3cdb87d06fda0f7df460d928811609b0381b7))
 * pre-v4 cleanup - locator option precedence and curated public API ([#862](https://github.com/tada5hi/locter/issues/862)) ([802f34d](https://github.com/tada5hi/locter/commit/802f34daeafd14ceac8b8216a5368504450bdaa4))
 
+## [4.0.0-beta.1](https://github.com/tada5hi/locter/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **format:** within the 4.0 beta line, read()/readSync() no longer wrap data formats in module records - use readAsModule()/Sync() for the uniform record shape. A literal __esModule key in parsed data is never treated as a module. There is deliberately still no export named load - stale 3.x call sites fail loudly at import time.
+
+### Features
+
+* **format:** split read (raw) from readAsModule (module records) ([#863](https://github.com/tada5hi/locter/issues/863)) ([0f276e8](https://github.com/tada5hi/locter/commit/0f276e8d762340df9aeb20871877d739379769d0))
+
 ## [3.0.0](https://github.com/tada5hi/locter/compare/v2.2.1...v3.0.0) (2026-05-21)
 
 
