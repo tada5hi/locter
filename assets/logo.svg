@@ -1,0 +1,27 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flame" x1="62" y1="62" x2="124" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFA726"/>
+      <stop offset="1" stop-color="#F4511E"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="22" y1="8" x2="84" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E7ECF2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- document with folded corner -->
+  <path d="M32 8h28l24 24v62a10 10 0 0 1-10 10H32a10 10 0 0 1-10-10V18a10 10 0 0 1 10-10Z"
+        fill="url(#paper)" stroke="#B9C4D0" stroke-width="2.5"/>
+  <path d="M60 8v16a8 8 0 0 0 8 8h16Z" fill="#CBD5E0"/>
+
+  <!-- text lines; the short flame line is the located match -->
+  <rect x="34" y="44" width="36" height="7" rx="3.5" fill="#A3AFBC"/>
+  <rect x="34" y="58" width="30" height="7" rx="3.5" fill="#A3AFBC"/>
+  <rect x="34" y="72" width="34" height="7" rx="3.5" fill="#A3AFBC"/>
+  <rect x="34" y="86" width="20" height="7" rx="3.5" fill="url(#flame)"/>
+
+  <!-- magnifying glass -->
+  <circle cx="86" cy="86" r="23" fill="#FFA726" fill-opacity="0.14" stroke="url(#flame)" stroke-width="9"/>
+  <line x1="103" y1="103" x2="119" y2="119" stroke="url(#flame)" stroke-width="13" stroke-linecap="round"/>
+</svg>

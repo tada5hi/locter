@@ -1,12 +1,45 @@
-# Locter 🔥
+<p align="center">
+  <img src="./assets/logo.svg" alt="locter" width="130" />
+</p>
 
-[![npm version](https://badge.fury.io/js/locter.svg)](https://badge.fury.io/js/locter)
-[![CI](https://github.com/tada5hi/locter/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/locter/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/locter/branch/master/graph/badge.svg?token=4KNSG8L13V)](https://codecov.io/gh/Tada5hi/locter)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+<h1 align="center">locter</h1>
 
-Locter is a library to locate, read and write files/modules regarding specific criteria.
+<p align="center">
+  <b>Locate, read &amp; write files — one API.</b><br>
+  Glob-based file discovery plus a pluggable format layer for JSON, YAML,
+  <code>.conf</code> and TS/ESM/CJS modules — every operation sync <i>and</i> async.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/locter"><img src="https://badge.fury.io/js/locter.svg" alt="npm version" /></a>
+  <a href="https://github.com/tada5hi/locter/actions/workflows/main.yml"><img src="https://github.com/tada5hi/locter/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
+  <a href="https://codecov.io/gh/Tada5hi/locter"><img src="https://codecov.io/gh/Tada5hi/locter/branch/master/graph/badge.svg?token=4KNSG8L13V" alt="codecov" /></a>
+  <a href="https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json"><img src="https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json" alt="Known Vulnerabilities" /></a>
+  <a href="https://conventionalcommits.org"><img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits" /></a>
+</p>
+
+<p align="center">
+  <a href="#installation"><b>Installation</b></a>
+  ·
+  <a href="#usage">Usage</a>
+  ·
+  <a href="#formats">Formats</a>
+  ·
+  <a href="#errors">Errors</a>
+  ·
+  <a href="#migrating-from-3x">Migration</a>
+</p>
+
+---
+
+## Features
+
+- 🔍 **Locate** — `locate`, `locateMany`, `locateUp`: fast-glob discovery returning structured `LocatorInfo` records.
+- 📖 **Read** — one `read()` for JSON, YAML, `.conf`, and JS/TS modules in any runtime (powered by `jiti`); every result normalized to a module record.
+- ✍️ **Write** — `write()` values back without pulling serializers into your app: comment-preserving YAML, indent-preserving JSON, rc9-style `.conf`.
+- 🔁 **Sync twins** — every operation ships as `fn` / `fnSync`, derived from one shared implementation.
+- 🧩 **Extensible** — register custom formats with independent reader/writer slots; override built-ins per extension.
+- 🚨 **Typed errors** — `LocterNotFoundError`, `LocterLoadError`, `LocterWriteError`, … each carrying `path` and `cause`.
 
 **Table of Contents**
 
