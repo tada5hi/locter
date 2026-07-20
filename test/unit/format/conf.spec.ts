@@ -34,12 +34,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file.conf'),
             () => readSync('./test/data/file.conf'),
         );
-        expect(content).toBeDefined();
-        expect(content.foo).toEqual('bar');
-        expect(content.bar).toBeDefined();
-        expect(content.bar.a).toEqual('baz');
-        expect(content.bar.b).toEqual('boz');
-        expect(content.default).toEqual({ foo: 'bar', bar: { a: 'baz', b: 'boz' } });
+        expect(content).toEqual({ foo: 'bar', bar: { a: 'baz', b: 'boz' } });
     });
 
     it('should write nested objects as dot-separated key=value lines', async () => {
@@ -67,8 +62,8 @@ describe('src/format/**', () => {
         const target = path.join(tmpDir, 'roundtrip.conf');
         await write(target, value);
 
-        const record = await read(target);
-        expect(record.default).toEqual(value);
+        const value2 = await read(target);
+        expect(value2).toEqual(value);
     });
 
     it('should write arrays as repeated key[]= lines', async () => {
@@ -104,22 +99,22 @@ describe('src/format/**', () => {
             'safe=1',
         ].join('\n'));
 
-        const record = await expectParity(
+        const value = await expectParity(
             () => read(target),
             () => readSync(target),
         );
 
         expect(({} as Record<string, unknown>).polluted).toBeUndefined();
         expect(Object.prototype).not.toHaveProperty('polluted');
-        expect(record.default.safe).toEqual(1);
-        expect(record.default.a).toEqual({});
+        expect(value.safe).toEqual(1);
+        expect(value.a).toEqual({});
     });
 
     it('should pin the documented lossy edge: numeric strings read back as numbers', async () => {
         const target = path.join(tmpDir, 'lossy.conf');
         await write(target, { version: '123' });
 
-        const record = await read(target);
-        expect(record.default.version).toEqual(123);
+        const value = await read(target);
+        expect(value.version).toEqual(123);
     });
 });

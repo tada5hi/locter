@@ -25,12 +25,32 @@ export function unregisterFormat(id: string) : boolean {
     return useFormatRegistry().unregister(id);
 }
 
+/**
+ * Read a file/module RAW: the plain parsed value for data formats
+ * (json/yaml/conf and custom readers — mutable, round-trip-symmetric
+ * with write); for modules the normalized module record (a module IS a
+ * record; normalization only irons out CJS/ESM interop divergence).
+ */
 export async function read(input: LocatorInfo | string) : Promise<any> {
     return useFormatRegistry().read(input);
 }
 
 export function readSync(input: LocatorInfo | string) : any {
     return useFormatRegistry().readSync(input);
+}
+
+/**
+ * Read a file/module and present the result as a normalized module
+ * record — the uniform, frozen shape regardless of format: `.default`
+ * always holds the loaded value, top-level keys are re-exposed as
+ * named exports.
+ */
+export async function readAsModule(input: LocatorInfo | string) : Promise<any> {
+    return useFormatRegistry().readAsModule(input);
+}
+
+export function readAsModuleSync(input: LocatorInfo | string) : any {
+    return useFormatRegistry().readAsModuleSync(input);
 }
 
 export async function write(input: LocatorInfo | string, value: unknown) : Promise<void> {

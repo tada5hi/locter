@@ -51,6 +51,8 @@ describe('src/index.ts (public API)', () => {
             'locateUp',
             'locateUpSync',
             'read',
+            'readAsModule',
+            'readAsModuleSync',
             'readPackageField',
             'readPackageFieldSync',
             'readSync',

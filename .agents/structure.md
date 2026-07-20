@@ -29,7 +29,7 @@ locter/
 │   │   │   ├── singleton.ts        # useFormatRegistry() — lazy process-global FormatRegistry instance
 │   │   │   ├── type.ts             # Rule, ReaderFactory, WriterFactory, FormatRegistration, FormatPreset
 │   │   │   └── index.ts            # Barrel
-│   │   ├── helpers.ts              # registerFormat, unregisterFormat, read, readSync, write, writeSync, setModuleReader (delegate to the singleton)
+│   │   ├── helpers.ts              # registerFormat, unregisterFormat, read/readAsModule/write (+Sync), setModuleReader (delegate to the singleton)
 │   │   ├── package-field.ts        # readPackageField / writePackageField (+Sync)
 │   │   └── built-in/
 │   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + reader + writer?); NOT in the barrel
@@ -80,7 +80,7 @@ locter/
 | `src/format/registry/`          | `FormatRegistry` — dispatches `read`/`write` (+Sync): user rules first, then the built-in extension table; owns `Rule`/`FormatRegistration`/`ReaderFactory`/`WriterFactory`/`FormatPreset` |
 | `src/format/built-in/registry.ts` | `BUILT_IN_PRESETS` — declarative registry of built-in formats; `BuiltInFormatId` and `WritableBuiltInFormatId` are derived from it |
 | `src/format/registry/singleton.ts` | Lazy global `FormatRegistry` shared across `read`, `write`, `registerFormat` |
-| `src/format/helpers.ts`         | Thin functional wrappers (`read`, `write`, `registerFormat`, …) over the singleton |
+| `src/format/helpers.ts`         | Thin functional wrappers (`read` = raw, `readAsModule` = module record, `write`, `registerFormat`, …) over the singleton |
 | `src/format/built-in/module/`   | TS/JS/ESM/CJS reader powered by `jiti`; returns the raw module value (the registry normalizes); read-only format |
 | `src/format/text-file/`         | Abstract `TextFileReader` (UTF-8 read + `parse`) and `TextFileWriter` (`stringify` + mkdir -p + write + trailing newline, opt-in read of the existing target); sync/async derived from one body each |
 | `src/format/built-in/json/`     | `JSON.parse` / `JSON.stringify` with configurable indent (incl. `'auto'` detection) |

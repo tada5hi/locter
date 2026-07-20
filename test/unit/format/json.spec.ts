@@ -17,6 +17,8 @@ import {
 import {
     JSONWriter, 
     read, 
+    readAsModule, 
+    readAsModuleSync, 
     readSync, 
     write, 
     writeSync,
@@ -30,23 +32,35 @@ afterAll(() => {
 });
 
 describe('src/format/**', () => {
-    it('should read .json file', async () => {
+    it('should read .json file as plain value', async () => {
         const content = await expectParity(
             () => read('./test/data/file.json'),
             () => readSync('./test/data/file.json'),
         );
-        expect(content).toBeDefined();
-        expect(content.foo).toEqual('bar');
-        expect(content.default).toEqual({ foo: 'bar' });
+        expect(content).toEqual({ foo: 'bar' });
     });
 
-    it('should wrap data containing an __esModule key', async () => {
-        const content = await expectParity(
-            () => read('./test/data/file-es-module.json'),
-            () => readSync('./test/data/file-es-module.json'),
+    it('should readAsModule .json file as module record', async () => {
+        const record = await expectParity(
+            () => readAsModule('./test/data/file.json'),
+            () => readAsModuleSync('./test/data/file.json'),
         );
-        expect(content.foo).toEqual('bar');
-        expect(content.default).toEqual({ __esModule: true, foo: 'bar' });
+        expect(record.foo).toEqual('bar');
+        expect(record.default).toEqual({ foo: 'bar' });
+    });
+
+    it('should wrap data containing an __esModule key on readAsModule', async () => {
+        const record = await expectParity(
+            () => readAsModule('./test/data/file-es-module.json'),
+            () => readAsModuleSync('./test/data/file-es-module.json'),
+        );
+        expect(record.foo).toEqual('bar');
+        expect(record.default).toEqual({ __esModule: true, foo: 'bar' });
+
+        // read() returns the data untouched — the literal __esModule key
+        // does not trigger module unwrapping
+        const value = await read('./test/data/file-es-module.json');
+        expect(value).toEqual({ __esModule: true, foo: 'bar' });
     });
 
     it('should write with 4-space indent and a trailing newline by default', async () => {

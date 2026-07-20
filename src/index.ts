@@ -66,6 +66,8 @@ export {
     getModuleExport,
     isModuleRecord,
     read,
+    readAsModule,
+    readAsModuleSync,
     readPackageField,
     readPackageFieldSync,
     readSync,
