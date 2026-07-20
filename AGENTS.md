@@ -2,7 +2,7 @@
 
 # Locter — Agent Guide
 
-Locter is a small Node.js/TypeScript library that locates files via glob patterns and loads them on demand. It bundles built-in loaders for `.json`, `.yml`/`.yaml`, `.conf`, and JavaScript/TypeScript modules (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`), and exposes a singleton `LoaderManager` that can be extended with custom loaders. The package ships as ESM-only.
+Locter is a small Node.js/TypeScript library that locates files via glob patterns and reads and writes them on demand. Each supported file format couples a reader with an optional writer: `.json`, `.yml`/`.yaml`, and `.conf` are read- and writable, JavaScript/TypeScript modules (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`) are read-only. A singleton `FormatRegistry` dispatches by extension and can be extended with custom formats. The package ships as ESM-only.
 
 ## Quick Reference
 
@@ -27,12 +27,12 @@ npm run lint:fix        # eslint --fix
 
 ## Documentation
 
-No standalone documentation site. Public usage examples live in `README.MD`. When you change the public API (locator signatures, loader interface, or loader registration), keep `README.MD` in sync.
+No standalone documentation site. Public usage examples live in `README.MD`. When you change the public API (locator signatures, the reader/writer ports, or format registration), keep `README.MD` in sync.
 
 ## Detailed Guides
 
-- **[Project Structure](.agents/structure.md)** — `src/` layout (locator, loader, utils), public `package.json` exports, and module responsibilities
-- **[Architecture](.agents/architecture.md)** — Locator/Loader split, the `Loader` port + rule-based dispatcher, and the `LoaderManager` singleton
+- **[Project Structure](.agents/structure.md)** — `src/` layout (locator, format, utils), public `package.json` exports, and module responsibilities
+- **[Architecture](.agents/architecture.md)** — Locator/Format split, the `IReader`/`IWriter` ports + rule-based dispatcher, and the `FormatRegistry` singleton
 - **[Testing](.agents/testing.md)** — Vitest + `test/data/` fixture files, and the per-file-extension test suites
 - **[Conventions](.agents/conventions.md)** — Conventional Commits via commitlint/husky, flat ESLint config, release-please + monoship, and CI
 

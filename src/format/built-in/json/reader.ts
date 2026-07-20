@@ -1,0 +1,14 @@
+/*
+ * Copyright (c) 2022-2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { TextFileReader } from '../../text-file';
+
+export class JSONReader extends TextFileReader {
+    parse(content: string) {
+        return JSON.parse(content);
+    }
+}

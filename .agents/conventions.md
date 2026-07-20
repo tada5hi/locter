@@ -31,12 +31,12 @@
 
 ## Naming Conventions
 
-- Loader classes: `<Format>Loader` (e.g. `JSONLoader`, `YAMLLoader`, `ConfLoader`, `ModuleLoader`).
-- Built-in loader ids: keys of the `BUILT_IN_PRESETS` registry (`src/loader/built-in/registry.ts`); the `BuiltInLoaderId` union is derived from it (there is no enum).
-- Interfaces implemented by classes: `I`-prefixed `PascalCase` (`ILoader`). Plain data shapes / type aliases stay unprefixed (`Rule`, `LocatorInfo`, `LoaderPreset`).
+- Format classes: `<Format>Reader` / `<Format>Writer` (e.g. `JSONReader`, `JSONWriter`, `YAMLWriter`, `ModuleReader`).
+- Built-in format ids: keys of the `BUILT_IN_PRESETS` registry (`src/format/built-in/registry.ts`); the `BuiltInFormatId` and `WritableBuiltInFormatId` unions are derived from it (there is no enum).
+- Interfaces implemented by classes: `I`-prefixed `PascalCase` (`IReader`, `IWriter`). Plain data shapes / type aliases stay unprefixed (`Rule`, `LocatorInfo`, `FormatPreset`).
 - Functions: `camelCase`, often verb-prefixed (`buildFilePath`, `pathToLocatorInfo`, `isLocatorInfo`, `handleException`).
 - Predicate helpers: `is*` (`isFilePath`, `isObject`, `isESModule`, `isTypeScriptError`).
-- Sync variants: append `Sync` to the async name (`locate` / `locateSync`, `load` / `loadSync`).
+- Sync variants: append `Sync` to the async name (`locate` / `locateSync`, `read` / `readSync`, `write` / `writeSync`).
 
 ## File Organization
 
@@ -44,7 +44,7 @@
 - Each directory has an `index.ts` barrel that re-exports public symbols. Internal-only files should remain unexported from the barrel.
 - Types live next to their implementation:
     - In `src/locator/` they're separated into `types.ts` (re-exported from the barrel).
-    - In `src/loader/` and `src/loader/built-in/<format>/` they live in `type.ts` (singular) — keep this convention for parity with existing folders.
+    - In `src/format/` and `src/format/built-in/<format>/` they live in `type.ts` (singular) — keep this convention for parity with existing folders.
 
 ## Pre-commit Hooks
 
@@ -113,8 +113,8 @@ Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-ty
 ## Best Practices
 
 - Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
-- When adding a new file format: create `src/loader/built-in/<format>/{module.ts,index.ts}`, add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`), export the class from `src/loader/built-in/index.ts`, and add a corresponding `test/unit/loader/<format>.spec.ts` + fixture in `test/data/`. The id union, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
-- Always implement both sync and async variants of a public function — derive them from one shared twin body (`src/utils/twin.ts`) rather than duplicating the logic; only `ModuleLoader` deliberately hand-writes its twins (divergent fallbacks).
-- Use `handleException(e)` (from `src/utils/error.ts`) inside loader `catch` blocks to normalize non-`Error` throws.
-- In source files that need `require` (e.g. for `loadSync` semantics), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
-- Keep `src/utils/` free of imports from `src/locator/` or `src/loader/`.
+- When adding a new file format: create `src/format/built-in/<format>/{reader.ts,writer.ts,index.ts}` (writer only if the format is writable), add ONE entry to `BUILT_IN_PRESETS` (`src/format/built-in/registry.ts`), export the classes from `src/format/built-in/index.ts`, and add a corresponding `test/unit/format/<format>.spec.ts` + fixture in `test/data/`. The id unions, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
+- Always implement both sync and async variants of a public function — derive them from one shared twin body (`src/utils/twin.ts`) rather than duplicating the logic; only `ModuleReader` deliberately hand-writes its twins (divergent fallbacks).
+- Use `handleException(e)` (from `src/utils/error.ts`) inside reader/writer `catch` blocks to normalize non-`Error` throws.
+- In source files that need `require` (e.g. for sync module loading), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
+- Keep `src/utils/` free of imports from `src/locator/` or `src/format/`.

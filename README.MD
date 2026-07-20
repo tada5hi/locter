@@ -1,23 +1,59 @@
-# Locter 🔥
+<p align="center">
+  <img src="./assets/logo.svg" alt="locter" width="130" />
+</p>
 
-[![npm version](https://badge.fury.io/js/locter.svg)](https://badge.fury.io/js/locter)
-[![CI](https://github.com/tada5hi/locter/actions/workflows/main.yml/badge.svg)](https://github.com/tada5hi/locter/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/Tada5hi/locter/branch/master/graph/badge.svg?token=4KNSG8L13V)](https://codecov.io/gh/Tada5hi/locter)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+<h1 align="center">locter</h1>
 
-Locter is a library to locate and load a file/modules regarding specific criteria.
+<p align="center">
+  <b>Locate, read &amp; write files — one API.</b><br>
+  Glob-based file discovery plus a pluggable format layer for JSON, YAML,
+  <code>.conf</code> and TS/ESM/CJS modules — every operation sync <i>and</i> async.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/locter"><img src="https://badge.fury.io/js/locter.svg" alt="npm version" /></a>
+  <a href="https://github.com/tada5hi/locter/actions/workflows/main.yml"><img src="https://github.com/tada5hi/locter/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
+  <a href="https://codecov.io/gh/Tada5hi/locter"><img src="https://codecov.io/gh/Tada5hi/locter/branch/master/graph/badge.svg?token=4KNSG8L13V" alt="codecov" /></a>
+  <a href="https://snyk.io/test/github/Tada5hi/locter?targetFile=package.json"><img src="https://snyk.io/test/github/Tada5hi/locter/badge.svg?targetFile=package.json" alt="Known Vulnerabilities" /></a>
+  <a href="https://conventionalcommits.org"><img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white" alt="Conventional Commits" /></a>
+</p>
+
+<p align="center">
+  <a href="#installation"><b>Installation</b></a>
+  ·
+  <a href="#usage">Usage</a>
+  ·
+  <a href="#formats">Formats</a>
+  ·
+  <a href="#errors">Errors</a>
+  ·
+  <a href="#migration">Migration</a>
+</p>
+
+---
+
+## Features
+
+- 🔍 **Locate** — `locate`, `locateMany`, `locateUp`: fast-glob discovery returning structured `LocatorInfo` records.
+- 📖 **Read** — one `read()` for JSON, YAML, `.conf`, and JS/TS modules in any runtime (powered by `jiti`); every result normalized to a module record.
+- ✍️ **Write** — `write()` values back without pulling serializers into your app: comment-preserving YAML, indent-preserving JSON, rc9-style `.conf`.
+- 🔁 **Sync twins** — every operation ships as `fn` / `fnSync`, derived from one shared implementation.
+- 🧩 **Extensible** — register custom formats with independent reader/writer slots; override built-ins per extension.
+- 🚨 **Typed errors** — `LocterNotFoundError`, `LocterLoadError`, `LocterWriteError`, … each carrying `path` and `cause`.
 
 **Table of Contents**
 
 - [Installation](#installation)
 - [Usage](#usage)
   - [Locator](#locator)
-  - [Loader](#loader)
+  - [Reader](#reader)
+  - [Writer](#writer)
+  - [Formats](#formats)
   - [Errors](#errors)
+  - [Runtime environments](#runtime-environments)
+- [Migration](#migration)
   - [Migrating from 3.x](#migrating-from-3x)
   - [Migrating from 2.x](#migrating-from-2x)
-  - [Runtime environments](#runtime-environments)
 - [License](#license)
 
 ## Installation
@@ -135,61 +171,57 @@ A synchronous variant `locateUpSync` is also available.
 
 `locateUp` / `locateUpSync` take the same options except `cwd` must be a single `string`, and additionally accept `stopAt?: string` (inclusive ceiling for the walk).
 
-### Loader
+### Reader
 
-The `load` method can be used to load a file/module in an asynchronous fashion.
+The `read` method loads a file/module in an asynchronous fashion.
 Either a string or the output of the locate/locateSync method can be passed as argument.
 
 ```typescript
-import { load, locate } from 'locter';
+import { read, locate } from 'locter';
 
 (async () => {
     const file = await locate(
         'files/example.{js,.ts}'
     );
 
-    let content = await load(file);
+    let content = await read(file);
     console.log(content);
     // ...
 
-    content = await load('...');
+    content = await read('...');
     console.log(content);
     // ...
 })
 ```
 
-There is also a synchronous method called `loadSync` to load files.
+There is also a synchronous method called `readSync`.
 
 ```typescript
-import { loadSync, locateSync } from 'locter';
+import { readSync, locateSync } from 'locter';
 
-(async () => {
-    const file = await locateSync(
-        'files/example.{js,.ts}'
-    );
+const file = locateSync(
+    'files/example.{js,.ts}'
+);
 
-    let content = await loadSync(file);
-    console.log(content);
-    // ...
-
-    content = await loadSync('...');
-    console.log(content);
-    // ...
-})
+const content = readSync(file);
 ```
+
+Bare module specifiers (no file extension) are routed to the module reader, so
+`read('yaml')` behaves like `import('yaml')` — note that reading a module
+**executes** it.
 
 **Module records**
 
-Every `load` / `loadSync` result is a **module record** — a frozen,
+Every `read` / `readSync` result is a **module record** — a frozen,
 null-prototype object shaped like an ES module namespace: `default` always
 holds the loaded value, and when that value is an object, its top-level keys
 are re-exposed as named exports.
 
 ```typescript
-import { load } from 'locter';
+import { read } from 'locter';
 
 (async () => {
-    const pkg = await load('package.json');
+    const pkg = await read('package.json');
 
     console.log(pkg.default);   // the full parsed JSON value
     console.log(pkg.version);   // top-level keys are named exports
@@ -197,47 +229,45 @@ import { load } from 'locter';
 ```
 
 For JavaScript/TypeScript files the module's own namespace passes through
-unchanged; the output of every other loader (built-in JSON/YAML/Conf and
+unchanged; the output of every other reader (built-in JSON/YAML/Conf and
 user-registered ones) is always wrapped — even if the parsed data happens to
-contain an `__esModule` key. The record is read-only: to mutate or serialize
-the loaded data, work with `.default`.
+contain an `__esModule` key. The record is read-only: to mutate the loaded
+data, work with `.default`.
+
+Records additionally carry a private, non-forgeable brand: `isModuleRecord`
+tells records produced by `read()` apart from arbitrary data, and
+[`write`](#writer) uses the brand to unwrap `.default` automatically on
+write-back.
 
 To pick an export by predicate, the `getModuleExport` helper is available:
 
 ```typescript
-import { getModuleExport, load } from 'locter';
+import { getModuleExport, read } from 'locter';
 
 (async () => {
-    const record = await load('files/example.ts');
+    const record = await read('files/example.ts');
 
     const found = getModuleExport(record, (key) => key === 'myExport');
     // → { key: 'myExport', value: ... }, or undefined if no key matches
 })
 ```
 
-Two loaders are predefined from scratch and already registered:
-- **ConfLoader**: This loader allows to load `.conf` files.
-- **JSONLoader**: This loader allows to load `.json` files.
-- **YAMLLoader**: This loader allows to load `.yml` files.
-- **ModuleLoader**: This loader allows to load modules with
-  `.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts` file extensions independent of the environment (cjs or esm).
-
 **Reading a `package.json` field**
 
-`loadPackageField` reads a top-level field from the nearest `package.json` — handy for the common `pkg.<your-config-key>` config-loading fallback (vite's `pkg.vite`, eslint's `pkg.eslintConfig`, etc.):
+`readPackageField` reads a top-level field from the nearest `package.json` — handy for the common `pkg.<your-config-key>` config-loading fallback (vite's `pkg.vite`, eslint's `pkg.eslintConfig`, etc.):
 
 ```typescript
-import { loadPackageField } from 'locter';
+import { readPackageField } from 'locter';
 
 (async () => {
     const cwd = process.cwd();
 
-    const value = await loadPackageField<{ entry: string }>('myapp', { cwd });
+    const value = await readPackageField<{ entry: string }>('myapp', { cwd });
     // → the value of the `myapp` field, or undefined if package.json
     //   or the field is absent.
 
     // Walk parent directories until a package.json is found:
-    const parentValue = await loadPackageField('myapp', {
+    const parentValue = await readPackageField('myapp', {
         cwd,
         walkUp: true,
         stopAt: '/repo', // optional ceiling, inclusive
@@ -245,89 +275,201 @@ import { loadPackageField } from 'locter';
 })
 ```
 
-Throws `LocterLoadError` if the resolved `package.json` is malformed. A sync variant `loadPackageFieldSync` is also available.
+Throws `LocterLoadError` if the resolved `package.json` is malformed. A sync variant `readPackageFieldSync` is also available.
 
-To register loader for other file types, the function `registerLoader` can be used.
-Rules are matched in registration order, **before** the built-in loaders — registering
-an extension a built-in claims (e.g. `.json`) overrides it. Bare module specifiers
-(no file extension) always use the module loader.
+### Writer
+
+The `write` method serializes a value to a file, dispatched by extension like
+`read` — no need to pull `yaml` or a `.conf` serializer into the consuming
+application:
 
 ```typescript
-import { registerLoader } from 'locter';
+import { read, write } from 'locter';
 
-registerLoader(['.ext'], {
-    async execute(input: string) {
-        // ...
-    },
-    executeSync(input: string) {
-        // ...
-    }
+(async () => {
+    const config = await read('config.yml');
+    config.default.port = 8080;
+
+    // records produced by read() are unwrapped automatically —
+    // the file receives the plain value, not the record wrapper
+    await write('config.yml', config);
+
+    // plain values work just as well
+    await write('generated/settings.json', { port: 8080 });
 })
 ```
 
-For text-based formats, extending the abstract `TextFileLoader` is simpler than
-implementing both `execute` variants by hand: it reads the file as UTF-8, wraps
-I/O and parse errors in typed `LocterError`s, and derives the sync and async
-surface from a single implementation — only `parse` must be provided. The
-built-in JSON/YAML/Conf loaders are implemented this way.
+A synchronous variant is also available: `writeSync`.
+
+Write semantics:
+
+- **Missing parent directories are created** (`mkdir -p`).
+- Output always ends with a single trailing newline.
+- Values that are records produced by `read()` (detected via the private
+  brand — an `__esModule` key in plain data does **not** count) are unwrapped
+  to their `.default` value before serialization.
+- Module formats (`.js`, `.ts`, …) are **read-only**: `write('config.ts', …)`
+  throws `LocterWriteError`, as does writing to a bare module specifier.
+
+Per-format behavior:
+
+- **JSON** — 4-space indent by default; configurable per instance:
+  `new JSONWriter({ indent })` accepts a number of spaces, a literal indent
+  string, or `'auto'` (detect and keep the indentation of the existing file).
+- **YAML** — *comment-preserving* write-back: when the target file exists, the
+  value is grafted into the parsed document, so comments and anchors attached
+  to surviving keys survive. Arrays and type-changed nodes are replaced
+  wholesale. A corrupt existing file throws instead of being overwritten.
+
+  ```yaml
+  # port used by the dev server
+  port: 3000
+  ```
+
+  ```typescript
+  await write('config.yml', { port: 8080 });
+  ```
+
+  ```yaml
+  # port used by the dev server
+  port: 8080
+  ```
+
+- **Conf** — the inverse of the reader: nested objects become dot-separated
+  `key=value` lines, arrays repeated `key[]=` lines. Round-trips are
+  structural, not textual: comments and line order are dropped, and a string
+  that parses as another type (`'123'`) reads back as that type (`123`).
+
+**Writing a `package.json` field**
+
+`writePackageField` is the write-side companion of `readPackageField` (same
+`cwd` / `walkUp` / `stopAt` semantics): it sets a top-level field of the
+nearest `package.json` and writes it back **preserving the file's existing
+indentation**.
 
 ```typescript
-import { TextFileLoader, registerLoader } from 'locter';
-import { parse } from 'smol-toml';
+import { writePackageField } from 'locter';
 
-class TomlLoader extends TextFileLoader {
+(async () => {
+    await writePackageField('myapp', { entry: 'src' }, { cwd: process.cwd() });
+
+    // passing undefined removes the field
+    await writePackageField('myapp', undefined);
+})
+```
+
+Throws `LocterNotFoundError` when no `package.json` could be located. A sync
+variant `writePackageFieldSync` is also available.
+
+### Formats
+
+A format couples an extension set with a reader and an optional writer. The
+built-in formats are pre-registered:
+
+- **conf** (`.conf`): `ConfReader` + `ConfWriter`
+- **json** (`.json`): `JSONReader` + `JSONWriter`
+- **yaml** (`.yml`, `.yaml`): `YAMLReader` + `YAMLWriter`
+- **module** (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`): `ModuleReader`
+  (read-only) — loads modules independent of the environment (cjs or esm).
+
+To register a format for other file types, use `registerFormat`. Rules are
+matched in registration order, **before** the built-ins — registering an
+extension a built-in claims (e.g. `.json`) overrides it. The reader and writer
+slots are independent: a reader-only rule overrides how `.json` is read
+without shadowing the built-in JSON writer (and vice versa).
+
+```typescript
+import { registerFormat } from 'locter';
+
+registerFormat({
+    test: ['.ext'],
+    reader: {
+        async read(input: string) {
+            // ...
+        },
+        readSync(input: string) {
+            // ...
+        },
+    },
+    writer: {
+        async write(path: string, value: unknown) {
+            // ...
+        },
+        writeSync(path: string, value: unknown) {
+            // ...
+        },
+    },
+});
+```
+
+For text-based formats, extending the abstract `TextFileReader` /
+`TextFileWriter` base classes is simpler than implementing the `IReader` /
+`IWriter` ports by hand: the bases own UTF-8 I/O, typed error wrapping, and
+derive the sync and async surface from a single implementation — only
+`parse(content)` respectively `stringify(value)` must be provided. The
+built-in JSON/YAML/Conf formats are implemented this way.
+
+```typescript
+import { TextFileReader, TextFileWriter, registerFormat } from 'locter';
+import { parse, stringify } from 'smol-toml';
+
+class TomlReader extends TextFileReader {
     parse(content: string) {
         return parse(content);
     }
 }
 
-registerLoader(['.toml'], () => new TomlLoader());
+class TomlWriter extends TextFileWriter {
+    stringify(value: unknown) {
+        return stringify(value);
+    }
+}
+
+registerFormat({
+    test: ['.toml'],
+    reader: () => new TomlReader(),
+    writer: () => new TomlWriter(),
+});
 ```
 
-Instead of a loader instance (the `ILoader` interface), a factory function can be
-passed — it is invoked lazily on the first matching input and the first
-successfully constructed loader is cached (a factory that throws is retried on
-the next match):
+Instead of instances, the slots accept factory functions (as above) — a
+factory is invoked lazily on the first matching input and the first
+successfully constructed instance is cached (a factory that throws is retried
+on the next match).
+
+Every rule has a stable id (auto-generated, or set explicitly). Registering an
+existing id replaces that rule in place; built-in ids (`module`, `conf`,
+`json`, `yaml`) are reserved. The registry can be inspected and unwound:
 
 ```typescript
-import { registerLoader } from 'locter';
+import { registerFormat, unregisterFormat, useFormatRegistry } from 'locter';
 
-registerLoader(['.toml'], () => new TomlLoader());
-```
+const registration = registerFormat({ test: ['.json5'], reader: json5Reader });
+unregisterFormat(registration.id);          // remove it again
 
-Every rule has a stable id (auto-generated, or set explicitly via the object form).
-Registering an existing id replaces that rule in place; built-in ids
-(`module`, `conf`, `json`, `yaml`) are reserved. The registry can be inspected
-and unwound:
+registerFormat({ id: 'json5', test: ['.json5'], reader: otherReader }); // replace by id
 
-```typescript
-import { registerLoader, unregisterLoader, useLoaderRegistry } from 'locter';
-
-const registration = registerLoader(['.json5'], json5Loader);
-unregisterLoader(registration.id);          // remove it again
-
-registerLoader({ id: 'json5', test: ['.json5'], loader: otherLoader }); // replace by id
-
-const manager = useLoaderRegistry();                // the process-global LoaderRegistry
-manager.entries();                          // [{ id, test, builtIn }, ...] in match order
-manager.has('json');                        // true (built-in)
-manager.reset();                            // drop all user rules + cached loader instances
+const registry = useFormatRegistry();       // the process-global FormatRegistry
+registry.entries();                         // [{ id, test, builtIn }, ...] in match order
+registry.has('json');                       // true (built-in)
+registry.reset();                           // drop all user rules + cached instances
 ```
 
 The global registry belongs to the **application**. Libraries that need custom
-loaders should create their own isolated instance instead of mutating the
-singleton: `new LoaderRegistry({ rules: [...] })`.
+formats should create their own isolated instance instead of mutating the
+singleton: `new FormatRegistry({ rules: [...] })`.
 
 ### Errors
 
-`load` / `loadSync` (and every built-in loader) throw a typed subclass of
+`read` / `write` (and every built-in format) throw a typed subclass of
 `LocterError`, so callers can distinguish failure modes without substring
 matching on `.message`:
 
 | Class                          | When it's thrown                                        |
 |--------------------------------|---------------------------------------------------------|
 | `LocterNotFoundError`          | File or module does not exist (`ENOENT`, `MODULE_NOT_FOUND`, `ERR_MODULE_NOT_FOUND`) |
-| `LocterLoadError`              | A loader threw — parse error, runtime/eval error, etc.  |
+| `LocterLoadError`              | A reader threw — parse error, runtime/eval error, etc.  |
+| `LocterWriteError`             | A write failed — serialization error, filesystem error, read-only format, corrupt existing YAML target |
 | `LocterUnknownExtensionError`  | No rule matched the file's extension                    |
 | `LocterError`                  | Base class; matches all of the above                    |
 
@@ -335,10 +477,10 @@ Each error exposes the offending `path` and preserves the underlying error
 on `cause`:
 
 ```typescript
-import { load, LocterNotFoundError, LocterLoadError } from 'locter';
+import { read, LocterNotFoundError, LocterLoadError } from 'locter';
 
 try {
-    await load('config.json');
+    await read('config.json');
 } catch (err) {
     if (err instanceof LocterNotFoundError) {
         console.error(`Config file not found: ${err.path}`);
@@ -350,44 +492,129 @@ try {
 }
 ```
 
-`LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `LocterNotFoundError`s thrown by the JSON loader) and a `toJSON()` for structured logging.
+Note that on the write side `ENOENT` stays a `LocterWriteError` — a missing
+parent directory is a write failure, not a lookup miss (and `write` creates
+missing parents anyway).
+
+`LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `LocterNotFoundError`s thrown by the JSON reader) and a `toJSON()` for structured logging.
 
 Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARKER`, `LOCTER_NOT_FOUND_ERROR_MARKER`, …), which makes `instanceof` work across realms — useful when consumers end up with duplicate copies of locter in their dependency tree.
 
+### Runtime environments
+
+Locter ships with runtime detection helpers:
+
+- `isJestRuntimeEnvironment()` — true when running under Jest. Built-in: the
+  `ModuleReader` falls back to `require()` under Jest to avoid a known
+  segmentation fault ([nodejs/node#35889](https://github.com/nodejs/node/issues/35889)).
+- `isVitestRuntimeEnvironment()` — true when running under Vitest (checks
+  `process.env.VITEST === 'true'`).
+- `isTsNodeRuntimeEnvironment()` — true when a `ts-node` register instance is
+  active. Built-in: the `ModuleReader`'s async path falls back to its sync
+  loading under ts-node.
+- `isTsxRuntimeEnvironment()` — true when the process was started through
+  [tsx](https://tsx.is) (`tsx script.ts`, `node --import tsx`, or a resolved
+  `.../node_modules/tsx/...` loader path). Useful for callers that need to
+  know whether TypeScript sources can be executed directly.
+
+#### Using locter with Vitest
+
+Locter's built-in `await import(id)` runs inside `node_modules/locter` and
+therefore bypasses Vitest's `vite-node` module graph by default. For most use
+cases this is fine, but it produces **duplicate module instances** when test
+code statically imports a module and locter dynamically loads the same module
+(or a transitive dependency of it). This breaks class identity for libraries
+that rely on it (e.g. TypeORM entity metadata).
+
+Use `setModuleReader` to inject an `import` call from user space so Vitest can
+rewrite it:
+
+```typescript
+// vitest setup file
+import { setModuleReader } from 'locter';
+
+setModuleReader({
+    load: (id) => import(id),
+});
+```
+
+`setModuleReader` returns a restore function that re-applies the previous
+configuration — useful for scoped overrides:
+
+```typescript
+const restore = setModuleReader({ load: (id) => import(id) });
+// ...
+restore();
+```
+
+Alternatively, the same effect can be achieved by inlining locter in
+`vitest.config.ts`:
+
+```typescript
+export default defineConfig({
+    test: {
+        server: {
+            deps: {
+                inline: [/locter/],
+            },
+        },
+    },
+});
+```
+
+## Migration
+
 ### Migrating from 3.x
 
-The 4.0 release reworks loader registration, dispatch, and result normalization. The list below is exhaustive — no other public APIs changed.
+The 4.0 release renames the loader subsystem around the **format** concept
+(read + write), reworks registration and dispatch, and normalizes results.
+The list below is exhaustive — no other public APIs changed.
+
+**Renames** (clean break, no deprecated aliases):
+
+| 3.x                                  | 4.x                                        |
+|--------------------------------------|--------------------------------------------|
+| `load` / `loadSync`                  | `read` / `readSync`                        |
+| `registerLoader` / `unregisterLoader`| `registerFormat` / `unregisterFormat`      |
+| `LoaderManager`                      | `FormatRegistry`                           |
+| `useLoader`                          | `useFormatRegistry`                        |
+| `Loader` type (`execute`/`executeSync`) | `IReader` (`read`/`readSync`) + `IWriter` (`write`/`writeSync`) |
+| `JSONLoader` / `YAMLLoader` / `ConfLoader` | `JSONReader`+`JSONWriter` / `YAMLReader`+`YAMLWriter` / `ConfReader`+`ConfWriter` |
+| `ModuleLoader`                       | `ModuleReader`                             |
+| `setModuleLoader`                    | `setModuleReader`                          |
+| `loadPackageField` / `loadPackageFieldSync` | `readPackageField` / `readPackageFieldSync` |
+
+**Behavioral changes:**
 
 ```diff
   // 1. User rules now override built-ins. Registering an extension a
   //    built-in claims (e.g. `.json`) previously had NO effect — the
   //    built-in rule always matched first. It now takes precedence.
-  registerLoader(['.json'], myJson5Loader); // 3.x: silent no-op — 4.x: overrides the built-in
+  registerFormat({ test: ['.json'], reader: myJson5Reader }); // 4.x: overrides the built-in
 
-  // 2. Plugin-string loaders are removed. Import the loader yourself and
-  //    register it (optionally lazily, via a factory).
+  // 2. Plugin-string loaders are removed, and rules use the object form
+  //    with independent reader/writer slots. Import the implementation
+  //    yourself and register it (optionally lazily, via a factory).
 - registerLoader({ test: ['.toml'], loader: 'toml' }); // resolved to @locter/toml, sync require()
-+ import { TomlLoader } from '@locter/toml';
-+ registerLoader(['.toml'], () => new TomlLoader());
++ import { TomlReader, TomlWriter } from '@locter/toml';
++ registerFormat({ test: ['.toml'], reader: () => new TomlReader(), writer: () => new TomlWriter() });
 
-  // 3. LoaderManager is renamed to LoaderRegistry and no longer implements
-  //    the loader interface: execute() / executeSync() become
-  //    load() / loadSync() (accepting LocatorInfo | string), and
-  //    findLoader() / resolve() are replaced by find() / builtIn().
+  // 3. The registry no longer implements the loader interface: execute() /
+  //    executeSync() become read() / readSync() (accepting LocatorInfo |
+  //    string), and findLoader() / resolve() are replaced by
+  //    findReader() / findWriter() / builtInReader() / builtInWriter().
 - const manager = new LoaderManager();
 - await manager.execute('file.json');
-- manager.findLoader('file.json');       // Loader | string | undefined
-- manager.resolve('module');             // required an id-to-loader round-trip
-+ const registry = new LoaderRegistry();
-+ await registry.load('file.json');      // mirrors the global load() helper
-+ registry.find('file.json');            // ILoader | undefined
-+ registry.builtIn('module');            // statically typed as ModuleLoader
++ const registry = new FormatRegistry();
++ await registry.read('file.json');       // mirrors the global read() helper
++ registry.findReader('file.json');       // IReader | undefined
++ registry.builtInReader('module');       // statically typed as ModuleReader
 
-  // 4. Every load() / loadSync() result is now a module record (see
+  // 4. Every read() / readSync() result is now a module record (see
   //    "Module records" above). Module files already resolved this way —
-  //    json/yaml/conf and custom loaders used to return the bare parsed
+  //    json/yaml/conf and custom readers used to return the bare parsed
   //    value.
-  const pkg = await load('package.json');
+  const pkg = await read('package.json');
   pkg.version;                           // top-level keys still work
 - pkg.default;                           // undefined
 + pkg.default;                           // the full parsed value
@@ -395,23 +622,35 @@ The 4.0 release reworks loader registration, dispatch, and result normalization.
 + // result, relies on Object.prototype, or enumerates/serializes it
 + // (now includes `default`) must use pkg.default instead.
 
-  // 5. ModuleLoader.execute() / executeSync() return the raw module value;
+  // 5. ModuleReader.read() / readSync() return the raw module value;
   //    normalization happens exactly once, at the registry boundary. Only
-  //    relevant when invoking the loader class directly.
+  //    relevant when invoking the reader class directly.
 - await new ModuleLoader().execute('file.ts');  // normalized record
-+ await new ModuleLoader().execute('file.ts');  // raw module value
-+ await registry.load('file.ts');               // normalized record
++ await new ModuleReader().read('file.ts');     // raw module value
++ await registry.read('file.ts');               // normalized record
 ```
 
-Additionally:
+**New in 4.0:**
 
-- The loader port is now exported as the `ILoader` interface (previously an unexported `Loader` type), alongside `Rule` and `LoaderFactory` — so custom loaders can finally be typed against the package: `import type { ILoader } from 'locter'`.
-- The extensions handled by the module loader are exported as `MODULE_FILE_EXTENSIONS`.
-- `loadPackageField` / `loadPackageFieldSync` now read `package.json` via the built-in JSON loader directly: user-registered `.json` rules no longer intercept the read, and synthetic record keys (`default`, `__esModule`) no longer resolve as package fields.
+- `write` / `writeSync` with per-format writers (`JSONWriter`, `YAMLWriter`,
+  `ConfWriter`), including comment-preserving YAML write-back — see
+  [Writer](#writer).
+- `writePackageField` / `writePackageFieldSync`.
+- `LocterWriteError` + `wrapWriteError`.
+- `isModuleRecord` — brand-based detection of records produced by `read()`.
+- The ports are exported as `IReader` / `IWriter`, alongside `Rule`,
+  `ReaderFactory`, `WriterFactory` — so custom formats can be typed against
+  the package.
+- The extensions handled by the module reader are exported as
+  `MODULE_FILE_EXTENSIONS`.
+- `readPackageField` / `readPackageFieldSync` read `package.json` via the
+  built-in JSON reader directly: user-registered `.json` rules no longer
+  intercept the read, and synthetic record keys (`default`, `__esModule`) no
+  longer resolve as package fields.
 
 ### Migrating from 2.x
 
-The 3.0 release reshapes a few public surfaces. The list below is exhaustive — no other public APIs changed.
+The 3.0 release reshapes a few public surfaces. The list below is exhaustive — no other public APIs changed. (Symbols are shown under their 3.x names; see [Migrating from 3.x](#migrating-from-3x) for the current ones.)
 
 ```diff
 - import { load, locate } from 'locter';
@@ -445,61 +684,6 @@ Additionally:
 
 - The `ebec` runtime dependency is replaced by `@ebec/core`. If you used to import `BaseError` from `ebec`, switch to `@ebec/core`.
 - The package is now ESM-only (no `require('locter')`). This change shipped in the 2.x→3.x toolchain modernization commit; mentioned here for completeness.
-
-### Runtime environments
-
-Locter ships with two runtime detection helpers:
-
-- `isJestRuntimeEnvironment()` — true when running under Jest. Built-in: the
-  `ModuleLoader` falls back to `require()` under Jest to avoid a known
-  segmentation fault ([nodejs/node#35889](https://github.com/nodejs/node/issues/35889)).
-- `isVitestRuntimeEnvironment()` — true when running under Vitest (checks
-  `process.env.VITEST === 'true'`).
-
-#### Using locter with Vitest
-
-Locter's built-in `await import(id)` runs inside `node_modules/locter` and
-therefore bypasses Vitest's `vite-node` module graph by default. For most use
-cases this is fine, but it produces **duplicate module instances** when test
-code statically imports a module and locter dynamically loads the same module
-(or a transitive dependency of it). This breaks class identity for libraries
-that rely on it (e.g. TypeORM entity metadata).
-
-Use `setModuleLoader` to inject an `import` call from user space so Vitest can
-rewrite it:
-
-```typescript
-// vitest setup file
-import { setModuleLoader } from 'locter';
-
-setModuleLoader({
-    load: (id) => import(id),
-});
-```
-
-`setModuleLoader` returns a restore function that re-applies the previous
-configuration — useful for scoped overrides:
-
-```typescript
-const restore = setModuleLoader({ load: (id) => import(id) });
-// ...
-restore();
-```
-
-Alternatively, the same effect can be achieved by inlining locter in
-`vitest.config.ts`:
-
-```typescript
-export default defineConfig({
-    test: {
-        server: {
-            deps: {
-                inline: [/locter/],
-            },
-        },
-    },
-});
-```
 
 
 ## License
