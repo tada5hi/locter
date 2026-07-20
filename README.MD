@@ -27,7 +27,7 @@
   ·
   <a href="#errors">Errors</a>
   ·
-  <a href="#migrating-from-3x">Migration</a>
+  <a href="#migration">Migration</a>
 </p>
 
 ---
@@ -50,9 +50,10 @@
   - [Writer](#writer)
   - [Formats](#formats)
   - [Errors](#errors)
+  - [Runtime environments](#runtime-environments)
+- [Migration](#migration)
   - [Migrating from 3.x](#migrating-from-3x)
   - [Migrating from 2.x](#migrating-from-2x)
-  - [Runtime environments](#runtime-environments)
 - [License](#license)
 
 ## Installation
@@ -499,6 +500,70 @@ missing parents anyway).
 
 Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARKER`, `LOCTER_NOT_FOUND_ERROR_MARKER`, …), which makes `instanceof` work across realms — useful when consumers end up with duplicate copies of locter in their dependency tree.
 
+### Runtime environments
+
+Locter ships with runtime detection helpers:
+
+- `isJestRuntimeEnvironment()` — true when running under Jest. Built-in: the
+  `ModuleReader` falls back to `require()` under Jest to avoid a known
+  segmentation fault ([nodejs/node#35889](https://github.com/nodejs/node/issues/35889)).
+- `isVitestRuntimeEnvironment()` — true when running under Vitest (checks
+  `process.env.VITEST === 'true'`).
+- `isTsNodeRuntimeEnvironment()` — true when a `ts-node` register instance is
+  active. Built-in: the `ModuleReader`'s async path falls back to its sync
+  loading under ts-node.
+- `isTsxRuntimeEnvironment()` — true when the process was started through
+  [tsx](https://tsx.is) (`tsx script.ts`, `node --import tsx`, or a resolved
+  `.../node_modules/tsx/...` loader path). Useful for callers that need to
+  know whether TypeScript sources can be executed directly.
+
+#### Using locter with Vitest
+
+Locter's built-in `await import(id)` runs inside `node_modules/locter` and
+therefore bypasses Vitest's `vite-node` module graph by default. For most use
+cases this is fine, but it produces **duplicate module instances** when test
+code statically imports a module and locter dynamically loads the same module
+(or a transitive dependency of it). This breaks class identity for libraries
+that rely on it (e.g. TypeORM entity metadata).
+
+Use `setModuleReader` to inject an `import` call from user space so Vitest can
+rewrite it:
+
+```typescript
+// vitest setup file
+import { setModuleReader } from 'locter';
+
+setModuleReader({
+    load: (id) => import(id),
+});
+```
+
+`setModuleReader` returns a restore function that re-applies the previous
+configuration — useful for scoped overrides:
+
+```typescript
+const restore = setModuleReader({ load: (id) => import(id) });
+// ...
+restore();
+```
+
+Alternatively, the same effect can be achieved by inlining locter in
+`vitest.config.ts`:
+
+```typescript
+export default defineConfig({
+    test: {
+        server: {
+            deps: {
+                inline: [/locter/],
+            },
+        },
+    },
+});
+```
+
+## Migration
+
 ### Migrating from 3.x
 
 The 4.0 release renames the loader subsystem around the **format** concept
@@ -619,61 +684,6 @@ Additionally:
 
 - The `ebec` runtime dependency is replaced by `@ebec/core`. If you used to import `BaseError` from `ebec`, switch to `@ebec/core`.
 - The package is now ESM-only (no `require('locter')`). This change shipped in the 2.x→3.x toolchain modernization commit; mentioned here for completeness.
-
-### Runtime environments
-
-Locter ships with two runtime detection helpers:
-
-- `isJestRuntimeEnvironment()` — true when running under Jest. Built-in: the
-  `ModuleReader` falls back to `require()` under Jest to avoid a known
-  segmentation fault ([nodejs/node#35889](https://github.com/nodejs/node/issues/35889)).
-- `isVitestRuntimeEnvironment()` — true when running under Vitest (checks
-  `process.env.VITEST === 'true'`).
-
-#### Using locter with Vitest
-
-Locter's built-in `await import(id)` runs inside `node_modules/locter` and
-therefore bypasses Vitest's `vite-node` module graph by default. For most use
-cases this is fine, but it produces **duplicate module instances** when test
-code statically imports a module and locter dynamically loads the same module
-(or a transitive dependency of it). This breaks class identity for libraries
-that rely on it (e.g. TypeORM entity metadata).
-
-Use `setModuleReader` to inject an `import` call from user space so Vitest can
-rewrite it:
-
-```typescript
-// vitest setup file
-import { setModuleReader } from 'locter';
-
-setModuleReader({
-    load: (id) => import(id),
-});
-```
-
-`setModuleReader` returns a restore function that re-applies the previous
-configuration — useful for scoped overrides:
-
-```typescript
-const restore = setModuleReader({ load: (id) => import(id) });
-// ...
-restore();
-```
-
-Alternatively, the same effect can be achieved by inlining locter in
-`vitest.config.ts`:
-
-```typescript
-export default defineConfig({
-    test: {
-        server: {
-            deps: {
-                inline: [/locter/],
-            },
-        },
-    },
-});
-```
 
 
 ## License
