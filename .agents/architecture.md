@@ -94,8 +94,8 @@ Conventions for new formats:
 
 - Class names: `<Format>Reader` / `<Format>Writer` (e.g. `TomlReader`, `TomlWriter`).
 - File location: `src/format/built-in/<format>/{reader.ts,writer.ts}`, with a barrel `index.ts` in the same directory.
-- Text-based format → extend `TextFileReader` (implement `parse(content)`) and `TextFileWriter` (implement `stringify(value, existing?)`); reading/writing, error wrapping, input normalization (`buildFilePath`), directory creation, and the sync/async derivation are inherited.
-- Non-file or binary formats implement `IReader` / `IWriter` directly: wrap I/O in `try/catch`, rethrow via `wrapLoaderError(e, filePath)` / `wrapWriteError(e, filePath)`, and use `buildFilePath(input)` so raw paths and `LocatorInfo` objects both work.
+- Text-based format → extend `TextFileReader` (implement `parse(content)`) and `TextFileWriter` (implement `stringify(value, existing?)`); reading/writing, error wrapping, directory creation, and the sync/async derivation are inherited. Port methods receive plain string paths — the dispatcher normalizes `LocatorInfo` inputs before dispatch.
+- Non-file or binary formats implement `IReader` / `IWriter` directly: wrap I/O in `try/catch` and rethrow via `wrapLoaderError(e, path)` / `wrapWriteError(e, path)`. The input is always a plain string path (the registry normalizes `LocatorInfo` via `buildFilePath` before dispatch).
 - If the format is meant to be built-in: add ONE entry to `BUILT_IN_PRESETS` (`src/format/built-in/registry.ts`) — the id, extensions, reader, and optional writer live there together; the type system derives everything else. Export the classes from `src/format/built-in/index.ts` to make them public.
 - If the format is external/plugin: consumers register it at runtime via `registerFormat` — instances or lazy factories per slot.
 

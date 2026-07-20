@@ -8,7 +8,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { wrapWriteError } from '../../errors';
-import { buildFilePath } from '../../locator';
 import type { TwinBody } from '../../utils/twin';
 import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
 import type { IWriter } from '../type';
@@ -46,7 +45,7 @@ export abstract class TextFileWriter implements IWriter {
     }
 
     protected* body(input: string, value: unknown) : TwinBody<void> {
-        const filePath = buildFilePath(input);
+        const filePath = input;
 
         try {
             let existing : string | undefined;

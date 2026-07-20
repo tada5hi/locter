@@ -10,7 +10,7 @@
 | ESLint 10 (flat) + `@tada5hi/eslint-config` | Lint TypeScript source                                           |
 | typescript-eslint 8                 | Brought in transitively by `@tada5hi/eslint-config` for TS rules         |
 | Husky + commitlint                  | `commit-msg` hook validates Conventional Commits                         |
-| release-please                      | Automated release PRs (alpha prereleases, node release-type)             |
+| release-please                      | Automated release PRs (node release-type; GitHub releases marked prerelease) |
 | monoship                            | Publishes built artifacts to npm on release                              |
 | `@tada5hi/tsconfig`                 | Base tsconfig (extended by `tsconfig.json`)                              |
 
@@ -34,14 +34,14 @@
 - Format classes: `<Format>Reader` / `<Format>Writer` (e.g. `JSONReader`, `JSONWriter`, `YAMLWriter`, `ModuleReader`).
 - Built-in format ids: keys of the `BUILT_IN_PRESETS` registry (`src/format/built-in/registry.ts`); the `BuiltInFormatId` and `WritableBuiltInFormatId` unions are derived from it (there is no enum).
 - Interfaces implemented by classes: `I`-prefixed `PascalCase` (`IReader`, `IWriter`). Plain data shapes / type aliases stay unprefixed (`Rule`, `LocatorInfo`, `FormatPreset`).
-- Functions: `camelCase`, often verb-prefixed (`buildFilePath`, `pathToLocatorInfo`, `isLocatorInfo`, `handleException`).
+- Functions: `camelCase`, often verb-prefixed (`buildFilePath`, `pathToLocatorInfo`, `isLocatorInfo`, `wrapWriteError`).
 - Predicate helpers: `is*` (`isFilePath`, `isObject`, `isESModule`, `isTypeScriptError`).
 - Sync variants: append `Sync` to the async name (`locate` / `locateSync`, `read` / `readSync`, `write` / `writeSync`).
 
 ## File Organization
 
 - One main concept per file. The file name is `kebab-case` and matches the dominant export's role (`file-path.ts` exports `isFilePath`, `has-property.ts` exports `hasOwnProperty`/`hasStringProperty`).
-- Each directory has an `index.ts` barrel that re-exports public symbols. Internal-only files should remain unexported from the barrel.
+- Each directory has an `index.ts` barrel (internal convenience). The PUBLIC surface is the curated named-export list in `src/index.ts`, pinned by `test/unit/public-api.spec.ts` — new symbols only become public when named there (plus snapshot + README updates).
 - Types live next to their implementation:
     - In `src/locator/` they're separated into `types.ts` (re-exported from the barrel).
     - In `src/format/` and `src/format/built-in/<format>/` they live in `type.ts` (singular) — keep this convention for parity with existing folders.
@@ -102,7 +102,7 @@ Releases are driven by **release-please** + **monoship** (`.github/workflows/rel
 4. The same workflow then runs `tada5hi/monoship@v2` to publish the built `dist/` to npm.
 5. Coverage is uploaded to Codecov on the same run.
 
-Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-type: "alpha"`, `bump-minor-pre-major: true`, `bump-patch-for-minor-pre-major: true` (pre-1.0 / 2.x behavior).
+Configuration (`release-please-config.json`): `release-type: node`, `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` (pre-1.0 behavior). Note: `prerelease: true` + `prerelease-type: "alpha"` only mark the *GitHub release* as a prerelease — version numbers are normal semver (no `-alpha.N` suffix); that would require `versioning: "prerelease"`.
 
 ## CI/CD
 
@@ -115,6 +115,5 @@ Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-ty
 - Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
 - When adding a new file format: create `src/format/built-in/<format>/{reader.ts,writer.ts,index.ts}` (writer only if the format is writable), add ONE entry to `BUILT_IN_PRESETS` (`src/format/built-in/registry.ts`), export the classes from `src/format/built-in/index.ts`, and add a corresponding `test/unit/format/<format>.spec.ts` + fixture in `test/data/`. The id unions, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
 - Always implement both sync and async variants of a public function — derive them from one shared twin body (`src/utils/twin.ts`) rather than duplicating the logic; only `ModuleReader` deliberately hand-writes its twins (divergent fallbacks).
-- Use `handleException(e)` (from `src/utils/error.ts`) inside reader/writer `catch` blocks to normalize non-`Error` throws.
 - In source files that need `require` (e.g. for sync module loading), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
 - Keep `src/utils/` free of imports from `src/locator/` or `src/format/`.
