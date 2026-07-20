@@ -9,19 +9,19 @@ import { markInstanceof } from '@ebec/core';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+    FormatRegistry,
     LOCTER_ERROR_MARKER,
     LOCTER_LOAD_ERROR_MARKER,
     LOCTER_NOT_FOUND_ERROR_MARKER,
     LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER,
-    LoaderRegistry,
     LocterError,
     LocterLoadError,
     LocterNotFoundError,
     LocterUnknownExtensionError,
     LocterWriteError,
-    load,
-    loadSync,
-    setModuleLoader,
+    read,
+    readSync,
+    setModuleReader,
     wrapLoaderError,
     wrapWriteError,
 } from '../../src';
@@ -30,14 +30,14 @@ const basePath = path.join(import.meta.dirname, '..', 'data');
 
 describe('src/errors/**', () => {
     it('should throw LocterUnknownExtensionError when no rule matches', async () => {
-        const manager = new LoaderRegistry();
+        const manager = new FormatRegistry();
         const missing = path.join(basePath, 'file.foo');
 
-        await expect(manager.load(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.loadSync(missing)).toThrow(LocterUnknownExtensionError);
+        await expect(manager.read(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        expect(() => manager.readSync(missing)).toThrow(LocterUnknownExtensionError);
 
         try {
-            await manager.load(missing);
+            await manager.read(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
             expect((e as LocterUnknownExtensionError).path).toEqual(missing);
@@ -48,11 +48,11 @@ describe('src/errors/**', () => {
     it('should throw LocterNotFoundError when a JSON file is missing', async () => {
         const missing = path.join(basePath, 'does-not-exist.json');
 
-        await expect(load(missing)).rejects.toBeInstanceOf(LocterNotFoundError);
-        expect(() => loadSync(missing)).toThrow(LocterNotFoundError);
+        await expect(read(missing)).rejects.toBeInstanceOf(LocterNotFoundError);
+        expect(() => readSync(missing)).toThrow(LocterNotFoundError);
 
         try {
-            await load(missing);
+            await read(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
             expect((e as LocterNotFoundError).path).toEqual(missing);
@@ -63,11 +63,11 @@ describe('src/errors/**', () => {
     it('should throw LocterLoadError when a JSON file is malformed', async () => {
         const malformed = path.join(basePath, 'malformed.json');
 
-        await expect(load(malformed)).rejects.toBeInstanceOf(LocterLoadError);
-        expect(() => loadSync(malformed)).toThrow(LocterLoadError);
+        await expect(read(malformed)).rejects.toBeInstanceOf(LocterLoadError);
+        expect(() => readSync(malformed)).toThrow(LocterLoadError);
 
         try {
-            await load(malformed);
+            await read(malformed);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
             expect((e as LocterLoadError).cause).toBeInstanceOf(SyntaxError);
@@ -177,7 +177,7 @@ describe('src/errors/**', () => {
         const syntaxErr = new SyntaxError('bad code');
         const refErr = new ReferenceError('missing');
 
-        const restore = setModuleLoader({
+        const restore = setModuleReader({
             load: () => { throw syntaxErr; },
             loadSync: () => { throw refErr; },
         });
@@ -185,7 +185,7 @@ describe('src/errors/**', () => {
         try {
             let asyncError: unknown;
             try {
-                await load('any-id');
+                await read('any-id');
             } catch (e) {
                 asyncError = e;
             }
@@ -195,7 +195,7 @@ describe('src/errors/**', () => {
 
             let syncError: unknown;
             try {
-                loadSync('any-id');
+                readSync('any-id');
             } catch (e) {
                 syncError = e;
             }

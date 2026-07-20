@@ -1,0 +1,200 @@
+/*
+ * Copyright (c) 2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { createJiti } from 'jiti';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+import { LocterError, wrapLoaderError } from '../../../errors';
+import type { LocatorInfo } from '../../../locator';
+import {
+    buildFilePath,
+    isLocatorInfo,
+} from '../../../locator';
+import {
+    hasStringProperty,
+    isFilePath,
+    isJestRuntimeEnvironment,
+    isObject,
+    isTsNodeRuntimeEnvironment,
+    isTypeScriptError,
+} from '../../../utils';
+import type { IReader } from '../../type';
+import { MODULE_FILE_EXTENSIONS } from './constants';
+import type {
+    ModuleLoadFn,
+    ModuleLoadOptions,
+    ModuleLoadSyncFn,
+    ModuleReaderOptions,
+} from './type';
+
+const require = createRequire(import.meta.url);
+
+type Jiti = ReturnType<typeof createJiti>;
+
+function originalPath(data: LocatorInfo | string) : string {
+    return typeof data === 'string' ? data : buildFilePath(data);
+}
+
+function isUnrecoverableError(error: unknown) : boolean {
+    const underlying = error instanceof LocterError ? error.cause : error;
+    return underlying instanceof SyntaxError ||
+        underlying instanceof ReferenceError ||
+        isTypeScriptError(underlying);
+}
+
+export class ModuleReader implements IReader {
+    protected instance : Jiti;
+
+    protected loadFn?: ModuleLoadFn;
+
+    protected loadSyncFn?: ModuleLoadSyncFn;
+
+    constructor(options: ModuleReaderOptions = {}) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.instance = createJiti(undefined, { extensions: [...MODULE_FILE_EXTENSIONS] });
+        this.loadFn = options.load;
+        this.loadSyncFn = options.loadSync;
+    }
+
+    /**
+     * Returns the previous configuration, so callers can restore it.
+     */
+    configure(options: ModuleReaderOptions) : ModuleReaderOptions {
+        const previous : ModuleReaderOptions = {
+            load: this.loadFn,
+            loadSync: this.loadSyncFn,
+        };
+
+        if ('load' in options) {
+            this.loadFn = options.load;
+        }
+        if ('loadSync' in options) {
+            this.loadSyncFn = options.loadSync;
+        }
+
+        return previous;
+    }
+
+    /**
+     * Returns the raw module value (import / require / jiti output) —
+     * normalization to a module record happens once, at the
+     * FormatRegistry boundary.
+     *
+     * read/readSync are deliberately NOT derived from a shared body
+     * (unlike every other sync/async twin in this package): their
+     * recovery paths differ. The async variant falls back to loadSync
+     * under ts-node (jiti's async path does not cooperate with ts-node)
+     * and to the jiti instance otherwise; the sync variant only has the
+     * jiti fallback. The divergence is pinned by the fallback tests in
+     * test/unit/format/module.spec.ts.
+     */
+    async read(input: string) {
+        try {
+            return await this.load(input);
+        } catch (e) {
+            if (isUnrecoverableError(e)) {
+                throw e;
+            }
+
+            // jiti + ts-node
+            // issue: https://github.com/nuxt/bridge/issues/228
+            if (isTsNodeRuntimeEnvironment()) {
+                return this.loadSync(input);
+            }
+
+            return this.instance(input);
+        }
+    }
+
+    readSync(input: string) {
+        try {
+            return this.loadSync(input);
+        } catch (e) {
+            if (isUnrecoverableError(e)) {
+                throw e;
+            }
+
+            return this.instance(input);
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+
+    async load(
+        data: LocatorInfo | string,
+        options: ModuleLoadOptions = {},
+    ) : Promise<unknown> {
+        const id = this.build(data, options);
+
+        try {
+            if (this.loadFn) {
+                return await this.loadFn(id);
+            }
+
+            // segmentation fault
+            // issue: https://github.com/nodejs/node/issues/35889
+            if (isJestRuntimeEnvironment()) {
+                return require(id);
+            }
+
+            return await import(id);
+        } catch (e) {
+            /* istanbul ignore next */
+            if (
+                !options.withFilePrefix &&
+                isObject(e) &&
+                hasStringProperty(e, 'code') &&
+                (
+                    e.code === 'ERR_UNSUPPORTED_ESM_URL_SCHEME' ||
+                    e.code === 'UNSUPPORTED_ESM_URL_SCHEME'
+                )
+            ) {
+                return this.load(data, {
+                    ...options,
+                    withFilePrefix: true,
+                });
+            }
+
+            throw wrapLoaderError(e, originalPath(data));
+        }
+    }
+
+    loadSync(
+        data: LocatorInfo | string,
+        options: ModuleLoadOptions = {},
+    ) : unknown {
+        const id = this.build(data, options);
+
+        try {
+            if (this.loadSyncFn) {
+                return this.loadSyncFn(id);
+            }
+
+            return require(id);
+        } catch (e) {
+            throw wrapLoaderError(e, originalPath(data));
+        }
+    }
+
+    private build(
+        data: LocatorInfo | string,
+        options: ModuleLoadOptions = {},
+    ) : string {
+        if (isLocatorInfo(data) || isFilePath(data)) {
+            if (typeof data !== 'string') {
+                data = buildFilePath(data);
+            }
+
+            if (options.withFilePrefix) {
+                data = pathToFileURL(data).href;
+            }
+        }
+
+        return data;
+    }
+}
