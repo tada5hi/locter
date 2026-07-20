@@ -169,6 +169,8 @@ A synchronous variant `locateUpSync` is also available.
 | `onlyDirectories` | `boolean`               | `false`         | Match directories only                                 |
 | `dot`             | `boolean`               | `false`         | Match dotfiles (e.g. `.env`, `.npmrc`) for wildcard patterns |
 
+If both flags are set, `onlyDirectories: true` takes precedence over `onlyFiles`; when neither restricts the match (`onlyFiles: false`), files **and** directories are returned.
+
 `locateUp` / `locateUpSync` take the same options except `cwd` must be a single `string`, and additionally accept `stopAt?: string` (inclusive ceiling for the walk).
 
 ### Reader
@@ -629,6 +631,14 @@ The list below is exhaustive — no other public APIs changed.
 + await new ModuleReader().read('file.ts');     // raw module value
 + await registry.read('file.ts');               // normalized record
 ```
+
+**Removed from the public surface** (internal plumbing that leaked through the old `export *` barrels; the package now exports a curated, snapshot-tested list):
+
+- Locator internals: `buildLocatorPatterns`, `buildLocatorOptions`, `pathToLocatorInfo`, `buildFilePathWithoutExtension` (deleted — it had no callers). `buildFilePath` and `isLocatorInfo` stay public.
+- Record internals: `isESModule`, `toModuleRecord`, `createModuleRecord`. Use `read()` (which normalizes) and the public `getModuleExport` / `isModuleRecord`.
+- Generic helpers: `isObject`, `isSafeObjectKey`, `hasOwnProperty`, `hasStringProperty`, `toArray`, `isFilePath`, `getFileNameExtension`, `removeFileNameExtension`, `isTypeScriptError`. The runtime detection helpers (`isJestRuntimeEnvironment`, `isVitestRuntimeEnvironment`, `isTsNodeRuntimeEnvironment`, `isTsxRuntimeEnvironment`) stay public.
+
+**Locator option precedence** — `{ onlyFiles: true, onlyDirectories: true }` used to resolve to *neither* restriction (everything matched); `onlyDirectories: true` now wins. `{ onlyFiles: false }` used to mean directories-only; it now means "no restriction" (files and directories).
 
 **New in 4.0:**
 

@@ -28,19 +28,12 @@ export function buildLocatorOptions(options: LocatorOptionsInput = {}) : Locator
         cwd.push(process.cwd());
     }
 
-    let onlyFiles : boolean;
-    let onlyDirectories : boolean;
-
-    if (options.onlyDirectories === options.onlyFiles) {
-        onlyDirectories = false;
-        onlyFiles = !options.onlyDirectories;
-    } else if (typeof options.onlyFiles === 'undefined') {
-        onlyDirectories = options.onlyDirectories ?? false;
-        onlyFiles = !options.onlyDirectories;
-    } else {
-        onlyFiles = options.onlyFiles ?? true;
-        onlyDirectories = !options.onlyFiles;
-    }
+    // precedence: an explicit `onlyDirectories: true` wins over `onlyFiles`
+    // (which defaults to true); when neither restricts, everything matches
+    const onlyDirectories = options.onlyDirectories ?? false;
+    const onlyFiles = onlyDirectories ?
+        false :
+        options.onlyFiles ?? true;
 
     return {
         cwd,
@@ -93,16 +86,4 @@ export function buildFilePath(input: LocatorInfo | string) {
     }
 
     return input.path;
-}
-
-export function buildFilePathWithoutExtension(input: LocatorInfo | string) {
-    let info: LocatorInfo;
-
-    if (typeof input === 'string') {
-        info = pathToLocatorInfo(input);
-    } else {
-        info = input;
-    }
-
-    return path.join(info.directory, info.name);
 }
