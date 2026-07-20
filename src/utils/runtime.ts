@@ -20,3 +20,26 @@ export function isTsNodeRuntimeEnvironment(): boolean {
     // @ts-ignore
     return !!process[Symbol.for('ts-node.register.instance')];
 }
+
+// matches the bare `tsx` specifier (node --import tsx), optionally with a
+// subpath (tsx/esm), as well as resolved paths into the tsx package
+// (.../node_modules/tsx/dist/loader.mjs)
+const TSX_MARKER_REGEX = /(?:^|=|[\\/])tsx(?:$|[\\/])/;
+
+export function isTsxRuntimeEnvironment() : boolean {
+    if (typeof process === 'undefined') {
+        return false;
+    }
+
+    if (
+        Array.isArray(process.execArgv) &&
+        process.execArgv.some((arg) => TSX_MARKER_REGEX.test(arg))
+    ) {
+        return true;
+    }
+
+    const { _preload_modules: preloadModules } = process as unknown as { _preload_modules?: string[] };
+
+    return Array.isArray(preloadModules) &&
+        preloadModules.some((el) => TSX_MARKER_REGEX.test(el));
+}

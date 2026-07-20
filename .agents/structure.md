@@ -57,7 +57,7 @@ locter/
 │       ├── file-path.ts            # isFilePath
 │       ├── has-property.ts         # hasOwnProperty, hasStringProperty
 │       ├── object.ts               # isObject, isSafeObjectKey
-│       ├── runtime.ts              # isJestRuntimeEnvironment, isTsNodeRuntimeEnvironment
+│       ├── runtime.ts              # isJestRuntimeEnvironment, isVitestRuntimeEnvironment, isTsNodeRuntimeEnvironment, isTsxRuntimeEnvironment
 │       ├── to-array.ts             # toArray
 │       └── typescript.ts           # isTypeScriptError
 ├── test/
