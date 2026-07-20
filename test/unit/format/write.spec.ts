@@ -20,6 +20,7 @@ import {
     LocterWriteError,
     isModuleRecord,
     read,
+    readAsModule,
     readSync,
     write,
     writeSync,
@@ -42,16 +43,15 @@ describe('src/format/** (write)', () => {
 
         expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(fs.readFileSync(asyncPath, 'utf-8'));
 
-        const record = await read(asyncPath);
-        expect(record.default).toEqual(value);
-        expect(readSync(syncPath).default).toEqual(value);
+        expect(await read(asyncPath)).toEqual(value);
+        expect(readSync(syncPath)).toEqual(value);
     });
 
-    it('should unwrap records produced by read() on write-back', async () => {
+    it('should unwrap records produced by readAsModule() on write-back', async () => {
         const source = path.join(tmpDir, 'roundtrip.json');
         await write(source, { port: 3000 });
 
-        const record = await read(source);
+        const record = await readAsModule(source);
         expect(isModuleRecord(record)).toBe(true);
 
         record.default.port = 8080;
@@ -61,6 +61,17 @@ describe('src/format/** (write)', () => {
         // no default / __esModule wrapper ends up in the file
         const written = JSON.parse(fs.readFileSync(target, 'utf-8'));
         expect(written).toEqual({ port: 8080 });
+    });
+
+    it('should round-trip read() values symmetrically', async () => {
+        const source = path.join(tmpDir, 'symmetric.yml');
+        await write(source, { port: 3000 });
+
+        const value = await read(source);
+        value.port = 8080;
+        await write(source, value);
+
+        expect(await read(source)).toEqual({ port: 8080 });
     });
 
     it('should write plain values carrying a literal __esModule key as-is', async () => {

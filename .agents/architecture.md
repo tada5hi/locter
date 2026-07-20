@@ -5,7 +5,7 @@
 Locter is structured as two cooperating subsystems plus a utility layer:
 
 1. **Locator** (`src/locator/`) — pure file discovery over `fast-glob`. Takes a glob pattern + options, returns `LocatorInfo` records `{ path, name, extension? }`. Has parallel sync/async surfaces.
-2. **Format** (`src/format/`) — pluggable file reading and writing. A `FormatRegistry` dispatches to `IReader` / `IWriter` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/format/built-in/registry.ts`). A process-wide singleton (`useFormatRegistry`) is exposed via the `read` / `readSync` / `write` / `writeSync` / `registerFormat` helpers.
+2. **Format** (`src/format/`) — pluggable file reading and writing. A `FormatRegistry` dispatches to `IReader` / `IWriter` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/format/built-in/registry.ts`). A process-wide singleton (`useFormatRegistry`) is exposed via the `read` / `readAsModule` / `write` (+Sync) / `registerFormat` helpers. `read` is raw (plain parsed value for data; normalized module record for modules — raw module output would break twin parity, since import() and require() disagree on CJS shapes); `readAsModule` presents EVERY result as the uniform module record.
 3. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
 
 The two subsystems are loosely coupled: `format/` depends on `locator/` only for `pathToLocatorInfo` and `buildFilePath` (to derive the extension and the on-disk path from a `LocatorInfo`). `locator/` does not import from `format/`.
@@ -21,7 +21,7 @@ Internally, both variants are derived from **one shared body** via the twin prot
 - `src/locator/core.ts` — `locateBody`, `locateManyBody` (used by `async.ts`, `sync.ts`, `up.ts`)
 - `src/format/text-file/reader.ts` — `TextFileReader.body` (read → parse → wrap errors)
 - `src/format/text-file/writer.ts` — `TextFileWriter.body` (optional read-existing → stringify → mkdir → write → wrap errors)
-- `src/format/registry/module.ts` — `FormatRegistry.readBody` (dispatch → read → normalize → wrap) and `FormatRegistry.writeBody` (dispatch → unwrap record → write → wrap)
+- `src/format/registry/module.ts` — `FormatRegistry.executeBody` (dispatch → execute → wrap errors), shared via `yield*` by `readBody` (raw / provenance-shaped) and `readAsModuleBody` (uniform record via `toRecord`), plus `FormatRegistry.writeBody` (dispatch → unwrap record → write → wrap)
 - `src/format/package-field.ts` — `readPackageFieldBody`, `writePackageFieldBody`, `locatePackageBody`
 
 **The one deliberate exception is `ModuleReader`**: `read` / `readSync` are hand-written twins because their recovery paths genuinely diverge (async falls back to `loadSync` under ts-node and to jiti otherwise; sync only has the jiti fallback). The divergence is documented on `read` and pinned by explicit fallback tests in `test/unit/format/module.spec.ts`.
@@ -112,7 +112,7 @@ Conventions for new formats:
 
 The registry does **not** implement the ports — it is a dispatcher over readers/writers, not one itself. Its `read`/`write` (+Sync) accept `LocatorInfo | string` (normalizing via `buildFilePath`), and own the record boundary — semantics a leaf reader's/writer's methods deliberately do not have:
 
-- **Read side** (`toRecord`): every result becomes a module record. Provenance decides how: output of a `ModuleReader` goes through `toModuleRecord` (the `__esModule` marker is trustworthy for values a module system produced), while every other reader's output is arbitrary parsed data and is always wrapped via `createModuleRecord` — even if it happens to contain an `__esModule` key.
+- **Read side** (`toRecord`, readAsModule): every readAsModule result becomes a module record; `read` skips the data-wrapping — data formats return the raw parsed value, modules return `toModuleRecord` output (their honest shape). Provenance decides how: output of a `ModuleReader` goes through `toModuleRecord` (the `__esModule` marker is trustworthy for values a module system produced), while every other reader's output is arbitrary parsed data and is always wrapped via `createModuleRecord` — even if it happens to contain an `__esModule` key.
 - **Write side** (inverse): records carry a private, non-enumerable Symbol brand (module-private, not `Symbol.for` — unforgeable from outside; `isModuleRecord` checks it). `writeBody` unwraps branded values to their `.default` before dispatching to the writer, so `read → modify → write` round-trips never leak the record wrapper. Arbitrary data with a literal `__esModule` key is written as-is. Branding is best-effort on the module-read passthrough path (module namespace objects are non-extensible — irrelevant, since module formats have no writer).
 
 `builtInReader(id)` / `builtInWriter(id)` lazily instantiate and cache built-in instances per registry instance; `builtInReader('module')` is statically typed as `ModuleReader` (used by `setModuleReader`, no cast needed), and `builtInWriter` only accepts `WritableBuiltInFormatId` (passing `'module'` is a compile error).

@@ -215,6 +215,13 @@ export class FormatRegistry {
         this.ruleCounter = 0;
     }
 
+    /**
+     * Read a file/module RAW: the plain parsed value for data formats
+     * (mutable, round-trip-symmetric with write); for modules the
+     * normalized module record — a module IS a record, and the
+     * normalization only irons out the CJS/ESM interop divergence so
+     * both twin variants agree on one shape.
+     */
     async read(input: LocatorInfo | string) : Promise<any> {
         return runTwinAsync(this.readBody(input));
     }
@@ -224,9 +231,40 @@ export class FormatRegistry {
     }
 
     /**
-     * Shared body of read/readSync: dispatch, read, normalize, wrap.
+     * Read a file/module and present the result as a normalized module
+     * record — the uniform, frozen shape regardless of format:
+     * `.default` always holds the loaded value, top-level keys are
+     * re-exposed as named exports.
      */
+    async readAsModule(input: LocatorInfo | string) : Promise<any> {
+        return runTwinAsync(this.readAsModuleBody(input));
+    }
+
+    readAsModuleSync(input: LocatorInfo | string) : any {
+        return runTwinSync(this.readAsModuleBody(input));
+    }
+
     protected* readBody(input: LocatorInfo | string) : TwinBody<any> {
+        const { output, reader } = yield* this.executeBody(input);
+        if (reader instanceof ModuleReader) {
+            return toModuleRecord(output);
+        }
+
+        return output;
+    }
+
+    protected* readAsModuleBody(input: LocatorInfo | string) : TwinBody<any> {
+        const { output, reader } = yield* this.executeBody(input);
+        return this.toRecord(output, reader);
+    }
+
+    /**
+     * Shared dispatch + execution of both read bodies: resolve the
+     * reader, run it, wrap errors. Normalization is the caller's call.
+     */
+    protected* executeBody(
+        input: LocatorInfo | string,
+    ) : TwinBody<{ output: unknown, reader: IReader }> {
         const filePath = buildFilePath(input);
         const reader = this.findReader(filePath);
         if (!reader) {
@@ -239,7 +277,7 @@ export class FormatRegistry {
                 () => reader.readSync(filePath),
             );
 
-            return this.toRecord(output, reader);
+            return { output, reader };
         } catch (e) {
             throw wrapLoaderError(e, filePath);
         }
@@ -255,9 +293,9 @@ export class FormatRegistry {
 
     /**
      * Shared body of write/writeSync: dispatch, unwrap records, write, wrap.
-     * The inverse boundary of readBody: a record produced by read() (brand
-     * detected) is unwrapped to its `.default` value; anything else is
-     * written as-is.
+     * The inverse boundary of readAsModuleBody: a record produced by
+     * readAsModule() (brand detected) is unwrapped to its `.default` value;
+     * anything else is written as-is.
      */
     protected* writeBody(input: LocatorInfo | string, value: unknown) : TwinBody<void> {
         const filePath = buildFilePath(input);
@@ -294,7 +332,7 @@ export class FormatRegistry {
     }
 
     /**
-     * The single normalization boundary: every read result becomes a module
+     * The single normalization boundary: every readAsModule result becomes a module
      * record (`.default` is always the loaded value, top-level keys stay
      * accessible as named exports). Provenance decides how: module-reader
      * output may legitimately already be a record (`__esModule` is meaningful

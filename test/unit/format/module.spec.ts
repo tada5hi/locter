@@ -14,6 +14,8 @@ import {
     ModuleReader,
     getModuleExport,
     read,
+    readAsModule,
+    readAsModuleSync,
     readSync,
     setModuleReader,
     useFormatRegistry,
@@ -23,7 +25,7 @@ import { expectParity } from '../../helpers/parity';
 const dataDir = path.join(import.meta.dirname, '..', '..', 'data');
 
 describe('src/format/**', () => {
-    it('should normalize every built-in read result to a module record', async () => {
+    it('should normalize every readAsModule result to a module record', async () => {
         const fixtures = [
             'file.json',
             'file.yml',
@@ -35,14 +37,36 @@ describe('src/format/**', () => {
         ];
 
         for (const fixture of fixtures) {
-            const record = await read(`./test/data/${fixture}`);
+            const record = await readAsModule(`./test/data/${fixture}`);
             expect(record.__esModule, fixture).toBe(true);
             expect(record.default, fixture).toBeDefined();
 
-            const recordSync = readSync(`./test/data/${fixture}`);
+            const recordSync = readAsModuleSync(`./test/data/${fixture}`);
             expect(recordSync.__esModule, fixture).toBe(true);
             expect(recordSync.default, fixture).toBeDefined();
         }
+    });
+
+    it('should read raw: plain values for data, module records for modules', async () => {
+        // data formats: the plain parsed value (equal to the record's .default)
+        const record = await readAsModule('./test/data/file.json');
+        const value = await expectParity(
+            () => read('./test/data/file.json'),
+            () => readSync('./test/data/file.json'),
+        );
+        expect(value).toEqual({ foo: 'bar' });
+        expect(value).toEqual(record.default);
+
+        // modules: the normalized record — NO default-export unwrapping
+        const withDefault = await expectParity(
+            () => read('./test/data/file-default.mjs'),
+            () => readSync('./test/data/file-default.mjs'),
+        );
+        expect(withDefault.bar).toEqual('baz');
+        expect(withDefault.default).toEqual({ foo: 'bar' });
+
+        const withoutDefault = await read('./test/data/file.mjs');
+        expect(withoutDefault.foo).toEqual('bar');
     });
 
     it('should wrap user-reader output even when it carries an __esModule key', async () => {
@@ -59,13 +83,18 @@ describe('src/format/**', () => {
             },
         });
 
-        const record = await manager.read('file.foo');
+        const record = await manager.readAsModule('file.foo');
         expect(record.foo).toEqual('bar');
         expect(record.default).toEqual({ __esModule: true, foo: 'bar' });
 
-        const recordSync = manager.readSync('file.foo');
+        const recordSync = manager.readAsModuleSync('file.foo');
         expect(recordSync.foo).toEqual('bar');
         expect(recordSync.default).toEqual({ __esModule: true, foo: 'bar' });
+
+        // read() hands back the parsed data untouched — a literal
+        // __esModule key in DATA never triggers module unwrapping
+        const value = await manager.read('file.foo');
+        expect(value).toEqual({ __esModule: true, foo: 'bar' });
     });
 
     it('should filter file', async () => {
@@ -85,18 +114,28 @@ describe('src/format/**', () => {
         expect(() => readSync('file.foo')).toThrow(LocterUnknownExtensionError);
     });
 
-    it('should read module', async () => {
-        const yaml = await read('yaml');
+    it('should readAsModule a bare specifier', async () => {
+        const yaml = await readAsModule('yaml');
         expect(yaml).toBeDefined();
         expect(yaml.parse).toBeDefined();
         expect(yaml.default.parse).toBeDefined();
     });
 
-    it('should read module sync', async () => {
-        const yaml = readSync('yaml');
+    it('should readAsModule a bare specifier sync', async () => {
+        const yaml = readAsModuleSync('yaml');
         expect(yaml).toBeDefined();
         expect(yaml.parse).toBeDefined();
         expect(yaml.default.parse).toBeDefined();
+    });
+
+    it('should read a bare specifier as module record', async () => {
+        const yaml = await read('yaml');
+        expect(yaml.parse).toBeDefined();
+        expect(yaml.default.parse).toBeDefined();
+
+        const yamlSync = readSync('yaml');
+        expect(yamlSync.parse).toBeDefined();
+        expect(yamlSync.default.parse).toBeDefined();
     });
 
     it('should register reader rule', async () => {
@@ -113,11 +152,12 @@ describe('src/format/**', () => {
             },
         });
 
-        const record = await manager.read('file.foo');
+        const record = await manager.readAsModule('file.foo');
         expect(record.default).toEqual('file.foo');
 
-        const recordSync = manager.readSync('file.foo');
-        expect(recordSync.default).toEqual('file.foo');
+        // value semantics: the reader output itself
+        expect(await manager.read('file.foo')).toEqual('file.foo');
+        expect(manager.readSync('file.foo')).toEqual('file.foo');
     });
 
     it('should register reader rule with regexp test', async () => {
@@ -186,11 +226,8 @@ describe('src/format/**', () => {
 
         expect(constructed).toEqual(0);
 
-        const record = await manager.read('file.foo');
-        expect(record.default).toEqual('file.foo');
-
-        const recordSync = manager.readSync('file.foo');
-        expect(recordSync.default).toEqual('file.foo');
+        expect(await manager.read('file.foo')).toEqual('file.foo');
+        expect(manager.readSync('file.foo')).toEqual('file.foo');
 
         expect(constructed).toEqual(1);
     });

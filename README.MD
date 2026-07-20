@@ -35,7 +35,7 @@
 ## Features
 
 - 🔍 **Locate** — `locate`, `locateMany`, `locateUp`: fast-glob discovery returning structured `LocatorInfo` records.
-- 📖 **Read** — one `read()` for JSON, YAML, `.conf`, and JS/TS modules in any runtime (powered by `jiti`); every result normalized to a module record.
+- 📖 **Read** — one `read()` for JSON, YAML, `.conf`, and JS/TS modules in any runtime (powered by `jiti`); `readAsModule()` for the uniform module-record shape.
 - ✍️ **Write** — `write()` values back without pulling serializers into your app: comment-preserving YAML, indent-preserving JSON, rc9-style `.conf`.
 - 🔁 **Sync twins** — every operation ships as `fn` / `fnSync`, derived from one shared implementation.
 - 🧩 **Extensible** — register custom formats with independent reader/writer slots; override built-ins per extension.
@@ -175,55 +175,55 @@ If both flags are set, `onlyDirectories: true` takes precedence over `onlyFiles`
 
 ### Reader
 
-The `read` method loads a file/module in an asynchronous fashion.
-Either a string or the output of the locate/locateSync method can be passed as argument.
+Two verbs, two shapes:
+
+- **`read`** — *raw*: the plain parsed value for data formats (JSON/YAML/Conf
+  and custom readers) — mutable and round-trip-symmetric with `write`. For
+  modules it returns the normalized module record: a module *is* a record,
+  and the normalization only irons out the CJS/ESM interop divergence so
+  `read` and `readSync` agree on one shape.
+- **`readAsModule`** — everything as a *module record*: the uniform, frozen
+  record shape regardless of format — for export inspection, interop, and
+  uniform handling of mixed-extension config.
+
+Either a string or the output of the locate/locateSync method can be passed
+as argument; both verbs have `*Sync` twins.
 
 ```typescript
-import { read, locate } from 'locter';
+import { locate, read, readSync } from 'locter';
 
 (async () => {
-    const file = await locate(
-        'files/example.{js,.ts}'
-    );
+    const config = await read('config.yml');
+    // → the plain parsed value: { port: 3000, ... } — mutable,
+    //   round-trip-symmetric with write()
 
-    let content = await read(file);
-    console.log(content);
-    // ...
+    const settings = await read('trapi.config.ts');
+    // → the module as a normalized record; unwrap explicitly:
+    //   settings.default
 
-    content = await read('...');
-    console.log(content);
-    // ...
+    const file = await locate('files/example.{js,.ts}');
+    const content = readSync(file);   // sync twin
 })
-```
-
-There is also a synchronous method called `readSync`.
-
-```typescript
-import { readSync, locateSync } from 'locter';
-
-const file = locateSync(
-    'files/example.{js,.ts}'
-);
-
-const content = readSync(file);
 ```
 
 Bare module specifiers (no file extension) are routed to the module reader, so
 `read('yaml')` behaves like `import('yaml')` — note that reading a module
 **executes** it.
 
-**Module records**
+**Module records — `readAsModule`**
 
-Every `read` / `readSync` result is a **module record** — a frozen,
-null-prototype object shaped like an ES module namespace: `default` always
-holds the loaded value, and when that value is an object, its top-level keys
-are re-exposed as named exports.
+Every `readAsModule` / `readAsModuleSync` result is a **module record** — a
+frozen, null-prototype object shaped like an ES module namespace: `default`
+always holds the loaded value, and when that value is an object, its
+top-level keys are re-exposed as named exports. For modules, `read` and
+`readAsModule` agree; for data formats, `read` returns what
+`readAsModule(...).default` holds.
 
 ```typescript
-import { read } from 'locter';
+import { readAsModule } from 'locter';
 
 (async () => {
-    const pkg = await read('package.json');
+    const pkg = await readAsModule('package.json');
 
     console.log(pkg.default);   // the full parsed JSON value
     console.log(pkg.version);   // top-level keys are named exports
@@ -233,21 +233,23 @@ import { read } from 'locter';
 For JavaScript/TypeScript files the module's own namespace passes through
 unchanged; the output of every other reader (built-in JSON/YAML/Conf and
 user-registered ones) is always wrapped — even if the parsed data happens to
-contain an `__esModule` key. The record is read-only: to mutate the loaded
-data, work with `.default`.
+contain an `__esModule` key (`read` of such data likewise returns it
+untouched — a literal `__esModule` key never turns data into a module).
+The record is read-only: to mutate the loaded data, work with `.default`
+(for data records that is the same object `read` returns).
 
 Records additionally carry a private, non-forgeable brand: `isModuleRecord`
-tells records produced by `read()` apart from arbitrary data, and
+tells records produced by `readAsModule()` apart from arbitrary data, and
 [`write`](#writer) uses the brand to unwrap `.default` automatically on
 write-back.
 
 To pick an export by predicate, the `getModuleExport` helper is available:
 
 ```typescript
-import { getModuleExport, read } from 'locter';
+import { getModuleExport, readAsModule } from 'locter';
 
 (async () => {
-    const record = await read('files/example.ts');
+    const record = await readAsModule('files/example.ts');
 
     const found = getModuleExport(record, (key) => key === 'myExport');
     // → { key: 'myExport', value: ... }, or undefined if no key matches
@@ -286,15 +288,19 @@ The `write` method serializes a value to a file, dispatched by extension like
 application:
 
 ```typescript
-import { read, write } from 'locter';
+import { read, readAsModule, write } from 'locter';
 
 (async () => {
+    // read → modify → write, fully symmetric
     const config = await read('config.yml');
-    config.default.port = 8080;
-
-    // records produced by read() are unwrapped automatically —
-    // the file receives the plain value, not the record wrapper
+    config.port = 8080;
     await write('config.yml', config);
+
+    // records produced by readAsModule() are unwrapped automatically —
+    // the file receives the plain value, not the record wrapper
+    const record = await readAsModule('config.yml');
+    record.default.port = 8080;
+    await write('config.yml', record);
 
     // plain values work just as well
     await write('generated/settings.json', { port: 8080 });
@@ -307,7 +313,7 @@ Write semantics:
 
 - **Missing parent directories are created** (`mkdir -p`).
 - Output always ends with a single trailing newline.
-- Values that are records produced by `read()` (detected via the private
+- Values that are records produced by `readAsModule()` (detected via the private
   brand — an `__esModule` key in plain data does **not** count) are unwrapped
   to their `.default` value before serialization.
 - Module formats (`.js`, `.ts`, …) are **read-only**: `write('config.ts', …)`
@@ -576,7 +582,7 @@ The list below is exhaustive — no other public APIs changed.
 
 | 3.x                                  | 4.x                                        |
 |--------------------------------------|--------------------------------------------|
-| `load` / `loadSync`                  | `read` / `readSync`                        |
+| `load` / `loadSync` | `read` / `readSync` (raw: plain data values / module records) or `readAsModule` / `readAsModuleSync` (everything as a module record) |
 | `registerLoader` / `unregisterLoader`| `registerFormat` / `unregisterFormat`      |
 | `LoaderManager`                      | `FormatRegistry`                           |
 | `useLoader`                          | `useFormatRegistry`                        |
@@ -612,17 +618,20 @@ The list below is exhaustive — no other public APIs changed.
 + registry.findReader('file.json');       // IReader | undefined
 + registry.builtInReader('module');       // statically typed as ModuleReader
 
-  // 4. Every read() / readSync() result is now a module record (see
-  //    "Module records" above). Module files already resolved this way —
-  //    json/yaml/conf and custom readers used to return the bare parsed
-  //    value.
-  const pkg = await read('package.json');
-  pkg.version;                           // top-level keys still work
-- pkg.default;                           // undefined
+  // 4. Two verbs replace 3.x load(): read() is RAW (the plain parsed
+  //    value for data — 3.x data loads map to read() nearly 1:1 — and
+  //    the normalized record for modules), while readAsModule() returns
+  //    a frozen, null-prototype module record for EVERY format (see
+  //    "Module records" above).
+  const value = await read('package.json');
+  value.version;                         // the plain parsed JSON
+
+  const pkg = await readAsModule('package.json');
+  pkg.version;                           // top-level keys as named exports
 + pkg.default;                           // the full parsed value
 + // The record is frozen and null-prototype: code that mutates the
 + // result, relies on Object.prototype, or enumerates/serializes it
-+ // (now includes `default`) must use pkg.default instead.
++ // must use pkg.default (or read()) instead.
 
   // 5. ModuleReader.read() / readSync() return the raw module value;
   //    normalization happens exactly once, at the registry boundary. Only
@@ -635,7 +644,7 @@ The list below is exhaustive — no other public APIs changed.
 **Removed from the public surface** (internal plumbing that leaked through the old `export *` barrels; the package now exports a curated, snapshot-tested list):
 
 - Locator internals: `buildLocatorPatterns`, `buildLocatorOptions`, `pathToLocatorInfo`, `buildFilePathWithoutExtension` (deleted — it had no callers). `buildFilePath` and `isLocatorInfo` stay public.
-- Record internals: `isESModule`, `toModuleRecord`, `createModuleRecord`. Use `read()` (which normalizes) and the public `getModuleExport` / `isModuleRecord`.
+- Record internals: `isESModule`, `toModuleRecord`, `createModuleRecord`. Use `readAsModule()` (which normalizes) / `read()` (raw) and the public `getModuleExport` / `isModuleRecord`.
 - Generic helpers: `isObject`, `isSafeObjectKey`, `hasOwnProperty`, `hasStringProperty`, `toArray`, `isFilePath`, `getFileNameExtension`, `removeFileNameExtension`, `isTypeScriptError`. The runtime detection helpers (`isJestRuntimeEnvironment`, `isVitestRuntimeEnvironment`, `isTsNodeRuntimeEnvironment`, `isTsxRuntimeEnvironment`) stay public.
 
 **Locator option precedence** — `{ onlyFiles: true, onlyDirectories: true }` used to resolve to *neither* restriction (everything matched); `onlyDirectories: true` now wins. `{ onlyFiles: false }` used to mean directories-only; it now means "no restriction" (files and directories).

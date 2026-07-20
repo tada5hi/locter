@@ -38,17 +38,14 @@ describe('src/format/**', () => {
         expect(content).toBeDefined();
         expect(content.YAML).toBeDefined();
         expect(content.yaml).toBeDefined();
-        expect(content.default).toBeDefined();
-        expect(content.default.YAML).toEqual(content.YAML);
     });
 
-    it('should wrap data containing an __esModule key', async () => {
+    it('should keep a literal __esModule key as plain data', async () => {
         const content = await expectParity(
             () => read('./test/data/file-es-module.yml'),
             () => readSync('./test/data/file-es-module.yml'),
         );
-        expect(content.foo).toEqual('bar');
-        expect(content.default).toEqual({ __esModule: true, foo: 'bar' });
+        expect(content).toEqual({ __esModule: true, foo: 'bar' });
     });
 
     it('should write a new .yml file with sync/async parity', async () => {
@@ -63,8 +60,7 @@ describe('src/format/**', () => {
         expect(content).toEqual('port: 3000\ndb:\n  host: localhost\n');
         expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(content);
 
-        const record = await read(asyncPath);
-        expect(record.default).toEqual(value);
+        expect(await read(asyncPath)).toEqual(value);
     });
 
     it('should preserve comments of surviving keys on write-back', async () => {
@@ -124,8 +120,7 @@ describe('src/format/**', () => {
         expect(content).toContain('# header');
         expect(content).toContain('host: localhost');
 
-        const record = await read(target);
-        expect(record.default).toEqual({ port: 3000, host: 'localhost' });
+        expect(await read(target)).toEqual({ port: 3000, host: 'localhost' });
     });
 
     it('should replace arrays and type-changed nodes wholesale', async () => {
@@ -134,8 +129,7 @@ describe('src/format/**', () => {
 
         await write(target, { tags: ['c'], value: 'scalar' });
 
-        const record = await read(target);
-        expect(record.default).toEqual({ tags: ['c'], value: 'scalar' });
+        expect(await read(target)).toEqual({ tags: ['c'], value: 'scalar' });
     });
 
     it('should throw instead of overwriting a corrupt existing file', async () => {
