@@ -8,17 +8,29 @@
 import {
     LocterError,
     LocterUnknownExtensionError,
+    LocterWriteError,
     wrapLoaderError,
+    wrapWriteError,
 } from '../../errors';
 import type { LocatorInfo } from '../../locator';
 import { buildFilePath, pathToLocatorInfo } from '../../locator';
 import { hasOwnProperty, isFilePath } from '../../utils';
 import type { TwinBody } from '../../utils/twin';
 import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
-import { ModuleReader, createModuleRecord, toModuleRecord } from '../built-in';
-import type { BuiltInFormatId, BuiltInReaderOf } from '../built-in/registry';
+import {
+    ModuleReader, 
+    createModuleRecord, 
+    isModuleRecord, 
+    toModuleRecord,
+} from '../built-in';
+import type {
+    BuiltInFormatId,
+    BuiltInReaderOf,
+    BuiltInWriterOf,
+    WritableBuiltInFormatId,
+} from '../built-in/registry';
 import { BUILT_IN_PRESETS } from '../built-in/registry';
-import type { IReader } from '../type';
+import type { IReader, IWriter } from '../type';
 import type {
     FormatRegistration,
     Rule,
@@ -32,14 +44,35 @@ export type FormatRegistryOptions = {
 };
 
 /**
- * A rule compiled to a memoizing accessor. Caller-owned Rule objects
- * are never mutated; factory caching lives in the closure.
+ * A rule compiled to memoizing per-slot accessors. Caller-owned Rule
+ * objects are never mutated; factory caching lives in the closures.
  */
 type CompiledRule = {
     id: string,
     test: RegExp | string[],
-    getReader: () => IReader
+    getReader?: () => IReader,
+    getWriter?: () => IWriter
 };
+
+function compileSlot<T>(slot: T | (() => T) | undefined) : (() => T) | undefined {
+    if (typeof slot === 'undefined') {
+        return undefined;
+    }
+
+    if (typeof slot !== 'function') {
+        return () => slot;
+    }
+
+    const factory = slot as () => T;
+    let cached : T | undefined;
+    return () => {
+        if (!cached) {
+            cached = factory();
+        }
+
+        return cached;
+    };
+}
 
 export class FormatRegistry {
     /**
@@ -53,6 +86,11 @@ export class FormatRegistry {
     protected builtInReaderCache : Map<BuiltInFormatId, IReader>;
 
     /**
+     * Lazy per-instance cache of built-in writer instances.
+     */
+    protected builtInWriterCache : Map<BuiltInFormatId, IWriter>;
+
+    /**
      * extension → built-in format id, precomputed once from BUILT_IN_PRESETS.
      */
     protected builtInExtensions : Map<string, BuiltInFormatId>;
@@ -62,6 +100,7 @@ export class FormatRegistry {
     constructor(options: FormatRegistryOptions = {}) {
         this.rules = [];
         this.builtInReaderCache = new Map();
+        this.builtInWriterCache = new Map();
         this.builtInExtensions = new Map();
         this.ruleCounter = 0;
 
@@ -90,6 +129,13 @@ export class FormatRegistry {
             hasOwnProperty(BUILT_IN_PRESETS, rule.id)
         ) {
             throw new LocterError({ message: `The id ${rule.id} is reserved by a built-in format.` });
+        }
+
+        if (
+            typeof rule.reader === 'undefined' &&
+            typeof rule.writer === 'undefined'
+        ) {
+            throw new LocterError({ message: 'A rule requires at least one of: reader, writer.' });
         }
 
         const id = rule.id ?? this.generateRuleId();
@@ -165,6 +211,7 @@ export class FormatRegistry {
     reset() : void {
         this.rules = [];
         this.builtInReaderCache.clear();
+        this.builtInWriterCache.clear();
         this.ruleCounter = 0;
     }
 
@@ -198,6 +245,54 @@ export class FormatRegistry {
         }
     }
 
+    async write(input: LocatorInfo | string, value: unknown) : Promise<void> {
+        return runTwinAsync(this.writeBody(input, value));
+    }
+
+    writeSync(input: LocatorInfo | string, value: unknown) : void {
+        runTwinSync(this.writeBody(input, value));
+    }
+
+    /**
+     * Shared body of write/writeSync: dispatch, unwrap records, write, wrap.
+     * The inverse boundary of readBody: a record produced by read() (brand
+     * detected) is unwrapped to its `.default` value; anything else is
+     * written as-is.
+     */
+    protected* writeBody(input: LocatorInfo | string, value: unknown) : TwinBody<void> {
+        const filePath = buildFilePath(input);
+        if (!isFilePath(filePath)) {
+            throw new LocterWriteError({
+                message: `Cannot write to a bare module specifier: ${filePath}`,
+                path: filePath,
+            });
+        }
+
+        const writer = this.findWriter(filePath);
+        if (!writer) {
+            if (this.findReader(filePath)) {
+                const info = pathToLocatorInfo(filePath);
+                throw new LocterWriteError({
+                    message: `The format of extension ${info.extension} is read-only.`,
+                    path: filePath,
+                });
+            }
+
+            throw this.unknownExtensionError(filePath);
+        }
+
+        const plain = isModuleRecord(value) ? value.default : value;
+
+        try {
+            yield* op(
+                () => writer.write(filePath, plain),
+                () => writer.writeSync(filePath, plain),
+            );
+        } catch (e) {
+            throw wrapWriteError(e, filePath);
+        }
+    }
+
     /**
      * The single normalization boundary: every read result becomes a module
      * record (`.default` is always the loaded value, top-level keys stay
@@ -228,6 +323,21 @@ export class FormatRegistry {
     }
 
     /**
+     * Typed accessor for the LIVE built-in writer instance (lazy, cached).
+     * Only writable format ids are accepted — read-only formats (module)
+     * are a compile error.
+     */
+    builtInWriter<K extends WritableBuiltInFormatId>(id: K) : BuiltInWriterOf<K> {
+        let writer = this.builtInWriterCache.get(id);
+        if (!writer) {
+            writer = BUILT_IN_PRESETS[id].writer();
+            this.builtInWriterCache.set(id, writer);
+        }
+
+        return writer as BuiltInWriterOf<K>;
+    }
+
+    /**
      * Dispatch order:
      *   1. bare specifier (no extension)  → module reader, always
      *   2. user rules, registration order → first match wins (can override built-ins)
@@ -239,16 +349,60 @@ export class FormatRegistry {
             return this.builtInReader('module');
         }
 
+        const rule = this.findRule(input, (item) => typeof item.getReader !== 'undefined');
+        if (rule && rule.getReader) {
+            return rule.getReader();
+        }
+
+        const id = this.findBuiltInId(input);
+        if (id) {
+            return this.builtInReader(id);
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Write-side dispatch. No bare-specifier step (there is nothing to
+     * write to); only rules with a writer slot participate, then built-in
+     * presets that declare a writer.
+     */
+    findWriter(input: string) : IWriter | undefined {
+        if (!isFilePath(input)) {
+            return undefined;
+        }
+
+        const rule = this.findRule(input, (item) => typeof item.getWriter !== 'undefined');
+        if (rule && rule.getWriter) {
+            return rule.getWriter();
+        }
+
+        const id = this.findBuiltInId(input);
+        if (id && 'writer' in BUILT_IN_PRESETS[id]) {
+            return this.builtInWriter(id as WritableBuiltInFormatId);
+        }
+
+        return undefined;
+    }
+
+    protected findRule(
+        input: string,
+        filter: (rule: CompiledRule) => boolean,
+    ) : CompiledRule | undefined {
         const info = pathToLocatorInfo(input);
 
         for (const rule of this.rules) {
+            if (!filter(rule)) {
+                continue;
+            }
+
             const { test } = rule;
             if (Array.isArray(test)) {
                 if (
                     info.extension &&
                     test.includes(info.extension)
                 ) {
-                    return rule.getReader();
+                    return rule;
                 }
             } else {
                 // reset before AND after: a g/y regex mutates lastIndex on
@@ -258,19 +412,21 @@ export class FormatRegistry {
                 const matched = test.test(buildFilePath(info));
                 test.lastIndex = 0;
                 if (matched) {
-                    return rule.getReader();
+                    return rule;
                 }
             }
         }
 
-        if (info.extension) {
-            const id = this.builtInExtensions.get(info.extension);
-            if (id) {
-                return this.builtInReader(id);
-            }
+        return undefined;
+    }
+
+    protected findBuiltInId(input: string) : BuiltInFormatId | undefined {
+        const info = pathToLocatorInfo(input);
+        if (!info.extension) {
+            return undefined;
         }
 
-        return undefined;
+        return this.builtInExtensions.get(info.extension);
     }
 
     protected unknownExtensionError(input: string) : LocterUnknownExtensionError {
@@ -282,26 +438,11 @@ export class FormatRegistry {
     }
 
     protected compile(id: string, rule: Rule) : CompiledRule {
-        const { test, reader } = rule;
-        if (typeof reader !== 'function') {
-            return {
-                id,
-                test,
-                getReader: () => reader,
-            };
-        }
-
-        let cached : IReader | undefined;
         return {
             id,
-            test,
-            getReader: () => {
-                if (!cached) {
-                    cached = reader();
-                }
-
-                return cached;
-            },
+            test: rule.test,
+            getReader: compileSlot<IReader>(rule.reader),
+            getWriter: compileSlot<IWriter>(rule.writer),
         };
     }
 

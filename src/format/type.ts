@@ -9,3 +9,8 @@ export interface IReader {
     read: (input: string) => Promise<any>,
     readSync: (input: string) => any
 }
+
+export interface IWriter {
+    write: (path: string, value: unknown) => Promise<void>,
+    writeSync: (path: string, value: unknown) => void
+}

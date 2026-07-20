@@ -11,6 +11,31 @@ import type { ModuleExport, ModuleExportFilterFn } from './type';
 type ESModule = { [key: string]: any, __esModule: boolean };
 
 /**
+ * Brand carried by every record locter's read() produces. Deliberately a
+ * module-private Symbol (NOT Symbol.for) so arbitrary parsed data cannot
+ * forge it — unlike `__esModule`, its presence is trustworthy. write()
+ * uses it to unwrap `.default` on round-trips.
+ */
+const MODULE_RECORD = Symbol('locter.record');
+
+/**
+ * True when the value is a record produced by locter's read()/toModuleRecord.
+ * Detection is brand-based; a plain object with an `__esModule` key is NOT
+ * a module record.
+ */
+export function isModuleRecord(input: unknown) : input is Record<string, any> {
+    return isObject(input) && MODULE_RECORD in input;
+}
+
+function brand<T>(input: T) : T {
+    if (isObject(input) && Object.isExtensible(input)) {
+        Object.defineProperty(input, MODULE_RECORD, { value: true });
+    }
+
+    return input;
+}
+
+/**
  * Detect the transpiler interop marker (`__esModule`). Only meaningful for
  * values that came out of a module system — arbitrary parsed data can carry
  * an `__esModule` key without being a module, so callers must decide by
@@ -29,6 +54,7 @@ export function createModuleRecord(data: unknown) {
     const output = Object.create(null, {
         __esModule: { value: true },
         [Symbol.toStringTag]: { value: 'Module' },
+        [MODULE_RECORD]: { value: true },
     });
 
     if (isObject(data)) {
@@ -81,13 +107,15 @@ export function toModuleRecord(
             isESModule(data.default) &&
             data.default.default
         ) {
-            return {
+            return brand({
                 ...data,
                 default: data.default.default,
-            };
+            });
         }
 
-        return data;
+        // best-effort: module namespace objects are non-extensible and
+        // stay unbranded — they have no writable format anyway
+        return brand(data);
     }
 
     return createModuleRecord(data);

@@ -33,6 +33,14 @@ export function readSync(input: LocatorInfo | string) : any {
     return useFormatRegistry().readSync(input);
 }
 
+export async function write(input: LocatorInfo | string, value: unknown) : Promise<void> {
+    return useFormatRegistry().write(input, value);
+}
+
+export function writeSync(input: LocatorInfo | string, value: unknown) : void {
+    useFormatRegistry().writeSync(input, value);
+}
+
 /**
  * Override the built-in module reader's `import` / `require` calls.
  *

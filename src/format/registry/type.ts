@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IReader } from '../type';
+import type { IReader, IWriter } from '../type';
 
 /**
  * Lazy reader construction. Invoked on the first input that matches the
@@ -15,10 +15,21 @@ import type { IReader } from '../type';
 export type ReaderFactory = () => IReader;
 
 /**
+ * Lazy writer construction — same lifecycle as ReaderFactory.
+ */
+export type WriterFactory = () => IWriter;
+
+/**
  * A user-registered dispatch rule. Rules are matched in registration order,
  * BEFORE the built-in extension table (i.e. user rules override built-ins).
  * Rules only ever see file paths — bare module specifiers (no extension)
  * are always routed to the module reader first.
+ *
+ * The reader and writer slots are independent: read dispatch only
+ * considers rules with a reader, write dispatch only rules with a writer.
+ * A reader-only rule for '.json' overrides how '.json' is read without
+ * shadowing the built-in JSON writer (and vice versa). At least one slot
+ * is required.
  */
 export type Rule = {
     /**
@@ -28,7 +39,8 @@ export type Rule = {
      */
     id?: string,
     test: RegExp | string[],
-    reader: IReader | ReaderFactory
+    reader?: IReader | ReaderFactory,
+    writer?: IWriter | WriterFactory
 };
 
 /**
@@ -45,12 +57,15 @@ export type FormatRegistration = {
 };
 
 /**
- * One built-in format: routing (extensions) + instantiation (reader),
- * inseparable by construction.
+ * One built-in format: routing (extensions) + instantiation (reader and
+ * optional writer), inseparable by construction. A preset without a
+ * writer is a read-only format (e.g. module).
  */
 export type FormatPreset = {
     /** Extensions (with leading dot) routed to this format. Must be disjoint across presets. */
     extensions: readonly string[],
     /** Lazy reader factory — invoked at most once per FormatRegistry instance. */
-    reader: () => IReader
+    reader: () => IReader,
+    /** Lazy writer factory — invoked at most once per FormatRegistry instance. */
+    writer?: () => IWriter
 };
