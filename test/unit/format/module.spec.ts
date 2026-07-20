@@ -358,7 +358,7 @@ describe('src/format/**', () => {
         });
 
         const builtIns = entries.filter((entry) => entry.builtIn);
-        expect(builtIns.map((entry) => entry.id)).toEqual(['module', 'conf', 'json', 'yaml']);
+        expect(builtIns.map((entry) => entry.id)).toEqual(['module', 'conf', 'json', 'yaml', 'text']);
         expect(manager.has('json')).toBe(true);
     });
 

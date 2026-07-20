@@ -11,3 +11,4 @@ export * from './package-field';
 export * from './registry';
 export * from './text-file';
 export * from './type';
+export * from './value';

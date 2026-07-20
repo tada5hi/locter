@@ -87,6 +87,7 @@ export const BUILT_IN_PRESETS = {
     conf: { extensions: ['.conf'], reader: () => new ConfReader(), writer: () => new ConfWriter() },
     json: { extensions: ['.json'], reader: () => new JSONReader(), writer: () => new JSONWriter() },
     yaml: { extensions: ['.yml', '.yaml'], reader: () => new YAMLReader(), writer: () => new YAMLWriter() },
+    text: { extensions: ['.txt'], reader: () => new TextReader(), writer: () => new TextWriter() },
 } as const satisfies Record<string, FormatPreset>;
 ```
 

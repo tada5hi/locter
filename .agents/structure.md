@@ -30,6 +30,7 @@ locter/
 │   │   │   ├── type.ts             # Rule, ReaderFactory, WriterFactory, FormatRegistration, FormatPreset
 │   │   │   └── index.ts            # Barrel
 │   │   ├── helpers.ts              # registerFormat, unregisterFormat, read/readAsModule/write (+Sync), setModuleReader (delegate to the singleton)
+│   │   ├── value.ts                # serializeValue / deserializeValue — lenient value codec (destr; shared by conf, public)
 │   │   ├── package-field.ts        # readPackageField / writePackageField (+Sync)
 │   │   └── built-in/
 │   │       ├── registry.ts         # BUILT_IN_PRESETS — single source of truth (id + extensions + reader + writer?); NOT in the barrel
@@ -46,7 +47,11 @@ locter/
 │   │       │   ├── reader.ts
 │   │       │   ├── writer.ts
 │   │       │   └── index.ts
-│   │       └── conf/               # ConfReader (key=value, destr + flat) + ConfWriter (rc9-style serialize)
+│   │       ├── conf/               # ConfReader (key=value, destr + flat) + ConfWriter (rc9-style serialize)
+│   │       │   ├── reader.ts
+│   │       │   ├── writer.ts
+│   │       │   └── index.ts
+│   │       └── text/               # TextReader + TextWriter — raw string content (.txt)
 │   │           ├── reader.ts
 │   │           ├── writer.ts
 │   │           └── index.ts

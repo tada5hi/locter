@@ -10,6 +10,7 @@ import type { IWriter } from '../type';
 import { ConfReader, ConfWriter } from './conf';
 import { JSONReader, JSONWriter } from './json';
 import { ModuleReader } from './module';
+import { TextReader, TextWriter } from './text';
 import { MODULE_FILE_EXTENSIONS } from './module/constants';
 import { YAMLReader, YAMLWriter } from './yaml';
 
@@ -37,6 +38,11 @@ export const BUILT_IN_PRESETS = {
         extensions: ['.yml', '.yaml'],
         reader: () => new YAMLReader(),
         writer: () => new YAMLWriter(),
+    },
+    text: {
+        extensions: ['.txt'],
+        reader: () => new TextReader(),
+        writer: () => new TextWriter(),
     },
 } as const satisfies Record<string, FormatPreset>;
 
