@@ -2,7 +2,7 @@
     "name": "locter",
     "version": "3.0.0",
     "type": "module",
-    "description": "A library to locate a file/module by criteria and load it!",
+    "description": "A library to locate files/modules by criteria, read them and write them back!",
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
@@ -39,15 +39,18 @@
     },
     "keywords": [
         "file",
+        "locator",
         "loader",
-        "transpiling",
-        "compiler",
+        "reader",
+        "writer",
         "loading",
         "on-demand-transpiling",
-        "locator",
-        "file-extension",
         "transpiling",
-        "typescript"
+        "file-extension",
+        "typescript",
+        "json",
+        "yaml",
+        "conf"
     ],
     "publishConfig": {
         "access": "public"
