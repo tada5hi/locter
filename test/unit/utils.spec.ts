@@ -12,10 +12,10 @@ import {
     isLocatorInfo,
     isTsxRuntimeEnvironment,
     isVitestRuntimeEnvironment,
+    removeFileNameExtension,
 } from '../../src';
-// internal helpers — not part of the public surface (see public-api.spec.ts)
+// internal helper — not part of the public surface (see public-api.spec.ts)
 import { pathToLocatorInfo } from '../../src/locator/utils';
-import { removeFileNameExtension } from '../../src/utils';
 
 describe('src/utils/*.ts', () => {
     it('should remove file name extension', () => {

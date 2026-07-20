@@ -173,6 +173,20 @@ If both flags are set, `onlyDirectories: true` takes precedence over `onlyFiles`
 
 `locateUp` / `locateUpSync` take the same options except `cwd` must be a single `string`, and additionally accept `stopAt?: string` (inclusive ceiling for the walk).
 
+**File-name helpers**
+
+Two small helpers for working with the extensions locter routes on:
+
+```typescript
+import { getFileNameExtension, removeFileNameExtension } from 'locter';
+
+getFileNameExtension('seed.ts');                    // '.ts'
+getFileNameExtension('seed.ts', ['.js', '.mjs']);   // undefined (not allowed)
+
+removeFileNameExtension('seed.ts');                 // 'seed'
+removeFileNameExtension('seed.ts', ['.js']);        // 'seed.ts' (not matched)
+```
+
 ### Reader
 
 Two verbs, two shapes:
@@ -645,7 +659,7 @@ The list below is exhaustive — no other public APIs changed.
 
 - Locator internals: `buildLocatorPatterns`, `buildLocatorOptions`, `pathToLocatorInfo`, `buildFilePathWithoutExtension` (deleted — it had no callers). `buildFilePath` and `isLocatorInfo` stay public.
 - Record internals: `isESModule`, `toModuleRecord`, `createModuleRecord`. Use `readAsModule()` (which normalizes) / `read()` (raw) and the public `getModuleExport` / `isModuleRecord`.
-- Generic helpers: `isObject`, `isSafeObjectKey`, `hasOwnProperty`, `hasStringProperty`, `toArray`, `isFilePath`, `getFileNameExtension`, `removeFileNameExtension`, `isTypeScriptError`. The runtime detection helpers (`isJestRuntimeEnvironment`, `isVitestRuntimeEnvironment`, `isTsNodeRuntimeEnvironment`, `isTsxRuntimeEnvironment`) stay public.
+- Generic helpers: `isObject`, `isSafeObjectKey`, `hasOwnProperty`, `hasStringProperty`, `toArray`, `isFilePath`, `isTypeScriptError`. The domain helpers stay public: `getFileNameExtension` / `removeFileNameExtension` (see [File-name helpers](#file-name-helpers)) and the runtime detection helpers (`isJestRuntimeEnvironment`, `isVitestRuntimeEnvironment`, `isTsNodeRuntimeEnvironment`, `isTsxRuntimeEnvironment`).
 
 **Locator option precedence** — `{ onlyFiles: true, onlyDirectories: true }` used to resolve to *neither* restriction (everything matched); `onlyDirectories: true` now wins. `{ onlyFiles: false }` used to mean directories-only; it now means "no restriction" (files and directories).
 
