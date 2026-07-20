@@ -14,6 +14,10 @@ Locter is a library to locate and load a file/modules regarding specific criteri
 - [Usage](#usage)
   - [Locator](#locator)
   - [Loader](#loader)
+  - [Errors](#errors)
+  - [Migrating from 3.x](#migrating-from-3x)
+  - [Migrating from 2.x](#migrating-from-2x)
+  - [Runtime environments](#runtime-environments)
 - [License](#license)
 
 ## Installation
@@ -174,6 +178,43 @@ import { loadSync, locateSync } from 'locter';
 })
 ```
 
+**Module records**
+
+Every `load` / `loadSync` result is a **module record** — a frozen,
+null-prototype object shaped like an ES module namespace: `default` always
+holds the loaded value, and when that value is an object, its top-level keys
+are re-exposed as named exports.
+
+```typescript
+import { load } from 'locter';
+
+(async () => {
+    const pkg = await load('package.json');
+
+    console.log(pkg.default);   // the full parsed JSON value
+    console.log(pkg.version);   // top-level keys are named exports
+})
+```
+
+For JavaScript/TypeScript files the module's own namespace passes through
+unchanged; the output of every other loader (built-in JSON/YAML/Conf and
+user-registered ones) is always wrapped — even if the parsed data happens to
+contain an `__esModule` key. The record is read-only: to mutate or serialize
+the loaded data, work with `.default`.
+
+To pick an export by predicate, the `getModuleExport` helper is available:
+
+```typescript
+import { getModuleExport, load } from 'locter';
+
+(async () => {
+    const record = await load('files/example.ts');
+
+    const found = getModuleExport(record, (key) => key === 'myExport');
+    // → { key: 'myExport', value: ... }, or undefined if no key matches
+})
+```
+
 Two loaders are predefined from scratch and already registered:
 - **ConfLoader**: This loader allows to load `.conf` files.
 - **JSONLoader**: This loader allows to load `.json` files.
@@ -315,7 +356,7 @@ Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARK
 
 ### Migrating from 3.x
 
-The 4.0 release reworks loader registration and dispatch. The list below is exhaustive — no other public APIs changed.
+The 4.0 release reworks loader registration, dispatch, and result normalization. The list below is exhaustive — no other public APIs changed.
 
 ```diff
   // 1. User rules now override built-ins. Registering an extension a
@@ -341,12 +382,32 @@ The 4.0 release reworks loader registration and dispatch. The list below is exha
 + await registry.load('file.json');      // mirrors the global load() helper
 + registry.find('file.json');            // ILoader | undefined
 + registry.builtIn('module');            // statically typed as ModuleLoader
+
+  // 4. Every load() / loadSync() result is now a module record (see
+  //    "Module records" above). Module files already resolved this way —
+  //    json/yaml/conf and custom loaders used to return the bare parsed
+  //    value.
+  const pkg = await load('package.json');
+  pkg.version;                           // top-level keys still work
+- pkg.default;                           // undefined
++ pkg.default;                           // the full parsed value
++ // The record is frozen and null-prototype: code that mutates the
++ // result, relies on Object.prototype, or enumerates/serializes it
++ // (now includes `default`) must use pkg.default instead.
+
+  // 5. ModuleLoader.execute() / executeSync() return the raw module value;
+  //    normalization happens exactly once, at the registry boundary. Only
+  //    relevant when invoking the loader class directly.
+- await new ModuleLoader().execute('file.ts');  // normalized record
++ await new ModuleLoader().execute('file.ts');  // raw module value
++ await registry.load('file.ts');               // normalized record
 ```
 
 Additionally:
 
 - The loader port is now exported as the `ILoader` interface (previously an unexported `Loader` type), alongside `Rule` and `LoaderFactory` — so custom loaders can finally be typed against the package: `import type { ILoader } from 'locter'`.
 - The extensions handled by the module loader are exported as `MODULE_FILE_EXTENSIONS`.
+- `loadPackageField` / `loadPackageFieldSync` now read `package.json` via the built-in JSON loader directly: user-registered `.json` rules no longer intercept the read, and synthetic record keys (`default`, `__esModule`) no longer resolve as package fields.
 
 ### Migrating from 2.x
 
