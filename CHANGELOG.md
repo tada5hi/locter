@@ -5,6 +5,33 @@
 
 * **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
 
+## [4.0.0-beta.0](https://github.com/tada5hi/locter/compare/v3.0.0...v4.0.0-beta.0) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* { onlyFiles: true, onlyDirectories: true } previously resolved to NEITHER restriction (everything matched) - it now matches directories only. { onlyFiles: false } previously meant directories only - it now means no restriction (files and directories).
+* **format:** the loader API is renamed around the format concept: load/loadSync -> read/readSync, registerLoader/unregisterLoader -> registerFormat/unregisterFormat (object form only), LoaderRegistry -> FormatRegistry, useLoaderRegistry -> useFormatRegistry, ILoader (execute/executeSync) -> IReader (read/readSync), LoaderFactory -> ReaderFactory, LoaderRegistration -> FormatRegistration, LoaderPreset -> FormatPreset, BuiltInLoaderId -> BuiltInFormatId, TextFileLoader -> TextFileReader, JSONLoader/YAMLLoader/ConfLoader -> *Reader, ModuleLoader -> ModuleReader, setModuleLoader -> setModuleReader, loadPackageField -> readPackageField, LoaderFilterFn -> ModuleExportFilterFn. No behavior changes.
+* **loader:** ModuleLoader.execute/executeSync return the raw module value instead of a normalized record; loadPackageField no longer dispatches through user-registered .json rules.
+* **loader:** user-registered rules now override built-in loaders; plugin-string loaders (Rule.loader: string) are removed; LoaderManager findLoader()/resolve() are replaced by find()/builtIn(); the LoaderId enum is deleted; the Loader type is renamed to ILoader.
+* **loader:** json/yaml/conf files now resolve to a frozen, null-prototype module record instead of a plain object. Top-level key access is preserved (e.g. `load(pkg).then(p => p.version)`), but code that mutates the result, relies on its prototype, or enumerates/serializes it (now includes `default`) is affected.
+
+### Features
+
+* **format:** read/write API - rename load() to read(), add write() with per-format writers ([#861](https://github.com/tada5hi/locter/issues/861)) ([0f2fb13](https://github.com/tada5hi/locter/commit/0f2fb1338b1e1164c0c00511567bbe0951cd6c4f))
+
+
+### Bug Fixes
+
+* **loader:** normalize every load() result to a module record ([#850](https://github.com/tada5hi/locter/issues/850)) ([7e5dc09](https://github.com/tada5hi/locter/commit/7e5dc09b51a4bfb36665e02f9465104167d64ec8))
+
+
+### Code Refactoring
+
+* **loader:** derive built-in dispatch from a single registry ([#855](https://github.com/tada5hi/locter/issues/855)) ([0ce655f](https://github.com/tada5hi/locter/commit/0ce655f4fda7ad1bdec38474d8d5deadac5cf197))
+* **loader:** normalize module records once at the registry boundary ([#856](https://github.com/tada5hi/locter/issues/856)) ([4ed3cdb](https://github.com/tada5hi/locter/commit/4ed3cdb87d06fda0f7df460d928811609b0381b7))
+* pre-v4 cleanup - locator option precedence and curated public API ([#862](https://github.com/tada5hi/locter/issues/862)) ([802f34d](https://github.com/tada5hi/locter/commit/802f34daeafd14ceac8b8216a5368504450bdaa4))
+
 ## [3.0.0](https://github.com/tada5hi/locter/compare/v2.2.1...v3.0.0) (2026-05-21)
 
 
