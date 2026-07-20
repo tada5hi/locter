@@ -10,3 +10,4 @@ export * from './load';
 export * from './not-found';
 export * from './unknown-extension';
 export * from './wrap';
+export * from './write';

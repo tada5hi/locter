@@ -18,10 +18,12 @@ import {
     LocterLoadError,
     LocterNotFoundError,
     LocterUnknownExtensionError,
+    LocterWriteError,
     load,
     loadSync,
     setModuleLoader,
     wrapLoaderError,
+    wrapWriteError,
 } from '../../src';
 
 const basePath = path.join(import.meta.dirname, '..', 'data');
@@ -94,6 +96,44 @@ describe('src/errors/**', () => {
     it('should pass LocterError instances through unchanged', () => {
         const original = new LocterLoadError({ message: 'already typed', path: '/x' });
         const wrapped = wrapLoaderError(original, '/y');
+
+        expect(wrapped).toBe(original);
+        expect(wrapped.path).toEqual('/x');
+    });
+
+    it('should map write-side errors to LocterWriteError', () => {
+        const cause = Object.assign(new Error('denied'), { code: 'EACCES' });
+        const wrapped = wrapWriteError(cause, '/some/path');
+
+        expect(wrapped).toBeInstanceOf(LocterWriteError);
+        expect(wrapped).toBeInstanceOf(LocterError);
+        expect(wrapped).not.toBeInstanceOf(LocterLoadError);
+        expect(wrapped.code).toEqual('EACCES');
+        expect(wrapped.path).toEqual('/some/path');
+        expect(wrapped.cause).toBe(cause);
+    });
+
+    it('should keep not-found codes as LocterWriteError on the write side', () => {
+        // ENOENT while writing (missing parent directory) is a write
+        // failure, not a not-found lookup — no LocterNotFoundError mapping.
+        const cause = Object.assign(new Error('missing dir'), { code: 'ENOENT' });
+        const wrapped = wrapWriteError(cause, '/missing/dir/file.json');
+
+        expect(wrapped).toBeInstanceOf(LocterWriteError);
+        expect(wrapped).not.toBeInstanceOf(LocterNotFoundError);
+    });
+
+    it('should normalize non-error throws via wrapWriteError', () => {
+        const wrapped = wrapWriteError('boom', '/some/path');
+
+        expect(wrapped).toBeInstanceOf(LocterWriteError);
+        expect(wrapped.message).toEqual('Failed to write: /some/path');
+        expect(wrapped.cause).toEqual('boom');
+    });
+
+    it('should pass LocterError instances through wrapWriteError unchanged', () => {
+        const original = new LocterWriteError({ message: 'already typed', path: '/x' });
+        const wrapped = wrapWriteError(original, '/y');
 
         expect(wrapped).toBe(original);
         expect(wrapped.path).toEqual('/x');
