@@ -80,6 +80,28 @@ describe('src/format/**', () => {
         expect(fs.readFileSync(target, 'utf-8')).toEqual('a=1\n');
     });
 
+    it('should serialize BigInt and RegExp values to their string form', async () => {
+        const target = path.join(tmpDir, 'special-values.conf');
+        await write(target, {
+            big: BigInt('9007199254740993'),
+            pattern: /^a+$/i,
+            list: [/x/g, BigInt(2)],
+        });
+
+        expect(fs.readFileSync(target, 'utf-8')).toEqual([
+            'big=9007199254740993',
+            'pattern=/^a+$/i',
+            'list[]=/x/g',
+            'list[]=2',
+            '',
+        ].join('\n'));
+
+        // documented lossy edges: they read back via destr as number/string
+        const value = await read(target);
+        expect(value.pattern).toEqual('/^a+$/i');
+        expect(value.list[1]).toEqual(2);
+    });
+
     it('should reject non-object values', async () => {
         const target = path.join(tmpDir, 'non-object.conf');
         await expect(write(target, 42)).rejects.toThrow('must be an object');

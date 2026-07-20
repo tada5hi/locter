@@ -12,7 +12,32 @@ import { isObject } from '../../../utils';
 import { TextFileWriter } from '../../text-file';
 
 function serializeValue(value: unknown) : string {
-    return typeof value === 'string' ? value : JSON.stringify(value);
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    // JSON.stringify would throw on BigInt and turn a RegExp into {} —
+    // both serialize to their string form instead (readable via destr,
+    // though they read back as string/number: documented lossy edges)
+    if (typeof value === 'bigint') {
+        return value.toString();
+    }
+
+    if (value instanceof RegExp) {
+        return value.toString();
+    }
+
+    return JSON.stringify(value, (_key, item) => {
+        if (item instanceof RegExp) {
+            return item.toString();
+        }
+
+        if (typeof item === 'bigint') {
+            return item.toString();
+        }
+
+        return item;
+    });
 }
 
 /**
