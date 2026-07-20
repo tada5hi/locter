@@ -102,7 +102,7 @@ Releases are driven by **release-please** + **monoship** (`.github/workflows/rel
 4. The same workflow then runs `tada5hi/monoship@v2` to publish the built `dist/` to npm.
 5. Coverage is uploaded to Codecov on the same run.
 
-Configuration (`release-please-config.json`): `release-type: node` with `versioning: "prerelease"` + `prerelease: true` + `prerelease-type: "beta"` — versions carry a `-beta.N` suffix and GitHub releases are marked prerelease. monoship publishes prerelease versions under the matching npm dist-tag (`beta`) automatically; stable versions go to `latest`. To cut a final release, drop `versioning`/`prerelease`/`prerelease-type` from the config — release-please then proposes the plain version. `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` retain pre-1.0 behavior.
+Configuration (`release-please-config.json`): `release-type: node`, standard semver versioning; `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` retain pre-1.0 behavior. For a prerelease phase, add `versioning: "prerelease"` + `prerelease: true` + `prerelease-type: "beta"` — versions then carry a `-beta.N` suffix, GitHub releases are marked prerelease, and monoship publishes under the matching npm dist-tag automatically (stable versions go to `latest`). A one-time `release-as` pin is needed when entering a prerelease phase from a stable version AND when flipping back to stable (chore-only deltas produce no releasable units); drop the pin right after the release is tagged.
 
 ## CI/CD
 

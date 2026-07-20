@@ -68,7 +68,7 @@ locter/
 ├── tsconfig.json                   # Extends @tada5hi/tsconfig (ESNext / bundler / noEmit)
 ├── eslint.config.js                # Flat ESLint config (@tada5hi/eslint-config)
 ├── commitlint.config.mjs           # Extends @tada5hi/commitlint-config
-├── release-please-config.json      # release-please (beta prerelease versioning, node release-type)
+├── release-please-config.json      # release-please (node release-type; see conventions.md for prerelease phases)
 └── package.json
 ```
 
