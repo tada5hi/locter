@@ -1,6 +1,6 @@
 {
     "name": "locter",
-    "version": "4.0.0-beta.1",
+    "version": "4.0.0-beta.2",
     "type": "module",
     "description": "A library to locate files/modules by criteria, read them and write them back!",
     "author": {
