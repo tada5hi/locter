@@ -10,11 +10,14 @@
 
 ### ⚠ BREAKING CHANGES
 
-* { onlyFiles: true, onlyDirectories: true } previously resolved to NEITHER restriction (everything matched) - it now matches directories only. { onlyFiles: false } previously meant directories only - it now means no restriction (files and directories).
-* **format:** the loader API is renamed around the format concept: load/loadSync -> read/readSync, registerLoader/unregisterLoader -> registerFormat/unregisterFormat (object form only), LoaderRegistry -> FormatRegistry, useLoaderRegistry -> useFormatRegistry, ILoader (execute/executeSync) -> IReader (read/readSync), LoaderFactory -> ReaderFactory, LoaderRegistration -> FormatRegistration, LoaderPreset -> FormatPreset, BuiltInLoaderId -> BuiltInFormatId, TextFileLoader -> TextFileReader, JSONLoader/YAMLLoader/ConfLoader -> *Reader, ModuleLoader -> ModuleReader, setModuleLoader -> setModuleReader, loadPackageField -> readPackageField, LoaderFilterFn -> ModuleExportFilterFn. No behavior changes.
-* **loader:** ModuleLoader.execute/executeSync return the raw module value instead of a normalized record; loadPackageField no longer dispatches through user-registered .json rules.
-* **loader:** user-registered rules now override built-in loaders; plugin-string loaders (Rule.loader: string) are removed; LoaderManager findLoader()/resolve() are replaced by find()/builtIn(); the LoaderId enum is deleted; the Loader type is renamed to ILoader.
-* **loader:** json/yaml/conf files now resolve to a frozen, null-prototype module record instead of a plain object. Top-level key access is preserved (e.g. `load(pkg).then(p => p.version)`), but code that mutates the result, relies on its prototype, or enumerates/serializes it (now includes `default`) is affected.
+The 4.0 line renames the loader subsystem around the **format** concept and adds a write side. The exhaustive migration guide (rename table + behavioral notes) lives in the README under [*Migrating from 3.x*](https://github.com/tada5hi/locter#migrating-from-3x). Summary:
+
+* Public verbs renamed: `load`/`loadSync` → `read`/`readSync`; `registerLoader`/`unregisterLoader` → `registerFormat`/`unregisterFormat` (object form only); `loadPackageField`(+Sync) → `readPackageField`(+Sync); `setModuleLoader` → `setModuleReader`.
+* Classes and ports: `LoaderManager` → `FormatRegistry` (`useLoader` → `useFormatRegistry`); the `Loader` type → `IReader` (`read`/`readSync`) plus the new `IWriter` (`write`/`writeSync`); `JSONLoader`/`YAMLLoader`/`ConfLoader` → `*Reader`+`*Writer` pairs; `ModuleLoader` → `ModuleReader`; rules take independent `reader`/`writer` slots.
+* User rules now override built-in formats; plugin-string loaders (`loader: 'toml'`) are removed.
+* Every `read()` result is a frozen, null-prototype module record (`.default` always holds the value); records carry a private brand that `write()` unwraps on round-trips. `ModuleReader.read()` returns the raw module value — normalization happens once, at the registry boundary.
+* Locator option precedence: `{ onlyFiles: true, onlyDirectories: true }` now matches directories only (previously everything); `{ onlyFiles: false }` now means no restriction (previously directories only).
+* The public surface is curated: internal helpers (`isObject`, `toArray`, `isFilePath`, `pathToLocatorInfo`, `toModuleRecord`, `getFileNameExtension`, `removeFileNameExtension`, …) are no longer exported — full list and replacements in the README migration section.
 
 ### Features
 
