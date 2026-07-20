@@ -1,10 +1,3 @@
-## [2.1.6](https://github.com/tada5hi/locter/compare/v2.1.5...v2.1.6) (2025-01-24)
-
-
-### Bug Fixes
-
-* **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
-
 ## [4.0.0-beta.0](https://github.com/tada5hi/locter/compare/v3.0.0...v4.0.0-beta.0) (2026-07-20)
 
 
@@ -81,6 +74,13 @@ The 4.0 line renames the loader subsystem around the **format** concept and adds
 ### Bug Fixes
 
 * **types:** export type definitions ([#769](https://github.com/tada5hi/locter/issues/769)) ([8b21435](https://github.com/tada5hi/locter/commit/8b21435d7c99f37fd31bd01a643b2c8e5ab22b41))
+
+## [2.1.6](https://github.com/tada5hi/locter/compare/v2.1.5...v2.1.6) (2025-01-24)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
 
 ## [2.1.5](https://github.com/tada5hi/locter/compare/v2.1.4...v2.1.5) (2024-11-06)
 
