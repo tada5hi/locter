@@ -91,6 +91,30 @@ describe('src/format/**', () => {
         expect(() => writeSync(target, 'text')).toThrow('must be an object');
     });
 
+    it('should not pollute Object.prototype via dotted keys', async () => {
+        // isSafeObjectKey only rejects keys EQUAL to __proto__/prototype/
+        // constructor; dotted paths reach flat.unflatten — this pins that
+        // flat's own guard drops __proto__ segments and that constructor
+        // paths land as harmless own keys
+        const target = path.join(tmpDir, 'pollution.conf');
+        fs.writeFileSync(target, [
+            '__proto__.polluted=x',
+            'a.__proto__.polluted=y',
+            'constructor.prototype.polluted=z',
+            'safe=1',
+        ].join('\n'));
+
+        const record = await expectParity(
+            () => read(target),
+            () => readSync(target),
+        );
+
+        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+        expect(Object.prototype).not.toHaveProperty('polluted');
+        expect(record.default.safe).toEqual(1);
+        expect(record.default.a).toEqual({});
+    });
+
     it('should pin the documented lossy edge: numeric strings read back as numbers', async () => {
         const target = path.join(tmpDir, 'lossy.conf');
         await write(target, { version: '123' });
