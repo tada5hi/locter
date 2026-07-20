@@ -5,12 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
 import {
+    afterAll, 
+    describe, 
+    expect, 
+    it,
+} from 'vitest';
+import {
+    LocterError,
     LocterLoadError,
+    LocterNotFoundError,
     readPackageField,
     readPackageFieldSync,
+    writePackageField,
+    writePackageFieldSync,
 } from '../../../src';
 import { expectParity } from '../../helpers/parity';
 
@@ -19,6 +30,21 @@ const withField = path.join(pkgBase, 'with-field');
 const withFieldNested = path.join(withField, 'nested');
 const emptyDir = path.join(pkgBase, 'empty');
 const malformed = path.join(pkgBase, 'malformed');
+
+const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'locter-pkg-'));
+let tmpCounter = 0;
+
+function makePkgDir(content: string) : string {
+    tmpCounter++;
+    const dir = path.join(tmpBase, `pkg-${tmpCounter}`);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'package.json'), content);
+    return dir;
+}
+
+afterAll(() => {
+    fs.rmSync(tmpBase, { recursive: true, force: true });
+});
 
 describe('src/format/package-field.ts', () => {
     it('should return a top-level field from the cwd package.json', async () => {
@@ -109,5 +135,86 @@ describe('src/format/package-field.ts', () => {
             syncError = e;
         }
         expect(syncError).toBeInstanceOf(LocterLoadError);
+    });
+
+    it('should write a field preserving the existing indentation', async () => {
+        const content = '{\n  "name": "app",\n  "version": "1.0.0"\n}\n';
+        const asyncDir = makePkgDir(content);
+        const syncDir = makePkgDir(content);
+
+        await writePackageField('myapp', { entry: 'src' }, { cwd: asyncDir });
+        writePackageFieldSync('myapp', { entry: 'src' }, { cwd: syncDir });
+
+        const written = fs.readFileSync(path.join(asyncDir, 'package.json'), 'utf-8');
+        expect(written).toEqual([
+            '{',
+            '  "name": "app",',
+            '  "version": "1.0.0",',
+            '  "myapp": {',
+            '    "entry": "src"',
+            '  }',
+            '}',
+            '',
+        ].join('\n'));
+        expect(fs.readFileSync(path.join(syncDir, 'package.json'), 'utf-8')).toEqual(written);
+
+        const value = await expectParity(
+            () => readPackageField('myapp', { cwd: asyncDir }),
+            () => readPackageFieldSync('myapp', { cwd: syncDir }),
+        );
+        expect(value).toEqual({ entry: 'src' });
+    });
+
+    it('should replace an existing field', async () => {
+        const dir = makePkgDir('{\n  "name": "app",\n  "myapp": {"old": true}\n}\n');
+
+        await writePackageField('myapp', { fresh: true }, { cwd: dir });
+
+        expect(await readPackageField('myapp', { cwd: dir })).toEqual({ fresh: true });
+    });
+
+    it('should remove a field when the value is undefined', async () => {
+        const dir = makePkgDir('{\n  "name": "app",\n  "myapp": {"old": true}\n}\n');
+
+        await writePackageField('myapp', undefined, { cwd: dir });
+
+        const written = fs.readFileSync(path.join(dir, 'package.json'), 'utf-8');
+        expect(written).not.toContain('myapp');
+        expect(await readPackageField('myapp', { cwd: dir })).toBeUndefined();
+    });
+
+    it('should walk up to the nearest package.json when `walkUp: true`', async () => {
+        const dir = makePkgDir('{\n  "name": "app"\n}\n');
+        const nested = path.join(dir, 'deeply', 'nested');
+        fs.mkdirSync(nested, { recursive: true });
+
+        await writePackageField('myapp', 'from-nested', { cwd: nested, walkUp: true });
+
+        expect(await readPackageField('myapp', { cwd: dir })).toEqual('from-nested');
+    });
+
+    it('should throw LocterNotFoundError when no package.json can be located', async () => {
+        await expect(writePackageField('myapp', 1, { cwd: emptyDir }))
+            .rejects.toBeInstanceOf(LocterNotFoundError);
+        expect(() => writePackageFieldSync('myapp', 1, { cwd: emptyDir }))
+            .toThrow(LocterNotFoundError);
+    });
+
+    it('should reject unsafe field names', async () => {
+        const dir = makePkgDir('{\n  "name": "app"\n}\n');
+
+        await expect(writePackageField('__proto__', 1, { cwd: dir }))
+            .rejects.toBeInstanceOf(LocterError);
+        expect(() => writePackageFieldSync('constructor', 1, { cwd: dir }))
+            .toThrow('not a safe object key');
+    });
+
+    it('should propagate LocterLoadError for a malformed package.json on write', async () => {
+        const dir = makePkgDir('{ not json');
+
+        await expect(writePackageField('myapp', 1, { cwd: dir }))
+            .rejects.toBeInstanceOf(LocterLoadError);
+        expect(() => writePackageFieldSync('myapp', 1, { cwd: dir }))
+            .toThrow(LocterLoadError);
     });
 });
