@@ -28,6 +28,13 @@ The 4.0 line renames the loader subsystem around the **format** concept and adds
 * **loader:** normalize module records once at the registry boundary ([#856](https://github.com/tada5hi/locter/issues/856)) ([4ed3cdb](https://github.com/tada5hi/locter/commit/4ed3cdb87d06fda0f7df460d928811609b0381b7))
 * pre-v4 cleanup - locator option precedence and curated public API ([#862](https://github.com/tada5hi/locter/issues/862)) ([802f34d](https://github.com/tada5hi/locter/commit/802f34daeafd14ceac8b8216a5368504450bdaa4))
 
+## [4.0.0-beta.2](https://github.com/tada5hi/locter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-07-20)
+
+
+### Features
+
+* keep the file-name extension helpers public ([#866](https://github.com/tada5hi/locter/issues/866)) ([9463e48](https://github.com/tada5hi/locter/commit/9463e489d0a44053d798d3e0e203c434970adbef))
+
 ## [4.0.0-beta.1](https://github.com/tada5hi/locter/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-07-20)
 
 
