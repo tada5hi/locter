@@ -7,7 +7,7 @@
 
 import type { FormatPreset } from '../registry/type';
 import type { IWriter } from '../type';
-import { ConfReader } from './conf';
+import { ConfReader, ConfWriter } from './conf';
 import { JSONReader, JSONWriter } from './json';
 import { ModuleReader } from './module';
 import { MODULE_FILE_EXTENSIONS } from './module/constants';
@@ -23,7 +23,11 @@ import { YAMLReader } from './yaml';
  */
 export const BUILT_IN_PRESETS = {
     module: { extensions: MODULE_FILE_EXTENSIONS, reader: () => new ModuleReader() },
-    conf: { extensions: ['.conf'], reader: () => new ConfReader() },
+    conf: {
+        extensions: ['.conf'],
+        reader: () => new ConfReader(),
+        writer: () => new ConfWriter(),
+    },
     json: {
         extensions: ['.json'],
         reader: () => new JSONReader(),
