@@ -103,8 +103,10 @@ export type {
 
 // utils
 export {
+    getFileNameExtension,
     isJestRuntimeEnvironment,
     isTsNodeRuntimeEnvironment,
     isTsxRuntimeEnvironment,
     isVitestRuntimeEnvironment,
+    removeFileNameExtension,
 } from './utils';
