@@ -102,7 +102,7 @@ Releases are driven by **release-please** + **monoship** (`.github/workflows/rel
 4. The same workflow then runs `tada5hi/monoship@v2` to publish the built `dist/` to npm.
 5. Coverage is uploaded to Codecov on the same run.
 
-Configuration (`release-please-config.json`): `release-type: node`, `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` (pre-1.0 behavior). Note: `prerelease: true` + `prerelease-type: "alpha"` only mark the *GitHub release* as a prerelease — version numbers are normal semver (no `-alpha.N` suffix); that would require `versioning: "prerelease"`.
+Configuration (`release-please-config.json`): `release-type: node` with `versioning: "prerelease"` + `prerelease: true` + `prerelease-type: "beta"` — versions carry a `-beta.N` suffix and GitHub releases are marked prerelease. monoship publishes prerelease versions under the matching npm dist-tag (`beta`) automatically; stable versions go to `latest`. To cut a final release, drop `versioning`/`prerelease`/`prerelease-type` from the config — release-please then proposes the plain version. `bump-minor-pre-major` / `bump-patch-for-minor-pre-major` retain pre-1.0 behavior.
 
 ## CI/CD
 
