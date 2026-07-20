@@ -84,10 +84,10 @@ GitHub Actions (`.github/workflows/main.yml`) runs on push to `develop`/`master`
 
 ```
 install ──▶ build ──▶ lint
-                 └──▶ tests
+                 └──▶ tests (matrix: ubuntu-latest, windows-latest)
 ```
 
-All jobs run against `PRIMARY_NODE_VERSION=24` only. There is no Node version matrix. Note that `engines.node` in `package.json` requires `>=22` — CI runs newer but the package supports Node 22+.
+All jobs run against `PRIMARY_NODE_VERSION=24` only (no Node version matrix; `engines.node` requires `>=22` — CI runs newer but the package supports Node 22+). The tests job runs on an OS matrix: ubuntu + windows (`fail-fast: false`); the Windows leg also exercises the build (per-OS build cache). A `.gitattributes` pins LF checkouts so Windows runners cannot introduce CRLF fixtures.
 
 ## Writing New Tests
 

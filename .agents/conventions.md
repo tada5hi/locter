@@ -106,7 +106,7 @@ Configuration (`release-please-config.json`): `release-type: node` with `version
 
 ## CI/CD
 
-- `.github/workflows/main.yml` — install → build → (lint || tests) on push to `develop`/`master`/`next`/`beta`/`alpha` and on PRs against those branches. Uses Node 24 only.
+- `.github/workflows/main.yml` — install → build → (lint || tests) on push to `develop`/`master`/`next`/`beta`/`alpha` and on PRs against those branches. Node 24 only; tests run on an ubuntu + windows OS matrix.
 - `.github/workflows/release.yml` — publish flow triggered by release-please on push to `master`.
 - `.github/dependabot.yml` — bumps npm and GitHub Actions deps; major prod, major dev, and minor/patch groups.
 
