@@ -12,6 +12,7 @@ import {
     loadPackageField,
     loadPackageFieldSync,
 } from '../../../src';
+import { expectParity } from '../../helpers/parity';
 
 const pkgBase = path.join(import.meta.dirname, '..', '..', 'data', 'pkg');
 const withField = path.join(pkgBase, 'with-field');
@@ -21,79 +22,75 @@ const malformed = path.join(pkgBase, 'malformed');
 
 describe('src/loader/package-field.ts', () => {
     it('should return a top-level field from the cwd package.json', async () => {
-        const asyncResult = await loadPackageField<string>('name', { cwd: withField });
-        expect(asyncResult).toEqual('with-field');
-
-        const syncResult = loadPackageFieldSync<string>('name', { cwd: withField });
-        expect(syncResult).toEqual('with-field');
+        const result = await expectParity(
+            () => loadPackageField<string>('name', { cwd: withField }),
+            () => loadPackageFieldSync<string>('name', { cwd: withField }),
+        );
+        expect(result).toEqual('with-field');
     });
 
     it('should return a nested object value when the field is an object', async () => {
-        const asyncResult = await loadPackageField<{ foo: string }>('myapp', { cwd: withField });
-        expect(asyncResult).toEqual({ foo: 'bar' });
-
-        const syncResult = loadPackageFieldSync<{ foo: string }>('myapp', { cwd: withField });
-        expect(syncResult).toEqual({ foo: 'bar' });
+        const result = await expectParity(
+            () => loadPackageField<{ foo: string }>('myapp', { cwd: withField }),
+            () => loadPackageFieldSync<{ foo: string }>('myapp', { cwd: withField }),
+        );
+        expect(result).toEqual({ foo: 'bar' });
     });
 
     it('should return undefined when the field is absent', async () => {
-        const asyncResult = await loadPackageField('does-not-exist', { cwd: withField });
-        expect(asyncResult).toBeUndefined();
-
-        const syncResult = loadPackageFieldSync('does-not-exist', { cwd: withField });
-        expect(syncResult).toBeUndefined();
+        const result = await expectParity(
+            () => loadPackageField('does-not-exist', { cwd: withField }),
+            () => loadPackageFieldSync('does-not-exist', { cwd: withField }),
+        );
+        expect(result).toBeUndefined();
     });
 
     it('should not resolve synthetic module-record keys as fields', async () => {
         // `default` / `__esModule` exist on the record load() returns, but
         // not in the raw package.json — they must read as absent fields
         for (const field of ['default', '__esModule']) {
-            const asyncResult = await loadPackageField(field, { cwd: withField });
-            expect(asyncResult, field).toBeUndefined();
-
-            const syncResult = loadPackageFieldSync(field, { cwd: withField });
-            expect(syncResult, field).toBeUndefined();
+            const result = await expectParity(
+                () => loadPackageField(field, { cwd: withField }),
+                () => loadPackageFieldSync(field, { cwd: withField }),
+            );
+            expect(result, field).toBeUndefined();
         }
     });
 
     it('should return undefined when package.json is absent (no walkUp)', async () => {
-        const asyncResult = await loadPackageField('name', { cwd: emptyDir });
-        expect(asyncResult).toBeUndefined();
-
-        const syncResult = loadPackageFieldSync('name', { cwd: emptyDir });
-        expect(syncResult).toBeUndefined();
+        const result = await expectParity(
+            () => loadPackageField('name', { cwd: emptyDir }),
+            () => loadPackageFieldSync('name', { cwd: emptyDir }),
+        );
+        expect(result).toBeUndefined();
     });
 
     it('should walk up to find a package.json when `walkUp: true`', async () => {
-        const asyncResult = await loadPackageField<string>('name', {
+        const options = {
             cwd: withFieldNested,
             walkUp: true,
             stopAt: withField,
-        });
-        expect(asyncResult).toEqual('with-field');
+        };
 
-        const syncResult = loadPackageFieldSync<string>('name', {
-            cwd: withFieldNested,
-            walkUp: true,
-            stopAt: withField,
-        });
-        expect(syncResult).toEqual('with-field');
+        const result = await expectParity(
+            () => loadPackageField<string>('name', options),
+            () => loadPackageFieldSync<string>('name', options),
+        );
+        expect(result).toEqual('with-field');
     });
 
     it('should return undefined when walkUp finds no package.json before `stopAt`', async () => {
-        const asyncResult = await loadPackageField('name', {
+        const options = {
             cwd: withFieldNested,
             walkUp: true,
             stopAt: withFieldNested,
-        });
-        expect(asyncResult).toBeUndefined();
+        };
 
-        const syncResult = loadPackageFieldSync('name', {
-            cwd: withFieldNested,
-            walkUp: true,
-            stopAt: withFieldNested,
-        });
-        expect(syncResult).toBeUndefined();
+        const result = await expectParity(
+            () => loadPackageField('name', options),
+            () => loadPackageFieldSync('name', options),
+        );
+        expect(result).toBeUndefined();
     });
 
     it('should throw LocterLoadError when package.json is malformed', async () => {

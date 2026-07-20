@@ -5,63 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fg from 'fast-glob';
+import { runTwinSync } from '../utils/twin';
+import { locateBody, locateManyBody } from './core';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
-import { buildLocatorOptions, buildLocatorPatterns, pathToLocatorInfo } from './utils';
 
 export function locateManySync(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : LocatorInfo[] {
-    const patterns = buildLocatorPatterns(pattern);
-    const opts = buildLocatorOptions(options);
-
-    const items : LocatorInfo[] = [];
-
-    for (const p of patterns) {
-        for (const cwd of opts.cwd) {
-            const files = fg.sync(p, {
-                absolute: true,
-                cwd,
-                ignore: opts.ignore,
-                onlyFiles: opts.onlyFiles,
-                onlyDirectories: opts.onlyDirectories,
-                dot: opts.dot,
-            });
-
-            for (const file of files) {
-                items.push(pathToLocatorInfo(file, true));
-            }
-        }
-    }
-
-    return items;
+    return runTwinSync(locateManyBody(pattern, options));
 }
 
 export function locateSync(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : LocatorInfo | undefined {
-    const patterns = buildLocatorPatterns(pattern);
-    const opts = buildLocatorOptions(options);
-
-    for (const p of patterns) {
-        for (const cwd of opts.cwd) {
-            const files = fg.sync(p, {
-                absolute: true,
-                cwd,
-                ignore: opts.ignore,
-                onlyFiles: opts.onlyFiles,
-                onlyDirectories: opts.onlyDirectories,
-                dot: opts.dot,
-            });
-
-            const element = files.shift();
-            if (element) {
-                return pathToLocatorInfo(element, true);
-            }
-        }
-    }
-
-    return undefined;
+    return runTwinSync(locateBody(pattern, options));
 }

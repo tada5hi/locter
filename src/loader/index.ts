@@ -9,4 +9,5 @@ export * from './built-in';
 export * from './helpers';
 export * from './package-field';
 export * from './registry';
+export * from './text-file';
 export * from './type';

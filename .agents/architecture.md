@@ -12,11 +12,20 @@ The two subsystems are loosely coupled: `loader/` depends on `locator/` only for
 
 ## Core Design Decisions
 
-### 1. Parallel sync + async surfaces
+### 1. Parallel sync + async surfaces, derived from one body
 
 Every public operation has two variants: `locate` / `locateSync`, `locateMany` / `locateManySync`, `load` / `loadSync`, and the `ILoader` interface itself requires both `execute(input)` and `executeSync(input)`. This is a deliberate constraint — consumers (config loaders, CLIs, plugin systems) frequently can't `await`.
 
-When adding a new loader or locator function, implement **both** variants. Tests in `test/unit/` typically cover both in the same `it()` block.
+Internally, both variants are derived from **one shared body** via the twin protocol (`src/utils/twin.ts`, internal — not exported from the utils barrel): a body is a generator that yields effect pairs (`yield* op(asyncThunk, syncThunk)`), and `runTwinAsync` / `runTwinSync` drive whichever side the public function stands for. Effect errors re-enter the body via `Generator.throw`, so `try/catch` inside a body behaves identically in both variants. Bodies compose via `yield*` delegation (`locateUpBody` delegates to `locateBody`). The bodies live in:
+
+- `src/locator/core.ts` — `locateBody`, `locateManyBody` (used by `async.ts`, `sync.ts`, `up.ts`)
+- `src/loader/text-file.ts` — `TextFileLoader.body` (read → parse → wrap errors)
+- `src/loader/registry/module.ts` — `LoaderRegistry.loadBody` (dispatch → execute → normalize → wrap)
+- `src/loader/package-field.ts` — `loadPackageFieldBody`
+
+**The one deliberate exception is `ModuleLoader`**: `execute` / `executeSync` are hand-written twins because their recovery paths genuinely diverge (async falls back to `loadSync` under ts-node and to jiti otherwise; sync only has the jiti fallback). The divergence is documented on `execute` and pinned by explicit fallback tests in `test/unit/loader/module.spec.ts`.
+
+When adding a new public operation, implement **both** variants by writing one twin body and two thin driver wrappers. Tests assert sync/async parity via the `expectParity` helper (`test/helpers/parity.ts`).
 
 ### 2. Singleton loader registry
 
@@ -46,28 +55,12 @@ export type Rule = {
 };
 ```
 
-A typical implementation (`JSONLoader`):
+Text-based formats don't implement `ILoader` by hand — they extend the abstract `TextFileLoader` (`src/loader/text-file.ts`, public), which owns the shared body (UTF-8 read → `parse` → `wrapLoaderError`) and derives both `execute` variants from it. A complete built-in (`JSONLoader`):
 
 ```typescript
-export class JSONLoader implements ILoader {
-    async execute(input: string) {
-        const filePath = buildFilePath(input);
-        try {
-            const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
-            return JSON.parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
-    }
-
-    executeSync(input: string) {
-        const filePath = buildFilePath(input);
-        try {
-            const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
-            return JSON.parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
+export class JSONLoader extends TextFileLoader {
+    parse(content: string) {
+        return JSON.parse(content);
     }
 }
 ```
@@ -87,8 +80,8 @@ Conventions for new loaders:
 
 - Class name: `<Format>Loader` (e.g. `TomlLoader`).
 - File location: `src/loader/built-in/<format>/module.ts`, with a barrel `index.ts` in the same directory.
-- Wrap I/O in `try/catch` and rethrow via `wrapLoaderError(e, filePath)` to produce typed `LocterError` subclasses.
-- Use `buildFilePath(input)` so the loader accepts both raw paths and `LocatorInfo` objects (the dispatcher already converts, but loaders should not assume the form).
+- Text-based format → extend `TextFileLoader` and implement `parse(content)` only; reading, error wrapping (`wrapLoaderError`), input normalization (`buildFilePath`), and the sync/async derivation are inherited.
+- Non-file or binary loaders implement `ILoader` directly: wrap I/O in `try/catch`, rethrow via `wrapLoaderError(e, filePath)`, and use `buildFilePath(input)` so raw paths and `LocatorInfo` objects both work.
 - If the loader is meant to be built-in: add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`) — the id, extensions, and factory live there together; the type system derives everything else. Export the class from `src/loader/built-in/index.ts` to make it public.
 - If the loader is external/plugin: consumers register it at runtime via `registerLoader` — either an `ILoader` instance or a lazy `LoaderFactory`.
 

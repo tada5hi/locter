@@ -9,6 +9,7 @@ the rest are parked here.
   `loadPackageField` synthetic-key leak. **Implemented 2026-07-19.**
 - [001-collapse-sync-async-duplication.md](001-collapse-sync-async-duplication.md) — derive the ~8
   sync/async twin pairs from shared cores; make the `ModuleLoader` asymmetry explicit and tested.
+  **Implemented 2026-07-19.**
 - [002-deepen-locator-input-normalization.md](002-deepen-locator-input-normalization.md) — one precedence
   rule for locator options (fixes the contradictory `onlyFiles`/`onlyDirectories` bug) and one
   canonical input-normalization entry point.

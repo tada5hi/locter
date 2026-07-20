@@ -9,37 +9,10 @@
 
 import { destr } from 'destr';
 import { unflatten } from 'flat';
-import fs from 'node:fs';
-import { wrapLoaderError } from '../../../errors';
-import { buildFilePath } from '../../../locator';
 import { isSafeObjectKey } from '../../../utils';
-import type { ILoader } from '../../type';
+import { TextFileLoader } from '../../text-file';
 
-export class ConfLoader implements ILoader {
-    async execute(input: string) {
-        const filePath = buildFilePath(input);
-
-        try {
-            const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
-
-            return this.parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
-    }
-
-    executeSync(input: string) {
-        const filePath = buildFilePath(input);
-
-        try {
-            const file = fs.readFileSync(filePath, { encoding: 'utf-8' });
-
-            return this.parse(file);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
-    }
-
+export class ConfLoader extends TextFileLoader {
     parse(contents: string): Record<string, any> {
         const config: Record<string, any> = {};
 

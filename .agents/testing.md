@@ -32,7 +32,7 @@ Tests mirror the `src/` tree, one spec per subsystem or built-in loader:
 | `test/unit/loader/cjs.spec.ts`          | CJS module loading paths                                 |
 | `test/unit/loader/esm.spec.ts`          | ESM module loading paths                                 |
 
-Every test covers **both** the sync and async surface in the same `it()` block — when adding a new locator or loader function, follow this pattern (see `test/unit/locator.spec.ts`).
+Every test covers **both** the sync and async surface in the same `it()` block — usually via the `expectParity` helper (`test/helpers/parity.ts`). When adding a new locator or loader function, follow this pattern (see `test/unit/loader/json.spec.ts`).
 
 Vitest globals are **not** enabled — each spec must `import { describe, expect, it } from 'vitest'`.
 
@@ -42,6 +42,7 @@ Specs are ESM (`"type": "module"` in `package.json`). `__dirname` is not defined
 
 ## Test Helpers & Fixtures
 
+- `test/helpers/parity.ts` exports `expectParity(run, runSync)` — runs both variants of a sync/async twin API with the same input, asserts deeply-equal results, and returns the async result for further assertions. Use it instead of hand-duplicating assertions per variant.
 - All fixture files live under `test/data/`. Add a new fixture file when introducing a new extension or testing a new edge case.
 - `test/data/file-default.{cts,mts,cjs,mjs}` exist specifically to exercise the `default.default` unwrap in `toModuleRecord` (`src/loader/built-in/module/utils.ts`).
 - For loader-registry isolation, instantiate `new LoaderRegistry()` directly instead of going through `useLoaderRegistry()` — see `test/unit/loader/module.spec.ts` ("should register loader", "should use module loader as fallback").

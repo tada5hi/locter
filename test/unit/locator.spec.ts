@@ -14,6 +14,7 @@ import {
     locateSync,
 } from '../../src';
 import type { LocatorInfo } from '../../src';
+import { expectParity } from '../helpers/parity';
 
 const basePath = path.join(import.meta.dirname, '..', 'data');
 
@@ -39,19 +40,17 @@ describe('src/locator.ts', () => {
     });
 
     it('should locate directories', async () => {
-        let locatorInfo = await locateMany(['*'], {
+        const options = {
             onlyDirectories: true,
             cwd: path.join(import.meta.dirname, '..'),
-        });
-        expect(locatorInfo.length).toEqual(2);
-        expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
+        };
 
-        locatorInfo = locateManySync(['*'], {
-            onlyDirectories: true,
-            cwd: path.join(import.meta.dirname, '..'),
-        });
-        expect(locatorInfo.length).toEqual(2);
-        expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'unit']);
+        const locatorInfo = await expectParity(
+            () => locateMany(['*'], options),
+            () => locateManySync(['*'], options),
+        );
+        expect(locatorInfo.length).toEqual(3);
+        expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'helpers', 'unit']);
     });
 
     it('should locate .[cm]js file', async () => {
@@ -89,27 +88,18 @@ describe('src/locator.ts', () => {
                 path: path.join(basePath, 'file.mts'),
             },
         ];
-        let locatorInfo = await locateMany(['file.[cm]ts'], { cwd: [basePath] });
-        expect(locatorInfo).toBeDefined();
-        expect(locatorInfo).toEqual(files);
-
-        locatorInfo = locateManySync(['file.[cm]ts'], { cwd: [basePath] });
-        expect(locatorInfo).toBeDefined();
+        const locatorInfo = await expectParity(
+            () => locateMany(['file.[cm]ts'], { cwd: [basePath] }),
+            () => locateManySync(['file.[cm]ts'], { cwd: [basePath] }),
+        );
         expect(locatorInfo).toEqual(files);
     });
 
     it('should locate .json file', async () => {
-        let locatorInfo = await locate('file.json', { cwd: [basePath] });
-        expect(locatorInfo).toBeDefined();
-        expect(locatorInfo).toEqual({
-            directory: basePath,
-            name: 'file',
-            extension: '.json',
-            path: path.join(basePath, 'file.json'),
-        } as LocatorInfo);
-
-        locatorInfo = locateSync('file.json', { cwd: [basePath] });
-        expect(locatorInfo).toBeDefined();
+        const locatorInfo = await expectParity(
+            () => locate('file.json', { cwd: [basePath] }),
+            () => locateSync('file.json', { cwd: [basePath] }),
+        );
         expect(locatorInfo).toEqual({
             directory: basePath,
             name: 'file',
@@ -119,21 +109,19 @@ describe('src/locator.ts', () => {
     });
 
     it('should not locate file', async () => {
-        const locatorInfo = await locate('file.foo', { cwd: [basePath] });
-        expect(locatorInfo).toBeUndefined();
-    });
-
-    it('should not locate file sync', () => {
-        const locatorInfo = locateSync('file.foo', { cwd: [basePath] });
+        const locatorInfo = await expectParity(
+            () => locate('file.foo', { cwd: [basePath] }),
+            () => locateSync('file.foo', { cwd: [basePath] }),
+        );
         expect(locatorInfo).toBeUndefined();
     });
 
     it('should ignore dotfiles by default with wildcard patterns', async () => {
-        const asyncResult = await locateMany('*', { cwd: [basePath] });
-        expect(asyncResult.map((r) => r.name)).not.toContain('.hidden');
-
-        const syncResult = locateManySync('*', { cwd: [basePath] });
-        expect(syncResult.map((r) => r.name)).not.toContain('.hidden');
+        const result = await expectParity(
+            () => locateMany('*', { cwd: [basePath] }),
+            () => locateManySync('*', { cwd: [basePath] }),
+        );
+        expect(result.map((r) => r.name)).not.toContain('.hidden');
     });
 
     it('should include dotfiles when `dot: true`', async () => {
@@ -144,10 +132,10 @@ describe('src/locator.ts', () => {
             path: path.join(basePath, '.hidden'),
         };
 
-        const asyncResult = await locateMany('*', { cwd: [basePath], dot: true });
-        expect(asyncResult).toContainEqual(expected);
-
-        const syncResult = locateManySync('*', { cwd: [basePath], dot: true });
-        expect(syncResult).toContainEqual(expected);
+        const result = await expectParity(
+            () => locateMany('*', { cwd: [basePath], dot: true }),
+            () => locateManySync('*', { cwd: [basePath], dot: true }),
+        );
+        expect(result).toContainEqual(expected);
     });
 });

@@ -13,6 +13,8 @@ import {
 import type { LocatorInfo } from '../../locator';
 import { buildFilePath, pathToLocatorInfo } from '../../locator';
 import { hasOwnProperty, isFilePath } from '../../utils';
+import type { TwinBody } from '../../utils/twin';
+import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
 import { ModuleLoader, createModuleRecord, toModuleRecord } from '../built-in';
 import type { BuiltInLoaderId, BuiltInLoaderOf } from '../built-in/registry';
 import { BUILT_IN_PRESETS } from '../built-in/registry';
@@ -174,20 +176,17 @@ export class LoaderRegistry {
     }
 
     async load(input: LocatorInfo | string) : Promise<any> {
-        const filePath = buildFilePath(input);
-        const loader = this.find(filePath);
-        if (!loader) {
-            throw this.unknownExtensionError(filePath);
-        }
-
-        try {
-            return this.toRecord(await loader.execute(filePath), loader);
-        } catch (e) {
-            throw wrapLoaderError(e, filePath);
-        }
+        return runTwinAsync(this.loadBody(input));
     }
 
     loadSync(input: LocatorInfo | string) : any {
+        return runTwinSync(this.loadBody(input));
+    }
+
+    /**
+     * Shared body of load/loadSync: dispatch, execute, normalize, wrap.
+     */
+    protected* loadBody(input: LocatorInfo | string) : TwinBody<any> {
         const filePath = buildFilePath(input);
         const loader = this.find(filePath);
         if (!loader) {
@@ -195,7 +194,12 @@ export class LoaderRegistry {
         }
 
         try {
-            return this.toRecord(loader.executeSync(filePath), loader);
+            const output = yield* op(
+                () => loader.execute(filePath),
+                () => loader.executeSync(filePath),
+            );
+
+            return this.toRecord(output, loader);
         } catch (e) {
             throw wrapLoaderError(e, filePath);
         }

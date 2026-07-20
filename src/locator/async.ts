@@ -5,63 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fg from 'fast-glob';
+import { runTwinAsync } from '../utils/twin';
+import { locateBody, locateManyBody } from './core';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
-import { buildLocatorOptions, buildLocatorPatterns, pathToLocatorInfo } from './utils';
 
 export async function locateMany(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : Promise<LocatorInfo[]> {
-    const patterns = buildLocatorPatterns(pattern);
-    const opts = buildLocatorOptions(options);
-
-    const items : LocatorInfo[] = [];
-
-    for (const p of patterns) {
-        for (const cwd of opts.cwd) {
-            const files = await fg(p, {
-                absolute: true,
-                cwd,
-                ignore: opts.ignore,
-                onlyFiles: opts.onlyFiles,
-                onlyDirectories: opts.onlyDirectories,
-                dot: opts.dot,
-            });
-
-            for (const file of files) {
-                items.push(pathToLocatorInfo(file, true));
-            }
-        }
-    }
-
-    return items;
+    return runTwinAsync(locateManyBody(pattern, options));
 }
 
 export async function locate(
     pattern: string | string[],
     options?: LocatorOptionsInput,
 ) : Promise<LocatorInfo | undefined> {
-    const patterns = buildLocatorPatterns(pattern);
-    const opts = buildLocatorOptions(options);
-
-    for (const p of patterns) {
-        for (const cwd of opts.cwd) {
-            const files = await fg(p, {
-                absolute: true,
-                cwd,
-                ignore: opts.ignore,
-                onlyFiles: opts.onlyFiles,
-                onlyDirectories: opts.onlyDirectories,
-                dot: opts.dot,
-            });
-
-            const element = files.shift();
-            if (element) {
-                return pathToLocatorInfo(element, true);
-            }
-        }
-    }
-
-    return undefined;
+    return runTwinAsync(locateBody(pattern, options));
 }

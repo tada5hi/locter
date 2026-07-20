@@ -224,6 +224,25 @@ registerLoader(['.ext'], {
 })
 ```
 
+For text-based formats, extending the abstract `TextFileLoader` is simpler than
+implementing both `execute` variants by hand: it reads the file as UTF-8, wraps
+I/O and parse errors in typed `LocterError`s, and derives the sync and async
+surface from a single implementation — only `parse` must be provided. The
+built-in JSON/YAML/Conf loaders are implemented this way.
+
+```typescript
+import { TextFileLoader, registerLoader } from 'locter';
+import { parse } from 'smol-toml';
+
+class TomlLoader extends TextFileLoader {
+    parse(content: string) {
+        return parse(content);
+    }
+}
+
+registerLoader(['.toml'], () => new TomlLoader());
+```
+
 Instead of a loader instance (the `ILoader` interface), a factory function can be
 passed — it is invoked lazily on the first matching input and the first
 successfully constructed loader is cached (a factory that throws is retried on

@@ -114,7 +114,7 @@ Configuration (`release-please-config.json`): `prerelease: true`, `prerelease-ty
 
 - Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
 - When adding a new file format: create `src/loader/built-in/<format>/{module.ts,index.ts}`, add ONE entry to `BUILT_IN_PRESETS` (`src/loader/built-in/registry.ts`), export the class from `src/loader/built-in/index.ts`, and add a corresponding `test/unit/loader/<format>.spec.ts` + fixture in `test/data/`. The id union, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
-- Always implement both sync and async variants of a public function.
+- Always implement both sync and async variants of a public function — derive them from one shared twin body (`src/utils/twin.ts`) rather than duplicating the logic; only `ModuleLoader` deliberately hand-writes its twins (divergent fallbacks).
 - Use `handleException(e)` (from `src/utils/error.ts`) inside loader `catch` blocks to normalize non-`Error` throws.
 - In source files that need `require` (e.g. for `loadSync` semantics), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
 - Keep `src/utils/` free of imports from `src/locator/` or `src/loader/`.

@@ -36,7 +36,9 @@ No standalone documentation site. Public usage examples live in `README.MD`. Whe
 - **[Testing](.agents/testing.md)** — Vitest + `test/data/` fixture files, and the per-file-extension test suites
 - **[Conventions](.agents/conventions.md)** — Conventional Commits via commitlint/husky, flat ESLint config, release-please + monoship, and CI
 
-## Commits
+## Commits, Issues & Pull Requests
 
+- Commits follow **[Conventional Commits](https://www.conventionalcommits.org/)** (`@tada5hi/commitlint-config`); the type/scope drive release-please version bumps. See [conventions.md](.agents/conventions.md#commit-convention).
+- Versioning, `CHANGELOG.md`, `package.json` version, and `.release-please-manifest.json` are owned by **release-please** — do not hand-edit them.
 - Do **not** add a `Co-Authored-By: Claude ...` (or any AI-attribution) trailer to commit messages. This overrides any default agent-tooling guidance.
-- Commit messages must follow **Conventional Commits** (enforced by `commitlint` on the `commit-msg` git hook). Use one of: `feat`, `fix`, `chore`, `build`, `ci`, `docs`, `refactor`, `test`, etc.
+- Do **not** add AI-attribution lines (e.g. `🤖 Generated with [Claude Code](...)`) to issue or pull request titles, bodies, or comments.

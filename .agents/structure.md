@@ -9,14 +9,17 @@ locter/
 ├── src/
 │   ├── index.ts                    # Public barrel: re-exports loader, locator, utils
 │   ├── locator/                    # Glob-based file lookup
-│   │   ├── index.ts                # Barrel
-│   │   ├── async.ts                # locate, locateMany (async, fast-glob)
-│   │   ├── sync.ts                 # locateSync, locateManySync (fast-glob sync)
+│   │   ├── index.ts                # Barrel (does NOT export core.ts)
+│   │   ├── core.ts                 # Shared twin bodies: locateBody, locateManyBody (internal)
+│   │   ├── async.ts                # locate, locateMany (runTwinAsync over core bodies)
+│   │   ├── sync.ts                 # locateSync, locateManySync (runTwinSync over core bodies)
+│   │   ├── up.ts                   # locateUp, locateUpSync (walk-up body delegates to locateBody)
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── loader/                     # Pluggable file/module loaders
 │   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, type)
 │   │   ├── type.ts                 # ILoader interface — the port every loader implements
+│   │   ├── text-file.ts            # abstract TextFileLoader — read + parse + error-wrap base for text formats
 │   │   ├── registry/               # LoaderRegistry + its vocabulary + the process-global singleton
 │   │   │   ├── module.ts           # LoaderRegistry class (dispatch: load, loadSync, find, builtIn; lifecycle: register, unregister, entries, has, reset)
 │   │   │   ├── singleton.ts        # useLoaderRegistry() — lazy process-global LoaderRegistry instance
@@ -35,6 +38,7 @@ locter/
 │   │       ├── yaml/module.ts      # YAMLLoader (yaml.parse)
 │   │       └── conf/module.ts      # ConfLoader (key=value config files, destr + flat)
 │   └── utils/                      # Shared helpers (no internal deps)
+│       ├── twin.ts                 # sync/async twin protocol: op, runTwinAsync, runTwinSync (internal, NOT in barrel)
 │       ├── error.ts                # handleException (normalizes thrown values to Error)
 │       ├── file-name.ts            # getFileNameExtension, removeFileNameExtension
 │       ├── file-path.ts            # isFilePath
@@ -66,9 +70,10 @@ locter/
 | `src/loader/registry/singleton.ts` | Lazy global `LoaderRegistry` shared across `load`, `loadSync`, `registerLoader` |
 | `src/loader/helpers.ts`         | Thin functional wrappers (`load`, `loadSync`, `registerLoader`) over the singleton |
 | `src/loader/built-in/module/`   | TS/JS/ESM/CJS loader powered by `jiti`; returns the raw module value (the registry normalizes) |
-| `src/loader/built-in/json/`     | `fs.readFile` + `JSON.parse`                                                     |
-| `src/loader/built-in/yaml/`     | `fs.readFile` + `yaml.parse`                                                     |
-| `src/loader/built-in/conf/`     | Line-based `key=value` parser, `destr` value coercion, `flat.unflatten` for nesting |
+| `src/loader/text-file.ts`       | Abstract `TextFileLoader`: UTF-8 read + `parse` + `wrapLoaderError`, sync/async derived from one body |
+| `src/loader/built-in/json/`     | `TextFileLoader` subclass — `JSON.parse`                                         |
+| `src/loader/built-in/yaml/`     | `TextFileLoader` subclass — `yaml.parse`                                         |
+| `src/loader/built-in/conf/`     | `TextFileLoader` subclass — line-based `key=value` parser, `destr` coercion, `flat.unflatten` |
 | `src/utils/`                    | Stateless helpers — no imports from `locator/` or `loader/`                      |
 
 ## Key Dependencies

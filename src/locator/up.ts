@@ -6,8 +6,9 @@
  */
 
 import path from 'node:path';
-import { locate } from './async';
-import { locateSync } from './sync';
+import type { TwinBody } from '../utils/twin';
+import { runTwinAsync, runTwinSync } from '../utils/twin';
+import { locateBody } from './core';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
 
 export type LocatorUpOptionsInput = Omit<LocatorOptionsInput, 'cwd'> & {
@@ -52,14 +53,14 @@ function nextDirectory(current: string, stopAt: string) : string | undefined {
     return parent;
 }
 
-export async function locateUp(
+function* locateUpBody(
     pattern: string | string[],
-    options: LocatorUpOptionsInput = {},
-) : Promise<LocatorInfo | undefined> {
+    options: LocatorUpOptionsInput,
+) : TwinBody<LocatorInfo | undefined> {
     let walk = startWalk(options);
 
     while (true) {
-        const found = await locate(pattern, { ...walk.baseOptions, cwd: walk.current });
+        const found = yield* locateBody(pattern, { ...walk.baseOptions, cwd: walk.current });
         if (found) {
             return found;
         }
@@ -73,23 +74,16 @@ export async function locateUp(
     }
 }
 
+export async function locateUp(
+    pattern: string | string[],
+    options: LocatorUpOptionsInput = {},
+) : Promise<LocatorInfo | undefined> {
+    return runTwinAsync(locateUpBody(pattern, options));
+}
+
 export function locateUpSync(
     pattern: string | string[],
     options: LocatorUpOptionsInput = {},
 ) : LocatorInfo | undefined {
-    let walk = startWalk(options);
-
-    while (true) {
-        const found = locateSync(pattern, { ...walk.baseOptions, cwd: walk.current });
-        if (found) {
-            return found;
-        }
-
-        const next = nextDirectory(walk.current, walk.stopAt);
-        if (!next) {
-            return undefined;
-        }
-
-        walk = { ...walk, current: next };
-    }
+    return runTwinSync(locateUpBody(pattern, options));
 }
