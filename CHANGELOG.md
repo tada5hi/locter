@@ -1,9 +1,32 @@
-## [2.1.6](https://github.com/tada5hi/locter/compare/v2.1.5...v2.1.6) (2025-01-24)
+## [4.0.0-beta.0](https://github.com/tada5hi/locter/compare/v3.0.0...v4.0.0-beta.0) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+The 4.0 line renames the loader subsystem around the **format** concept and adds a write side. The exhaustive migration guide (rename table + behavioral notes) lives in the README under [*Migrating from 3.x*](https://github.com/tada5hi/locter#migrating-from-3x). Summary:
+
+* Public verbs renamed: `load`/`loadSync` → `read`/`readSync`; `registerLoader`/`unregisterLoader` → `registerFormat`/`unregisterFormat` (object form only); `loadPackageField`(+Sync) → `readPackageField`(+Sync); `setModuleLoader` → `setModuleReader`.
+* Classes and ports: `LoaderManager` → `FormatRegistry` (`useLoader` → `useFormatRegistry`); the `Loader` type → `IReader` (`read`/`readSync`) plus the new `IWriter` (`write`/`writeSync`); `JSONLoader`/`YAMLLoader`/`ConfLoader` → `*Reader`+`*Writer` pairs; `ModuleLoader` → `ModuleReader`; rules take independent `reader`/`writer` slots.
+* User rules now override built-in formats; plugin-string loaders (`loader: 'toml'`) are removed.
+* Every `read()` result is a frozen, null-prototype module record (`.default` always holds the value); records carry a private brand that `write()` unwraps on round-trips. `ModuleReader.read()` returns the raw module value — normalization happens once, at the registry boundary.
+* Locator option precedence: `{ onlyFiles: true, onlyDirectories: true }` now matches directories only (previously everything); `{ onlyFiles: false }` now means no restriction (previously directories only).
+* The public surface is curated: internal helpers (`isObject`, `toArray`, `isFilePath`, `pathToLocatorInfo`, `toModuleRecord`, `getFileNameExtension`, `removeFileNameExtension`, …) are no longer exported — full list and replacements in the README migration section.
+
+### Features
+
+* **format:** read/write API - rename load() to read(), add write() with per-format writers ([#861](https://github.com/tada5hi/locter/issues/861)) ([0f2fb13](https://github.com/tada5hi/locter/commit/0f2fb1338b1e1164c0c00511567bbe0951cd6c4f))
 
 
 ### Bug Fixes
 
-* **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
+* **loader:** normalize every load() result to a module record ([#850](https://github.com/tada5hi/locter/issues/850)) ([7e5dc09](https://github.com/tada5hi/locter/commit/7e5dc09b51a4bfb36665e02f9465104167d64ec8))
+
+
+### Code Refactoring
+
+* **loader:** derive built-in dispatch from a single registry ([#855](https://github.com/tada5hi/locter/issues/855)) ([0ce655f](https://github.com/tada5hi/locter/commit/0ce655f4fda7ad1bdec38474d8d5deadac5cf197))
+* **loader:** normalize module records once at the registry boundary ([#856](https://github.com/tada5hi/locter/issues/856)) ([4ed3cdb](https://github.com/tada5hi/locter/commit/4ed3cdb87d06fda0f7df460d928811609b0381b7))
+* pre-v4 cleanup - locator option precedence and curated public API ([#862](https://github.com/tada5hi/locter/issues/862)) ([802f34d](https://github.com/tada5hi/locter/commit/802f34daeafd14ceac8b8216a5368504450bdaa4))
 
 ## [3.0.0](https://github.com/tada5hi/locter/compare/v2.2.1...v3.0.0) (2026-05-21)
 
@@ -51,6 +74,13 @@
 ### Bug Fixes
 
 * **types:** export type definitions ([#769](https://github.com/tada5hi/locter/issues/769)) ([8b21435](https://github.com/tada5hi/locter/commit/8b21435d7c99f37fd31bd01a643b2c8e5ab22b41))
+
+## [2.1.6](https://github.com/tada5hi/locter/compare/v2.1.5...v2.1.6) (2025-01-24)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 13 updates ([#753](https://github.com/tada5hi/locter/issues/753)) ([7dd1b67](https://github.com/tada5hi/locter/commit/7dd1b677b0fef258b758fd1ea2dd636b75f53d46))
 
 ## [2.1.5](https://github.com/tada5hi/locter/compare/v2.1.4...v2.1.5) (2024-11-06)
 
