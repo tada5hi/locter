@@ -1,3 +1,46 @@
+## [4.0.0](https://github.com/tada5hi/locter/compare/v3.0.0...v4.0.0) (2026-07-21)
+
+locter 4.0 turns the library from a locator + loader into a **locator + reader + writer**: one API to locate files, read them raw or as module records, and write them back — sync and async throughout. The exhaustive migration guide (rename table + behavioral notes) lives in the README under [*Migrating from 3.x*](https://github.com/tada5hi/locter#migrating-from-3x).
+
+### ⚠ BREAKING CHANGES
+
+* The loader vocabulary is renamed around the **format** concept: `LoaderManager` → `FormatRegistry` (`useLoader` → `useFormatRegistry`), `registerLoader`/`unregisterLoader` → `registerFormat`/`unregisterFormat` (object form only; rules take independent `reader`/`writer` slots), the `Loader` type → `IReader` plus the new `IWriter`, `JSONLoader`/`YAMLLoader`/`ConfLoader` → `*Reader`+`*Writer` pairs, `ModuleLoader` → `ModuleReader`, `setModuleLoader` → `setModuleReader`, `loadPackageField`(+Sync) → `readPackageField`(+Sync).
+* `load`/`loadSync` are replaced by two verbs: `read`/`readSync` return the **raw** parsed value for data formats (mutable, round-trip-symmetric with `write`) and the normalized module record for modules; `readAsModule`/`readAsModuleSync` present **every** result as the uniform, frozen, branded module record. There is deliberately no export named `load` — stale 3.x call sites fail loudly at import time.
+* User rules now override built-in formats; plugin-string loaders (`loader: 'toml'`) are removed.
+* Locator option precedence: `{ onlyFiles: true, onlyDirectories: true }` now matches directories only (previously everything); `{ onlyFiles: false }` now means no restriction (previously directories only).
+* The public surface is curated to a named, snapshot-tested export list: generic internal helpers (`isObject`, `toArray`, `isFilePath`, `pathToLocatorInfo`, `toModuleRecord`, …) are no longer exported — full list and replacements in the README migration section.
+
+### Features
+
+* `write` / `writeSync` — per-format writers dispatched like reads: comment-preserving YAML write-back (Document grafting), JSON with configurable indent incl. `'auto'` (keep the existing file's indentation), rc9-style `.conf` serialization (RegExp/BigInt-safe). Missing parent directories are created, and records produced by `readAsModule()` are unwrapped automatically on round-trips.
+* `text` built-in (`.txt`) — `TextReader` / `TextWriter` with raw string semantics: no value coercion, writes accept strings only ([#870](https://github.com/tada5hi/locter/issues/870)).
+* `serializeValue` / `deserializeValue` — the lenient value codec (env-var/KV philosophy; shared by the `.conf` format, always returns a string, never throws on parse) ([#870](https://github.com/tada5hi/locter/issues/870)).
+* `writePackageField` / `writePackageFieldSync` — set a top-level `package.json` field preserving the file's indentation.
+* `readAsModule` / `readAsModuleSync` plus the record helpers `isModuleRecord` / `getModuleExport`.
+* `isTsxRuntimeEnvironment()` — tsx process detection alongside the existing runtime helpers.
+* `LocterWriteError` + `wrapWriteError` — the typed write-side error surface.
+* The test suite runs on an ubuntu + windows CI matrix.
+
+The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
+
+## [4.0.0-beta.2](https://github.com/tada5hi/locter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-07-20)
+
+
+### Features
+
+* keep the file-name extension helpers public ([#866](https://github.com/tada5hi/locter/issues/866)) ([9463e48](https://github.com/tada5hi/locter/commit/9463e489d0a44053d798d3e0e203c434970adbef))
+
+## [4.0.0-beta.1](https://github.com/tada5hi/locter/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-07-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **format:** within the 4.0 beta line, read()/readSync() no longer wrap data formats in module records - use readAsModule()/Sync() for the uniform record shape. A literal __esModule key in parsed data is never treated as a module. There is deliberately still no export named load - stale 3.x call sites fail loudly at import time.
+
+### Features
+
+* **format:** split read (raw) from readAsModule (module records) ([#863](https://github.com/tada5hi/locter/issues/863)) ([0f276e8](https://github.com/tada5hi/locter/commit/0f276e8d762340df9aeb20871877d739379769d0))
+
 ## [4.0.0-beta.0](https://github.com/tada5hi/locter/compare/v3.0.0...v4.0.0-beta.0) (2026-07-20)
 
 
@@ -27,24 +70,6 @@ The 4.0 line renames the loader subsystem around the **format** concept and adds
 * **loader:** derive built-in dispatch from a single registry ([#855](https://github.com/tada5hi/locter/issues/855)) ([0ce655f](https://github.com/tada5hi/locter/commit/0ce655f4fda7ad1bdec38474d8d5deadac5cf197))
 * **loader:** normalize module records once at the registry boundary ([#856](https://github.com/tada5hi/locter/issues/856)) ([4ed3cdb](https://github.com/tada5hi/locter/commit/4ed3cdb87d06fda0f7df460d928811609b0381b7))
 * pre-v4 cleanup - locator option precedence and curated public API ([#862](https://github.com/tada5hi/locter/issues/862)) ([802f34d](https://github.com/tada5hi/locter/commit/802f34daeafd14ceac8b8216a5368504450bdaa4))
-
-## [4.0.0-beta.2](https://github.com/tada5hi/locter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-07-20)
-
-
-### Features
-
-* keep the file-name extension helpers public ([#866](https://github.com/tada5hi/locter/issues/866)) ([9463e48](https://github.com/tada5hi/locter/commit/9463e489d0a44053d798d3e0e203c434970adbef))
-
-## [4.0.0-beta.1](https://github.com/tada5hi/locter/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-07-20)
-
-
-### ⚠ BREAKING CHANGES
-
-* **format:** within the 4.0 beta line, read()/readSync() no longer wrap data formats in module records - use readAsModule()/Sync() for the uniform record shape. A literal __esModule key in parsed data is never treated as a module. There is deliberately still no export named load - stale 3.x call sites fail loudly at import time.
-
-### Features
-
-* **format:** split read (raw) from readAsModule (module records) ([#863](https://github.com/tada5hi/locter/issues/863)) ([0f276e8](https://github.com/tada5hi/locter/commit/0f276e8d762340df9aeb20871877d739379769d0))
 
 ## [3.0.0](https://github.com/tada5hi/locter/compare/v2.2.1...v3.0.0) (2026-05-21)
 
