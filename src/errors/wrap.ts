@@ -7,9 +7,9 @@
 
 import { hasStringProperty, isObject } from '../utils';
 import { LocterError } from './base';
-import { LocterLoadError } from './load';
-import { LocterNotFoundError } from './not-found';
-import { LocterWriteError } from './write';
+import { LoadError } from './load';
+import { NotFoundError } from './not-found';
+import { WriteError } from './write';
 
 const NOT_FOUND_CODES = new Set([
     'ENOENT',
@@ -31,7 +31,7 @@ export function wrapLoaderError(input: unknown, path: string) : LocterError {
         `Failed to load: ${path}`;
 
     if (code && NOT_FOUND_CODES.has(code)) {
-        return new LocterNotFoundError({
+        return new NotFoundError({
             message,
             code,
             cause: input,
@@ -39,7 +39,7 @@ export function wrapLoaderError(input: unknown, path: string) : LocterError {
         });
     }
 
-    return new LocterLoadError({
+    return new LoadError({
         message,
         code,
         cause: input,
@@ -60,7 +60,7 @@ export function wrapWriteError(input: unknown, path: string) : LocterError {
         input.message :
         `Failed to write: ${path}`;
 
-    return new LocterWriteError({
+    return new WriteError({
         message,
         code,
         cause: input,

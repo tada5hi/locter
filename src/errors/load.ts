@@ -10,7 +10,7 @@ import { LocterError, type LocterErrorInput } from './base';
 
 export const LOCTER_LOAD_ERROR_MARKER = Symbol.for('@locter/load-error');
 
-export class LocterLoadError extends LocterError {
+export class LoadError extends LocterError {
     static override [Symbol.hasInstance](input: unknown) : boolean {
         return hasInstanceof(input, LOCTER_LOAD_ERROR_MARKER);
     }

@@ -35,12 +35,41 @@ export type Rule = {
     /**
      * Stable identity. Registering an existing id REPLACES that rule in
      * place (position preserved, cached instance evicted). Built-in ids
-     * ('module', 'conf', 'json', 'yaml') are reserved. Omitted → auto-generated.
+     * ('module', 'conf', 'json', 'yaml', 'text') are reserved.
+     * Omitted → auto-generated.
      */
     id?: string,
     test: RegExp | string[],
     reader?: IReader | ReaderFactory,
     writer?: IWriter | WriterFactory
+};
+
+/**
+ * Per-call options for read / readAsModule (+Sync).
+ */
+export type ReadOptions = {
+    /**
+     * Read with the format registered under this id — a built-in id
+     * ('module', 'conf', 'json', 'yaml', 'text') or a user rule id —
+     * INSTEAD of dispatching by extension. This is the evaluation-free
+     * escape hatch for module files: read('config.ts', { format: 'text' })
+     * returns the source without executing it. Unknown ids throw.
+     */
+    format?: string
+};
+
+/**
+ * Per-call options for write (+Sync).
+ */
+export type WriteOptions = {
+    /**
+     * Write with the format registered under this id INSTEAD of
+     * dispatching by extension. Skips the bare-specifier guard, so
+     * extensionless paths become writable ('LICENSE' with 'text') and
+     * read-only extensions become targetable (raw source to a '.ts'
+     * file with 'text'). Read-only format ids and unknown ids throw.
+     */
+    format?: string
 };
 
 /**

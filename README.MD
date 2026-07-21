@@ -39,7 +39,7 @@
 - ✍️ **Write** — `write()` values back without pulling serializers into your app: comment-preserving YAML, indent-preserving JSON, rc9-style `.conf`.
 - 🔁 **Sync twins** — every operation ships as `fn` / `fnSync`, derived from one shared implementation.
 - 🧩 **Extensible** — register custom formats with independent reader/writer slots; override built-ins per extension.
-- 🚨 **Typed errors** — `LocterNotFoundError`, `LocterLoadError`, `LocterWriteError`, … each carrying `path` and `cause`.
+- 🚨 **Typed errors** — `NotFoundError`, `LoadError`, `WriteError`, … each carrying `path` and `cause`.
 
 **Table of Contents**
 
@@ -224,6 +224,28 @@ Bare module specifiers (no file extension) are routed to the module reader, so
 `read('yaml')` behaves like `import('yaml')` — note that reading a module
 **executes** it.
 
+**Per-call format override**
+
+Every read/write verb accepts an options object with a `format` key — a
+registered format id (a built-in: `module`, `conf`, `json`, `yaml`, `text` —
+or the id of a rule registered via `registerFormat`) used *instead* of
+extension dispatch. The most useful consequence: module files become readable
+**without being executed**:
+
+```typescript
+import { read } from 'locter';
+
+(async () => {
+    // the source of a module file — no evaluation, no side effects
+    const source = await read('vite.config.ts', { format: 'text' });
+
+    // extensionless files become readable, too
+    const license = await read('LICENSE', { format: 'text' });
+})
+```
+
+Unknown format ids throw `LocterError`.
+
 **Module records — `readAsModule`**
 
 Every `readAsModule` / `readAsModuleSync` result is a **module record** — a
@@ -293,7 +315,7 @@ import { readPackageField } from 'locter';
 })
 ```
 
-Throws `LocterLoadError` if the resolved `package.json` is malformed. A sync variant `readPackageFieldSync` is also available.
+Throws `LoadError` if the resolved `package.json` is malformed. A sync variant `readPackageFieldSync` is also available.
 
 ### Writer
 
@@ -331,7 +353,22 @@ Write semantics:
   brand — an `__esModule` key in plain data does **not** count) are unwrapped
   to their `.default` value before serialization.
 - Module formats (`.js`, `.ts`, …) are **read-only**: `write('config.ts', …)`
-  throws `LocterWriteError`, as does writing to a bare module specifier.
+  throws `WriteError`, as does writing to a bare module specifier.
+
+An explicit `format` id lifts both restrictions of the last bullet — naming
+the format resolves the ambiguity those guards exist for:
+
+```typescript
+import { write } from 'locter';
+
+(async () => {
+    // scaffold a module file from raw source ('text' bypasses read-only)
+    await write('generated/config.ts', 'export default {};', { format: 'text' });
+
+    // extensionless target, explicit format
+    await write('.myapprc', { port: 3000 }, { format: 'json' });
+})
+```
 
 Per-format behavior:
 
@@ -380,7 +417,7 @@ import { writePackageField } from 'locter';
 })
 ```
 
-Throws `LocterNotFoundError` when no `package.json` could be located. A sync
+Throws `NotFoundError` when no `package.json` could be located. A sync
 variant `writePackageFieldSync` is also available.
 
 ### Formats
@@ -509,24 +546,24 @@ matching on `.message`:
 
 | Class                          | When it's thrown                                        |
 |--------------------------------|---------------------------------------------------------|
-| `LocterNotFoundError`          | File or module does not exist (`ENOENT`, `MODULE_NOT_FOUND`, `ERR_MODULE_NOT_FOUND`) |
-| `LocterLoadError`              | A reader threw — parse error, runtime/eval error, etc.  |
-| `LocterWriteError`             | A write failed — serialization error, filesystem error, read-only format, corrupt existing YAML target |
-| `LocterUnknownExtensionError`  | No rule matched the file's extension                    |
+| `NotFoundError`                | File or module does not exist (`ENOENT`, `MODULE_NOT_FOUND`, `ERR_MODULE_NOT_FOUND`) |
+| `LoadError`                    | A reader threw — parse error, runtime/eval error, etc.  |
+| `WriteError`                   | A write failed — serialization error, filesystem error, read-only format, corrupt existing YAML target |
+| `UnknownExtensionError`        | No rule matched the file's extension                    |
 | `LocterError`                  | Base class; matches all of the above                    |
 
 Each error exposes the offending `path` and preserves the underlying error
 on `cause`:
 
 ```typescript
-import { read, LocterNotFoundError, LocterLoadError } from 'locter';
+import { read, NotFoundError, LoadError } from 'locter';
 
 try {
     await read('config.json');
 } catch (err) {
-    if (err instanceof LocterNotFoundError) {
+    if (err instanceof NotFoundError) {
         console.error(`Config file not found: ${err.path}`);
-    } else if (err instanceof LocterLoadError) {
+    } else if (err instanceof LoadError) {
         console.error(`Failed to parse config: ${err.cause}`);
     } else {
         throw err;
@@ -534,11 +571,11 @@ try {
 }
 ```
 
-Note that on the write side `ENOENT` stays a `LocterWriteError` — a missing
+Note that on the write side `ENOENT` stays a `WriteError` — a missing
 parent directory is a write failure, not a lookup miss (and `write` creates
 missing parents anyway).
 
-`LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `LocterNotFoundError`s thrown by the JSON reader) and a `toJSON()` for structured logging.
+`LocterError` extends [`BaseError`](https://github.com/Tada5hi/ebec) from `@ebec/core`, so each instance also carries a `code` (auto-derived from the class name unless overridden — e.g. `'ENOENT'` for `NotFoundError`s thrown by the JSON reader) and a `toJSON()` for structured logging.
 
 Each error class also publishes its `Symbol.for(...)` marker (`LOCTER_ERROR_MARKER`, `LOCTER_NOT_FOUND_ERROR_MARKER`, …), which makes `instanceof` work across realms — useful when consumers end up with duplicate copies of locter in their dependency tree.
 
@@ -625,6 +662,7 @@ The list below is exhaustive — no other public APIs changed.
 | `ModuleLoader`                       | `ModuleReader`                             |
 | `setModuleLoader`                    | `setModuleReader`                          |
 | `loadPackageField` / `loadPackageFieldSync` | `readPackageField` / `readPackageFieldSync` |
+| `LocterLoadError` / `LocterNotFoundError` / `LocterUnknownExtensionError` | `LoadError` / `NotFoundError` / `UnknownExtensionError` — the `LocterError` base class keeps its name |
 
 **Behavioral changes:**
 
@@ -689,7 +727,7 @@ The list below is exhaustive — no other public APIs changed.
   `ConfWriter`), including comment-preserving YAML write-back — see
   [Writer](#writer).
 - `writePackageField` / `writePackageFieldSync`.
-- `LocterWriteError` + `wrapWriteError`.
+- `WriteError` + `wrapWriteError`.
 - `isModuleRecord` — brand-based detection of records produced by `read()`.
 - The ports are exported as `IReader` / `IWriter`, alongside `Rule`,
   `ReaderFactory`, `WriterFactory` — so custom formats can be typed against

@@ -10,7 +10,7 @@ import { LocterError, type LocterErrorInput } from './base';
 
 export const LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER = Symbol.for('@locter/unknown-extension-error');
 
-export class LocterUnknownExtensionError extends LocterError {
+export class UnknownExtensionError extends LocterError {
     static override [Symbol.hasInstance](input: unknown) : boolean {
         return hasInstanceof(input, LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER);
     }

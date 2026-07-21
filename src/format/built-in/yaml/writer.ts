@@ -63,7 +63,7 @@ function graftMap(doc: Document, node: YAMLMap, value: Record<string, unknown>) 
  * target file already exists, the new value is grafted into its parsed
  * document, so comments and anchors attached to surviving keys survive
  * the write-back. New files are plain `yaml.stringify` output. An
- * existing file that fails to parse throws (wrapped as LocterWriteError)
+ * existing file that fails to parse throws (wrapped as WriteError)
  * instead of being silently overwritten.
  */
 export class YAMLWriter extends TextFileWriter {

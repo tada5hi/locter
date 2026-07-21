@@ -14,11 +14,11 @@ import {
     LOCTER_LOAD_ERROR_MARKER,
     LOCTER_NOT_FOUND_ERROR_MARKER,
     LOCTER_UNKNOWN_EXTENSION_ERROR_MARKER,
+    LoadError,
     LocterError,
-    LocterLoadError,
-    LocterNotFoundError,
-    LocterUnknownExtensionError,
-    LocterWriteError,
+    NotFoundError,
+    UnknownExtensionError,
+    WriteError,
     read,
     readSync,
     setModuleReader,
@@ -29,48 +29,48 @@ import {
 const basePath = path.join(import.meta.dirname, '..', 'data');
 
 describe('src/errors/**', () => {
-    it('should throw LocterUnknownExtensionError when no rule matches', async () => {
+    it('should throw UnknownExtensionError when no rule matches', async () => {
         const manager = new FormatRegistry();
         const missing = path.join(basePath, 'file.foo');
 
-        await expect(manager.read(missing)).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.readSync(missing)).toThrow(LocterUnknownExtensionError);
+        await expect(manager.read(missing)).rejects.toBeInstanceOf(UnknownExtensionError);
+        expect(() => manager.readSync(missing)).toThrow(UnknownExtensionError);
 
         try {
             await manager.read(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
-            expect((e as LocterUnknownExtensionError).path).toEqual(missing);
-            expect((e as LocterUnknownExtensionError).message).toContain('.foo');
+            expect((e as UnknownExtensionError).path).toEqual(missing);
+            expect((e as UnknownExtensionError).message).toContain('.foo');
         }
     });
 
-    it('should throw LocterNotFoundError when a JSON file is missing', async () => {
+    it('should throw NotFoundError when a JSON file is missing', async () => {
         const missing = path.join(basePath, 'does-not-exist.json');
 
-        await expect(read(missing)).rejects.toBeInstanceOf(LocterNotFoundError);
-        expect(() => readSync(missing)).toThrow(LocterNotFoundError);
+        await expect(read(missing)).rejects.toBeInstanceOf(NotFoundError);
+        expect(() => readSync(missing)).toThrow(NotFoundError);
 
         try {
             await read(missing);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
-            expect((e as LocterNotFoundError).path).toEqual(missing);
-            expect((e as LocterNotFoundError).cause).toBeDefined();
+            expect((e as NotFoundError).path).toEqual(missing);
+            expect((e as NotFoundError).cause).toBeDefined();
         }
     });
 
-    it('should throw LocterLoadError when a JSON file is malformed', async () => {
+    it('should throw LoadError when a JSON file is malformed', async () => {
         const malformed = path.join(basePath, 'malformed.json');
 
-        await expect(read(malformed)).rejects.toBeInstanceOf(LocterLoadError);
-        expect(() => readSync(malformed)).toThrow(LocterLoadError);
+        await expect(read(malformed)).rejects.toBeInstanceOf(LoadError);
+        expect(() => readSync(malformed)).toThrow(LoadError);
 
         try {
             await read(malformed);
         } catch (e) {
             expect(e).toBeInstanceOf(LocterError);
-            expect((e as LocterLoadError).cause).toBeInstanceOf(SyntaxError);
+            expect((e as LoadError).cause).toBeInstanceOf(SyntaxError);
         }
     });
 
@@ -79,60 +79,60 @@ describe('src/errors/**', () => {
             const cause = Object.assign(new Error('boom'), { code });
             const wrapped = wrapLoaderError(cause, '/some/path');
 
-            expect(wrapped).toBeInstanceOf(LocterNotFoundError);
+            expect(wrapped).toBeInstanceOf(NotFoundError);
             expect(wrapped.path).toEqual('/some/path');
             expect(wrapped.cause).toBe(cause);
         }
     });
 
-    it('should map other errors to LocterLoadError', () => {
+    it('should map other errors to LoadError', () => {
         const cause = new SyntaxError('bad');
         const wrapped = wrapLoaderError(cause, '/some/path');
 
-        expect(wrapped).toBeInstanceOf(LocterLoadError);
+        expect(wrapped).toBeInstanceOf(LoadError);
         expect(wrapped.cause).toBe(cause);
     });
 
     it('should pass LocterError instances through unchanged', () => {
-        const original = new LocterLoadError({ message: 'already typed', path: '/x' });
+        const original = new LoadError({ message: 'already typed', path: '/x' });
         const wrapped = wrapLoaderError(original, '/y');
 
         expect(wrapped).toBe(original);
         expect(wrapped.path).toEqual('/x');
     });
 
-    it('should map write-side errors to LocterWriteError', () => {
+    it('should map write-side errors to WriteError', () => {
         const cause = Object.assign(new Error('denied'), { code: 'EACCES' });
         const wrapped = wrapWriteError(cause, '/some/path');
 
-        expect(wrapped).toBeInstanceOf(LocterWriteError);
+        expect(wrapped).toBeInstanceOf(WriteError);
         expect(wrapped).toBeInstanceOf(LocterError);
-        expect(wrapped).not.toBeInstanceOf(LocterLoadError);
+        expect(wrapped).not.toBeInstanceOf(LoadError);
         expect(wrapped.code).toEqual('EACCES');
         expect(wrapped.path).toEqual('/some/path');
         expect(wrapped.cause).toBe(cause);
     });
 
-    it('should keep not-found codes as LocterWriteError on the write side', () => {
+    it('should keep not-found codes as WriteError on the write side', () => {
         // ENOENT while writing (missing parent directory) is a write
-        // failure, not a not-found lookup — no LocterNotFoundError mapping.
+        // failure, not a not-found lookup — no NotFoundError mapping.
         const cause = Object.assign(new Error('missing dir'), { code: 'ENOENT' });
         const wrapped = wrapWriteError(cause, '/missing/dir/file.json');
 
-        expect(wrapped).toBeInstanceOf(LocterWriteError);
-        expect(wrapped).not.toBeInstanceOf(LocterNotFoundError);
+        expect(wrapped).toBeInstanceOf(WriteError);
+        expect(wrapped).not.toBeInstanceOf(NotFoundError);
     });
 
     it('should normalize non-error throws via wrapWriteError', () => {
         const wrapped = wrapWriteError('boom', '/some/path');
 
-        expect(wrapped).toBeInstanceOf(LocterWriteError);
+        expect(wrapped).toBeInstanceOf(WriteError);
         expect(wrapped.message).toEqual('Failed to write: /some/path');
         expect(wrapped.cause).toEqual('boom');
     });
 
     it('should pass LocterError instances through wrapWriteError unchanged', () => {
-        const original = new LocterWriteError({ message: 'already typed', path: '/x' });
+        const original = new WriteError({ message: 'already typed', path: '/x' });
         const wrapped = wrapWriteError(original, '/y');
 
         expect(wrapped).toBe(original);
@@ -148,24 +148,24 @@ describe('src/errors/**', () => {
         markInstanceof(alien, LOCTER_NOT_FOUND_ERROR_MARKER);
 
         expect(alien instanceof LocterError).toBe(true);
-        expect(alien instanceof LocterNotFoundError).toBe(true);
-        expect(alien instanceof LocterLoadError).toBe(false);
-        expect(alien instanceof LocterUnknownExtensionError).toBe(false);
+        expect(alien instanceof NotFoundError).toBe(true);
+        expect(alien instanceof LoadError).toBe(false);
+        expect(alien instanceof UnknownExtensionError).toBe(false);
     });
 
     it('should accumulate ancestor markers on subclass instances', () => {
-        const loadErr = new LocterLoadError('x');
-        const unknownExtErr = new LocterUnknownExtensionError('y');
+        const loadErr = new LoadError('x');
+        const unknownExtErr = new UnknownExtensionError('y');
 
         // Each subclass instance carries its own marker AND the base marker —
         // so a parent-class guard fast-paths a subclass.
         expect(loadErr instanceof LocterError).toBe(true);
-        expect(loadErr instanceof LocterLoadError).toBe(true);
-        expect(loadErr instanceof LocterNotFoundError).toBe(false);
+        expect(loadErr instanceof LoadError).toBe(true);
+        expect(loadErr instanceof NotFoundError).toBe(false);
 
         expect(unknownExtErr instanceof LocterError).toBe(true);
-        expect(unknownExtErr instanceof LocterUnknownExtensionError).toBe(true);
-        expect(unknownExtErr instanceof LocterLoadError).toBe(false);
+        expect(unknownExtErr instanceof UnknownExtensionError).toBe(true);
+        expect(unknownExtErr instanceof LoadError).toBe(false);
 
         // Markers are reachable from the call sites that import them
         // (regression: keep them exported for cross-realm consumers).
@@ -189,9 +189,9 @@ describe('src/errors/**', () => {
             } catch (e) {
                 asyncError = e;
             }
-            expect(asyncError).toBeInstanceOf(LocterLoadError);
-            expect((asyncError as LocterLoadError).cause).toBe(syntaxErr);
-            expect((asyncError as LocterLoadError).path).toEqual('any-id');
+            expect(asyncError).toBeInstanceOf(LoadError);
+            expect((asyncError as LoadError).cause).toBe(syntaxErr);
+            expect((asyncError as LoadError).path).toEqual('any-id');
 
             let syncError: unknown;
             try {
@@ -199,9 +199,9 @@ describe('src/errors/**', () => {
             } catch (e) {
                 syncError = e;
             }
-            expect(syncError).toBeInstanceOf(LocterLoadError);
-            expect((syncError as LocterLoadError).cause).toBe(refErr);
-            expect((syncError as LocterLoadError).path).toEqual('any-id');
+            expect(syncError).toBeInstanceOf(LoadError);
+            expect((syncError as LoadError).cause).toBe(refErr);
+            expect((syncError as LoadError).path).toEqual('any-id');
         } finally {
             restore();
         }

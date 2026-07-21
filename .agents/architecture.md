@@ -107,9 +107,11 @@ Conventions for new formats:
 1. Bare module specifiers (no extension, per `isFilePath`) always route to `builtInReader('module')` so `read('yaml')` works like `require('yaml')`.
 2. User rules **that have a reader slot**, in registration order — first match wins. **User rules are matched before the built-in table**, so registering `.json` overrides the built-in JSON reader.
 3. The built-in extension table (O(1) map derived from `BUILT_IN_PRESETS`).
-4. `undefined` — `read`/`readSync` then throw `LocterUnknownExtensionError`.
+4. `undefined` — `read`/`readSync` then throw `UnknownExtensionError`.
 
-`findWriter(input)` mirrors this **without the bare-specifier step** (there is nothing to write to): user rules with a writer slot, then built-in presets that declare a writer. The slots are deliberately independent — a reader-only rule for `.json` does not shadow the built-in JSON writer, and vice versa. When `write` finds no writer it distinguishes two failures: the extension resolves to a reader → `LocterWriteError` ("format is read-only", e.g. `.ts`); otherwise `LocterUnknownExtensionError`.
+`findWriter(input)` mirrors this **without the bare-specifier step** (there is nothing to write to): user rules with a writer slot, then built-in presets that declare a writer. The slots are deliberately independent — a reader-only rule for `.json` does not shadow the built-in JSON writer, and vice versa. When `write` finds no writer it distinguishes two failures: the extension resolves to a reader → `WriteError` ("format is read-only", e.g. `.ts`); otherwise `UnknownExtensionError`.
+
+Both sides additionally accept a **per-call format override** — `read(input, { format })` / `write(input, value, { format })` (`ReadOptions` / `WriteOptions`) resolve the named id directly (`resolveReader` / `resolveWriter`: user rule ids first, then built-in ids) and skip dispatch entirely. On the write side this includes the bare-specifier guard: an explicit format makes extensionless paths writable and read-only extensions targetable (e.g. raw source to a `.ts` file via `{ format: 'text' }` — the evaluation-free read path for module files is the same override on `read`). Unknown ids throw `LocterError`; a slot mismatch throws `LocterError` ("has no reader") on the read side and `WriteError` ("is read-only") on the write side, mirroring extension dispatch.
 
 The registry does **not** implement the ports — it is a dispatcher over readers/writers, not one itself. Its `read`/`write` (+Sync) accept `LocatorInfo | string` (normalizing via `buildFilePath`), and own the record boundary — semantics a leaf reader's/writer's methods deliberately do not have:
 
@@ -151,10 +153,10 @@ Read (FormatRegistry.read / readSync):
      (module reader → toModuleRecord; any other reader → createModuleRecord)
 
 Write (FormatRegistry.write / writeSync):
-  1. buildFilePath(input)                 → string; bare specifier → LocterWriteError
+  1. buildFilePath(input)                 → string; bare specifier → WriteError
   2. findWriter(path)                     → IWriter | undefined
      (user rules with writer slot; built-in presets with writer)
-     none: reader exists → LocterWriteError (read-only); else LocterUnknownExtensionError
+     none: reader exists → WriteError (read-only); else UnknownExtensionError
   3. isModuleRecord(value) ? value.default : value   → plain value
   4. writer.write(path, plain)            → serialized, mkdir -p, UTF-8 + trailing newline
 
@@ -164,13 +166,13 @@ Output:
 
 ## Error Handling
 
-- I/O and parsing errors inside built-in readers are routed through `wrapLoaderError(e, path)` (`src/errors/wrap.ts`), which maps them to typed `LocterError` subclasses (`LocterNotFoundError`, `LocterLoadError`) preserving the underlying error on `cause`.
-- Write-side failures are routed through `wrapWriteError(e, path)` → `LocterWriteError`. `ENOENT` deliberately stays a `LocterWriteError` on this side (a missing parent directory is a write failure, not a lookup miss — and the writer creates parents anyway).
+- I/O and parsing errors inside built-in readers are routed through `wrapLoaderError(e, path)` (`src/errors/wrap.ts`), which maps them to typed `LocterError` subclasses (`NotFoundError`, `LoadError`) preserving the underlying error on `cause`.
+- Write-side failures are routed through `wrapWriteError(e, path)` → `WriteError`. `ENOENT` deliberately stays a `WriteError` on this side (a missing parent directory is a write failure, not a lookup miss — and the writer creates parents anyway).
 - `YAMLWriter` throws (wrapped) when the existing target fails to parse — it never silently overwrites a file it cannot understand.
 - `ModuleReader` additionally:
     - Rethrows `SyntaxError`, `ReferenceError`, and TypeScript compile errors (detected by `isTypeScriptError`) without retry.
     - Retries with `withFilePrefix: true` (pathToFileURL) on `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
-- `FormatRegistry.read` throws `LocterUnknownExtensionError` when no rule matches and the input looks like a file path.
+- `FormatRegistry.read` throws `UnknownExtensionError` when no rule matches and the input looks like a file path.
 
 ## File Structure
 

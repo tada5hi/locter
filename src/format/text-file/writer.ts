@@ -20,7 +20,7 @@ function isNotFound(e: unknown) : boolean {
  * Base class for writers of text-based file formats: serializes via
  * `stringify`, creates missing parent directories, writes the file as
  * UTF-8 (always terminated by a single trailing newline), and wraps
- * failures in LocterWriteError. Subclasses implement `stringify` only —
+ * failures in WriteError. Subclasses implement `stringify` only —
  * both `write` variants are derived from the same body.
  */
 export abstract class TextFileWriter implements IWriter {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LocterError, LocterNotFoundError, LocterWriteError } from '../errors';
+import { LocterError, NotFoundError, WriteError } from '../errors';
 import type { LocatorInfo } from '../locator';
 import {
     buildFilePath,
@@ -74,7 +74,7 @@ function* readPackageFieldBody<T>(
 
         return extractField<T>(pkg, field);
     } catch (e) {
-        if (e instanceof LocterNotFoundError) {
+        if (e instanceof NotFoundError) {
             return undefined;
         }
         throw e;
@@ -108,7 +108,7 @@ function* writePackageFieldBody(
     if (!info) {
         // unlike the reader, there is nothing sensible to return —
         // a write without a target is an error
-        throw new LocterNotFoundError({ message: 'No package.json could be located.' });
+        throw new NotFoundError({ message: 'No package.json could be located.' });
     }
 
     const reader = useFormatRegistry().builtInReader('json');
@@ -120,7 +120,7 @@ function* writePackageFieldBody(
     );
 
     if (!isObject(pkg)) {
-        throw new LocterWriteError({
+        throw new WriteError({
             message: 'The located package.json does not contain an object.',
             path: filePath,
         });
@@ -141,7 +141,7 @@ function* writePackageFieldBody(
  * Set a top-level field of the nearest `package.json` (same locate
  * semantics as readPackageField) and write it back, preserving the
  * file's existing indentation. Passing `undefined` removes the field.
- * Throws LocterNotFoundError when no package.json could be located.
+ * Throws NotFoundError when no package.json could be located.
  */
 export async function writePackageField(
     field: string,
