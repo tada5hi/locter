@@ -15,9 +15,9 @@ import {
     it,
 } from 'vitest';
 import {
+    LoadError,
     LocterError,
-    LocterLoadError,
-    LocterNotFoundError,
+    NotFoundError,
     readPackageField,
     readPackageFieldSync,
     writePackageField,
@@ -119,14 +119,14 @@ describe('src/format/package-field.ts', () => {
         expect(result).toBeUndefined();
     });
 
-    it('should throw LocterLoadError when package.json is malformed', async () => {
+    it('should throw LoadError when package.json is malformed', async () => {
         let asyncError: unknown;
         try {
             await readPackageField('name', { cwd: malformed });
         } catch (e) {
             asyncError = e;
         }
-        expect(asyncError).toBeInstanceOf(LocterLoadError);
+        expect(asyncError).toBeInstanceOf(LoadError);
 
         let syncError: unknown;
         try {
@@ -134,7 +134,7 @@ describe('src/format/package-field.ts', () => {
         } catch (e) {
             syncError = e;
         }
-        expect(syncError).toBeInstanceOf(LocterLoadError);
+        expect(syncError).toBeInstanceOf(LoadError);
     });
 
     it('should write a field preserving the existing indentation', async () => {
@@ -193,11 +193,11 @@ describe('src/format/package-field.ts', () => {
         expect(await readPackageField('myapp', { cwd: dir })).toEqual('from-nested');
     });
 
-    it('should throw LocterNotFoundError when no package.json can be located', async () => {
+    it('should throw NotFoundError when no package.json can be located', async () => {
         await expect(writePackageField('myapp', 1, { cwd: emptyDir }))
-            .rejects.toBeInstanceOf(LocterNotFoundError);
+            .rejects.toBeInstanceOf(NotFoundError);
         expect(() => writePackageFieldSync('myapp', 1, { cwd: emptyDir }))
-            .toThrow(LocterNotFoundError);
+            .toThrow(NotFoundError);
     });
 
     it('should reject unsafe field names', async () => {
@@ -209,12 +209,12 @@ describe('src/format/package-field.ts', () => {
             .toThrow('not a safe object key');
     });
 
-    it('should propagate LocterLoadError for a malformed package.json on write', async () => {
+    it('should propagate LoadError for a malformed package.json on write', async () => {
         const dir = makePkgDir('{ not json');
 
         await expect(writePackageField('myapp', 1, { cwd: dir }))
-            .rejects.toBeInstanceOf(LocterLoadError);
+            .rejects.toBeInstanceOf(LoadError);
         expect(() => writePackageFieldSync('myapp', 1, { cwd: dir }))
-            .toThrow(LocterLoadError);
+            .toThrow(LoadError);
     });
 });

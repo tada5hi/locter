@@ -15,7 +15,7 @@ import {
     it,
 } from 'vitest';
 import {
-    LocterWriteError, 
+    WriteError, 
     read, 
     readSync, 
     write, 
@@ -137,8 +137,8 @@ describe('src/format/**', () => {
         const corrupt = 'key: [unclosed\n  - broken: {\n';
         fs.writeFileSync(target, corrupt);
 
-        await expect(write(target, { a: 1 })).rejects.toBeInstanceOf(LocterWriteError);
-        expect(() => writeSync(target, { a: 1 })).toThrow(LocterWriteError);
+        await expect(write(target, { a: 1 })).rejects.toBeInstanceOf(WriteError);
+        expect(() => writeSync(target, { a: 1 })).toThrow(WriteError);
 
         // the corrupt file is untouched
         expect(fs.readFileSync(target, 'utf-8')).toEqual(corrupt);
@@ -146,8 +146,8 @@ describe('src/format/**', () => {
         try {
             await write(target, { a: 1 });
         } catch (e) {
-            expect((e as LocterWriteError).cause).toBeDefined();
-            expect((e as LocterWriteError).path).toEqual(target);
+            expect((e as WriteError).cause).toBeDefined();
+            expect((e as WriteError).path).toEqual(target);
         }
     });
 });

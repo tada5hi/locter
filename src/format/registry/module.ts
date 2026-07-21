@@ -7,8 +7,8 @@
 
 import {
     LocterError,
-    LocterUnknownExtensionError,
-    LocterWriteError,
+    UnknownExtensionError,
+    WriteError,
     wrapLoaderError,
     wrapWriteError,
 } from '../../errors';
@@ -33,7 +33,9 @@ import { BUILT_IN_PRESETS } from '../built-in/registry';
 import type { IReader, IWriter } from '../type';
 import type {
     FormatRegistration,
+    ReadOptions,
     Rule,
+    WriteOptions,
 } from './type';
 
 export type FormatRegistryOptions = {
@@ -221,13 +223,17 @@ export class FormatRegistry {
      * normalized module record — a module IS a record, and the
      * normalization only irons out the CJS/ESM interop divergence so
      * both twin variants agree on one shape.
+     *
+     * options.format names a registered format id to use instead of
+     * extension dispatch (e.g. { format: 'text' } reads module source
+     * without evaluating it).
      */
-    async read(input: LocatorInfo | string) : Promise<any> {
-        return runTwinAsync(this.readBody(input));
+    async read(input: LocatorInfo | string, options: ReadOptions = {}) : Promise<any> {
+        return runTwinAsync(this.readBody(input, options));
     }
 
-    readSync(input: LocatorInfo | string) : any {
-        return runTwinSync(this.readBody(input));
+    readSync(input: LocatorInfo | string, options: ReadOptions = {}) : any {
+        return runTwinSync(this.readBody(input, options));
     }
 
     /**
@@ -236,16 +242,16 @@ export class FormatRegistry {
      * `.default` always holds the loaded value, top-level keys are
      * re-exposed as named exports.
      */
-    async readAsModule(input: LocatorInfo | string) : Promise<any> {
-        return runTwinAsync(this.readAsModuleBody(input));
+    async readAsModule(input: LocatorInfo | string, options: ReadOptions = {}) : Promise<any> {
+        return runTwinAsync(this.readAsModuleBody(input, options));
     }
 
-    readAsModuleSync(input: LocatorInfo | string) : any {
-        return runTwinSync(this.readAsModuleBody(input));
+    readAsModuleSync(input: LocatorInfo | string, options: ReadOptions = {}) : any {
+        return runTwinSync(this.readAsModuleBody(input, options));
     }
 
-    protected* readBody(input: LocatorInfo | string) : TwinBody<any> {
-        const { output, reader } = yield* this.executeBody(input);
+    protected* readBody(input: LocatorInfo | string, options: ReadOptions) : TwinBody<any> {
+        const { output, reader } = yield* this.executeBody(input, options);
         if (reader instanceof ModuleReader) {
             return toModuleRecord(output);
         }
@@ -253,8 +259,8 @@ export class FormatRegistry {
         return output;
     }
 
-    protected* readAsModuleBody(input: LocatorInfo | string) : TwinBody<any> {
-        const { output, reader } = yield* this.executeBody(input);
+    protected* readAsModuleBody(input: LocatorInfo | string, options: ReadOptions) : TwinBody<any> {
+        const { output, reader } = yield* this.executeBody(input, options);
         return this.toRecord(output, reader);
     }
 
@@ -264,9 +270,17 @@ export class FormatRegistry {
      */
     protected* executeBody(
         input: LocatorInfo | string,
+        options: ReadOptions,
     ) : TwinBody<{ output: unknown, reader: IReader }> {
         const filePath = buildFilePath(input);
-        const reader = this.findReader(filePath);
+
+        let reader : IReader | undefined;
+        if (typeof options.format === 'undefined') {
+            reader = this.findReader(filePath);
+        } else {
+            reader = this.resolveReader(options.format);
+        }
+
         if (!reader) {
             throw this.unknownExtensionError(filePath);
         }
@@ -283,12 +297,16 @@ export class FormatRegistry {
         }
     }
 
-    async write(input: LocatorInfo | string, value: unknown) : Promise<void> {
-        return runTwinAsync(this.writeBody(input, value));
+    /**
+     * options.format names a registered format id to use instead of
+     * extension dispatch — see writeBody for the boundary semantics.
+     */
+    async write(input: LocatorInfo | string, value: unknown, options: WriteOptions = {}) : Promise<void> {
+        return runTwinAsync(this.writeBody(input, value, options));
     }
 
-    writeSync(input: LocatorInfo | string, value: unknown) : void {
-        runTwinSync(this.writeBody(input, value));
+    writeSync(input: LocatorInfo | string, value: unknown, options: WriteOptions = {}) : void {
+        runTwinSync(this.writeBody(input, value, options));
     }
 
     /**
@@ -296,27 +314,44 @@ export class FormatRegistry {
      * The inverse boundary of readAsModuleBody: a record produced by
      * readAsModule() (brand detected) is unwrapped to its `.default` value;
      * anything else is written as-is.
+     *
+     * An explicit options.format skips extension dispatch entirely —
+     * including the bare-specifier guard: naming the format resolves the
+     * ambiguity the guard exists for, so extensionless paths become
+     * writable.
      */
-    protected* writeBody(input: LocatorInfo | string, value: unknown) : TwinBody<void> {
+    protected* writeBody(
+        input: LocatorInfo | string,
+        value: unknown,
+        options: WriteOptions,
+    ) : TwinBody<void> {
         const filePath = buildFilePath(input);
-        if (!isFilePath(filePath)) {
-            throw new LocterWriteError({
-                message: `Cannot write to a bare module specifier: ${filePath}`,
-                path: filePath,
-            });
-        }
 
-        const writer = this.findWriter(filePath);
-        if (!writer) {
-            if (this.findReader(filePath)) {
-                const info = pathToLocatorInfo(filePath);
-                throw new LocterWriteError({
-                    message: `The format of extension ${info.extension} is read-only.`,
+        let writer : IWriter;
+        if (typeof options.format === 'undefined') {
+            if (!isFilePath(filePath)) {
+                throw new WriteError({
+                    message: `Cannot write to a bare module specifier: ${filePath}`,
                     path: filePath,
                 });
             }
 
-            throw this.unknownExtensionError(filePath);
+            const found = this.findWriter(filePath);
+            if (!found) {
+                if (this.findReader(filePath)) {
+                    const info = pathToLocatorInfo(filePath);
+                    throw new WriteError({
+                        message: `The format of extension ${info.extension} is read-only.`,
+                        path: filePath,
+                    });
+                }
+
+                throw this.unknownExtensionError(filePath);
+            }
+
+            writer = found;
+        } else {
+            writer = this.resolveWriter(options.format, filePath);
         }
 
         const plain = isModuleRecord(value) ? value.default : value;
@@ -380,7 +415,7 @@ export class FormatRegistry {
      *   1. bare specifier (no extension)  → module reader, always
      *   2. user rules, registration order → first match wins (can override built-ins)
      *   3. built-in extension table
-     *   4. undefined → read/readSync throw LocterUnknownExtensionError
+     *   4. undefined → read/readSync throw UnknownExtensionError
      */
     findReader(input: string) : IReader | undefined {
         if (!isFilePath(input)) {
@@ -421,6 +456,60 @@ export class FormatRegistry {
         }
 
         return undefined;
+    }
+
+    /**
+     * Resolve a reader by EXPLICIT format id (the per-call override) —
+     * a user rule id or a built-in id — bypassing extension dispatch.
+     * Unknown ids and writer-only rules throw.
+     */
+    protected resolveReader(id: string) : IReader {
+        const rule = this.rules.find((item) => item.id === id);
+        if (rule) {
+            if (rule.getReader) {
+                return rule.getReader();
+            }
+
+            throw new LocterError({ message: `The format ${id} has no reader.` });
+        }
+
+        if (hasOwnProperty(BUILT_IN_PRESETS, id)) {
+            return this.builtInReader(id as BuiltInFormatId);
+        }
+
+        throw this.unknownFormatError(id);
+    }
+
+    /**
+     * Write-side counterpart of resolveReader. Reader-only rules and
+     * read-only built-ins (module) throw WriteError, mirroring
+     * what extension dispatch throws for read-only extensions.
+     */
+    protected resolveWriter(id: string, path: string) : IWriter {
+        const rule = this.rules.find((item) => item.id === id);
+        if (rule) {
+            if (rule.getWriter) {
+                return rule.getWriter();
+            }
+
+            throw new WriteError({
+                message: `The format ${id} is read-only.`,
+                path,
+            });
+        }
+
+        if (hasOwnProperty(BUILT_IN_PRESETS, id)) {
+            if ('writer' in BUILT_IN_PRESETS[id as BuiltInFormatId]) {
+                return this.builtInWriter(id as WritableBuiltInFormatId);
+            }
+
+            throw new WriteError({
+                message: `The format ${id} is read-only.`,
+                path,
+            });
+        }
+
+        throw this.unknownFormatError(id);
     }
 
     protected findRule(
@@ -467,12 +556,16 @@ export class FormatRegistry {
         return this.builtInExtensions.get(info.extension);
     }
 
-    protected unknownExtensionError(input: string) : LocterUnknownExtensionError {
+    protected unknownExtensionError(input: string) : UnknownExtensionError {
         const info = pathToLocatorInfo(input);
-        return new LocterUnknownExtensionError({
+        return new UnknownExtensionError({
             message: `No format registered for extension: ${info.extension ?? 'unknown'}`,
             path: input,
         });
+    }
+
+    protected unknownFormatError(id: string) : LocterError {
+        return new LocterError({ message: `No format registered with id: ${id}` });
     }
 
     protected compile(id: string, rule: Rule) : CompiledRule {

@@ -9,7 +9,9 @@ import type { LocatorInfo } from '../locator';
 import type { ModuleReaderOptions } from './built-in/module/type';
 import {
     type FormatRegistration,
+    type ReadOptions,
     type Rule,
+    type WriteOptions,
     useFormatRegistry,
 } from './registry';
 
@@ -30,13 +32,17 @@ export function unregisterFormat(id: string) : boolean {
  * (json/yaml/conf and custom readers — mutable, round-trip-symmetric
  * with write); for modules the normalized module record (a module IS a
  * record; normalization only irons out CJS/ESM interop divergence).
+ *
+ * options.format forces a registered format id instead of extension
+ * dispatch — e.g. { format: 'text' } reads a module file's source
+ * WITHOUT evaluating it.
  */
-export async function read(input: LocatorInfo | string) : Promise<any> {
-    return useFormatRegistry().read(input);
+export async function read(input: LocatorInfo | string, options?: ReadOptions) : Promise<any> {
+    return useFormatRegistry().read(input, options);
 }
 
-export function readSync(input: LocatorInfo | string) : any {
-    return useFormatRegistry().readSync(input);
+export function readSync(input: LocatorInfo | string, options?: ReadOptions) : any {
+    return useFormatRegistry().readSync(input, options);
 }
 
 /**
@@ -45,20 +51,25 @@ export function readSync(input: LocatorInfo | string) : any {
  * always holds the loaded value, top-level keys are re-exposed as
  * named exports.
  */
-export async function readAsModule(input: LocatorInfo | string) : Promise<any> {
-    return useFormatRegistry().readAsModule(input);
+export async function readAsModule(input: LocatorInfo | string, options?: ReadOptions) : Promise<any> {
+    return useFormatRegistry().readAsModule(input, options);
 }
 
-export function readAsModuleSync(input: LocatorInfo | string) : any {
-    return useFormatRegistry().readAsModuleSync(input);
+export function readAsModuleSync(input: LocatorInfo | string, options?: ReadOptions) : any {
+    return useFormatRegistry().readAsModuleSync(input, options);
 }
 
-export async function write(input: LocatorInfo | string, value: unknown) : Promise<void> {
-    return useFormatRegistry().write(input, value);
+/**
+ * options.format forces a registered format id instead of extension
+ * dispatch — this also lifts the bare-specifier guard (extensionless
+ * paths) and the read-only block on module extensions.
+ */
+export async function write(input: LocatorInfo | string, value: unknown, options?: WriteOptions) : Promise<void> {
+    return useFormatRegistry().write(input, value, options);
 }
 
-export function writeSync(input: LocatorInfo | string, value: unknown) : void {
-    useFormatRegistry().writeSync(input, value);
+export function writeSync(input: LocatorInfo | string, value: unknown, options?: WriteOptions) : void {
+    useFormatRegistry().writeSync(input, value, options);
 }
 
 /**

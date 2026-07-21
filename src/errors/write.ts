@@ -10,7 +10,7 @@ import { LocterError, type LocterErrorInput } from './base';
 
 export const LOCTER_WRITE_ERROR_MARKER = Symbol.for('@locter/write-error');
 
-export class LocterWriteError extends LocterError {
+export class WriteError extends LocterError {
     static override [Symbol.hasInstance](input: unknown) : boolean {
         return hasInstanceof(input, LOCTER_WRITE_ERROR_MARKER);
     }

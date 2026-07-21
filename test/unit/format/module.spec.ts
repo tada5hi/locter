@@ -5,14 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
     FormatRegistry,
     LocterError,
-    LocterUnknownExtensionError,
     ModuleReader,
+    UnknownExtensionError,
     getModuleExport,
+    isModuleRecord,
     read,
     readAsModule,
     readAsModuleSync,
@@ -110,8 +112,8 @@ describe('src/format/**', () => {
     });
 
     it('should not read file', async () => {
-        await expect(read('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => readSync('file.foo')).toThrow(LocterUnknownExtensionError);
+        await expect(read('file.foo')).rejects.toBeInstanceOf(UnknownExtensionError);
+        expect(() => readSync('file.foo')).toThrow(UnknownExtensionError);
     });
 
     it('should readAsModule a bare specifier', async () => {
@@ -136,6 +138,88 @@ describe('src/format/**', () => {
         const yamlSync = readSync('yaml');
         expect(yamlSync.parse).toBeDefined();
         expect(yamlSync.default.parse).toBeDefined();
+    });
+
+    it('should read module source with an explicit text format, without evaluating', async () => {
+        const filePath = path.join(dataDir, 'file.mjs');
+
+        const output = await expectParity(
+            () => read(filePath, { format: 'text' }),
+            () => readSync(filePath, { format: 'text' }),
+        );
+
+        expect(typeof output).toEqual('string');
+        expect(output).toEqual(fs.readFileSync(filePath, { encoding: 'utf-8' }));
+    });
+
+    it('should read with an explicit format id instead of extension dispatch', async () => {
+        const filePath = path.join(dataDir, 'file.json');
+
+        const output = await expectParity(
+            () => read(filePath, { format: 'text' }),
+            () => readSync(filePath, { format: 'text' }),
+        );
+
+        expect(output).toEqual(fs.readFileSync(filePath, { encoding: 'utf-8' }));
+    });
+
+    it('should wrap format-overridden readAsModule output as a record', async () => {
+        const filePath = path.join(dataDir, 'file.json');
+
+        const record = await expectParity(
+            () => readAsModule(filePath, { format: 'text' }),
+            () => readAsModuleSync(filePath, { format: 'text' }),
+        );
+
+        expect(isModuleRecord(record)).toBe(true);
+        expect(record.default).toEqual(fs.readFileSync(filePath, { encoding: 'utf-8' }));
+    });
+
+    it('should read with a user rule id regardless of its test', async () => {
+        const manager = new FormatRegistry();
+        manager.register({
+            id: 'upper',
+            test: ['.up'],
+            reader: {
+                async read(input) {
+                    return fs.readFileSync(input, { encoding: 'utf-8' }).toUpperCase();
+                },
+                readSync(input: string) {
+                    return fs.readFileSync(input, { encoding: 'utf-8' }).toUpperCase();
+                },
+            },
+        });
+
+        const filePath = path.join(dataDir, 'file.txt');
+        const output = await expectParity(
+            () => manager.read(filePath, { format: 'upper' }),
+            () => manager.readSync(filePath, { format: 'upper' }),
+        );
+
+        expect(output).toEqual(fs.readFileSync(filePath, { encoding: 'utf-8' }).toUpperCase());
+    });
+
+    it('should throw for an unknown explicit format id', async () => {
+        const filePath = path.join(dataDir, 'file.json');
+
+        await expect(read(filePath, { format: 'toml' })).rejects.toThrow('No format registered with id: toml');
+        expect(() => readSync(filePath, { format: 'toml' })).toThrow('No format registered with id: toml');
+    });
+
+    it('should throw when the explicit format id resolves to a writer-only rule', async () => {
+        const manager = new FormatRegistry();
+        manager.register({
+            id: 'sink',
+            test: ['.sink'],
+            writer: {
+                async write() { /* noop */ },
+                writeSync() { /* noop */ },
+            },
+        });
+
+        const filePath = path.join(dataDir, 'file.json');
+        await expect(manager.read(filePath, { format: 'sink' })).rejects.toThrow('The format sink has no reader.');
+        expect(() => manager.readSync(filePath, { format: 'sink' })).toThrow('The format sink has no reader.');
     });
 
     it('should register reader rule', async () => {
@@ -278,8 +362,8 @@ describe('src/format/**', () => {
         expect(manager.has(registration.id)).toBe(false);
         expect(manager.unregister(registration.id)).toBe(false);
 
-        await expect(manager.read('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => manager.readSync('file.foo')).toThrow(LocterUnknownExtensionError);
+        await expect(manager.read('file.foo')).rejects.toBeInstanceOf(UnknownExtensionError);
+        expect(() => manager.readSync('file.foo')).toThrow(UnknownExtensionError);
     });
 
     it('should replace rule registered with an existing id', async () => {
@@ -385,7 +469,7 @@ describe('src/format/**', () => {
 
         manager.reset();
 
-        await expect(manager.read('file.foo')).rejects.toBeInstanceOf(LocterUnknownExtensionError);
+        await expect(manager.read('file.foo')).rejects.toBeInstanceOf(UnknownExtensionError);
         expect(manager.entries().every((entry) => entry.builtIn)).toBe(true);
     });
 

@@ -10,7 +10,7 @@ import { LocterError, type LocterErrorInput } from './base';
 
 export const LOCTER_NOT_FOUND_ERROR_MARKER = Symbol.for('@locter/not-found-error');
 
-export class LocterNotFoundError extends LocterError {
+export class NotFoundError extends LocterError {
     static override [Symbol.hasInstance](input: unknown) : boolean {
         return hasInstanceof(input, LOCTER_NOT_FOUND_ERROR_MARKER);
     }

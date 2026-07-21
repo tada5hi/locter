@@ -16,8 +16,8 @@ import {
 } from 'vitest';
 import {
     FormatRegistry,
-    LocterUnknownExtensionError,
-    LocterWriteError,
+    UnknownExtensionError,
+    WriteError,
     isModuleRecord,
     read,
     readAsModule,
@@ -93,28 +93,95 @@ describe('src/format/** (write)', () => {
         expect(JSON.parse(fs.readFileSync(targetSync, 'utf-8'))).toEqual({ ok: true });
     });
 
-    it('should throw LocterWriteError for read-only formats', async () => {
+    it('should throw WriteError for read-only formats', async () => {
         const target = path.join(tmpDir, 'file.ts');
-        await expect(write(target, {})).rejects.toBeInstanceOf(LocterWriteError);
-        expect(() => writeSync(target, {})).toThrow(LocterWriteError);
+        await expect(write(target, {})).rejects.toBeInstanceOf(WriteError);
+        expect(() => writeSync(target, {})).toThrow(WriteError);
 
         try {
             await write(target, {});
         } catch (e) {
-            expect((e as LocterWriteError).message).toContain('read-only');
-            expect((e as LocterWriteError).path).toEqual(target);
+            expect((e as WriteError).message).toContain('read-only');
+            expect((e as WriteError).path).toEqual(target);
         }
     });
 
-    it('should throw LocterUnknownExtensionError for unknown extensions', async () => {
+    it('should throw UnknownExtensionError for unknown extensions', async () => {
         const target = path.join(tmpDir, 'file.foo');
-        await expect(write(target, {})).rejects.toBeInstanceOf(LocterUnknownExtensionError);
-        expect(() => writeSync(target, {})).toThrow(LocterUnknownExtensionError);
+        await expect(write(target, {})).rejects.toBeInstanceOf(UnknownExtensionError);
+        expect(() => writeSync(target, {})).toThrow(UnknownExtensionError);
     });
 
     it('should reject bare module specifiers', async () => {
-        await expect(write('yaml', {})).rejects.toBeInstanceOf(LocterWriteError);
-        expect(() => writeSync('yaml', {})).toThrow(LocterWriteError);
+        await expect(write('yaml', {})).rejects.toBeInstanceOf(WriteError);
+        expect(() => writeSync('yaml', {})).toThrow(WriteError);
+    });
+
+    it('should write with an explicit format id instead of extension dispatch', async () => {
+        const source = 'export const generated = true;\n';
+        const asyncPath = path.join(tmpDir, 'generated-async.ts');
+        const syncPath = path.join(tmpDir, 'generated-sync.ts');
+
+        await write(asyncPath, source, { format: 'text' });
+        writeSync(syncPath, source, { format: 'text' });
+
+        expect(fs.readFileSync(asyncPath, 'utf-8')).toEqual(source);
+        expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(fs.readFileSync(asyncPath, 'utf-8'));
+    });
+
+    it('should write an extensionless path when the format is explicit', async () => {
+        const asyncPath = path.join(tmpDir, 'rc-async');
+        const syncPath = path.join(tmpDir, 'rc-sync');
+        const value = { port: 3000 };
+
+        await write(asyncPath, value, { format: 'json' });
+        writeSync(syncPath, value, { format: 'json' });
+
+        expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(fs.readFileSync(asyncPath, 'utf-8'));
+
+        expect(await read(asyncPath, { format: 'json' })).toEqual(value);
+        expect(readSync(syncPath, { format: 'json' })).toEqual(value);
+    });
+
+    it('should throw WriteError when the explicit format is read-only', async () => {
+        const target = path.join(tmpDir, 'explicit-readonly.json');
+
+        await expect(write(target, {}, { format: 'module' })).rejects.toThrow(WriteError);
+        expect(() => writeSync(target, {}, { format: 'module' })).toThrow(WriteError);
+
+        try {
+            await write(target, {}, { format: 'module' });
+        } catch (e) {
+            expect((e as WriteError).message).toContain('read-only');
+            expect((e as WriteError).path).toEqual(target);
+        }
+    });
+
+    it('should throw when the explicit format id resolves to a reader-only rule', async () => {
+        const manager = new FormatRegistry();
+        manager.register({
+            id: 'peek',
+            test: ['.peek'],
+            reader: {
+                async read() {
+                    return 'peek';
+                },
+                readSync() {
+                    return 'peek';
+                },
+            },
+        });
+
+        const target = path.join(tmpDir, 'explicit-reader-only.json');
+        await expect(manager.write(target, {}, { format: 'peek' })).rejects.toThrow('The format peek is read-only.');
+        expect(() => manager.writeSync(target, {}, { format: 'peek' })).toThrow('The format peek is read-only.');
+    });
+
+    it('should throw for an unknown explicit format id on write', async () => {
+        const target = path.join(tmpDir, 'explicit-unknown.json');
+
+        await expect(write(target, {}, { format: 'toml' })).rejects.toThrow('No format registered with id: toml');
+        expect(() => writeSync(target, {}, { format: 'toml' })).toThrow('No format registered with id: toml');
     });
 
     it('should not shadow the built-in writer with a reader-only rule', async () => {
