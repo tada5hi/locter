@@ -43,7 +43,7 @@ export function serializeValue(input: unknown) : string {
         return input.toString();
     }
 
-    return JSON.stringify(input, (_key, item) => {
+    const output = JSON.stringify(input, (_key, item) => {
         if (item instanceof RegExp) {
             return item.toString();
         }
@@ -54,6 +54,10 @@ export function serializeValue(input: unknown) : string {
 
         return item;
     });
+
+    // JSON.stringify yields undefined for top-level Symbol/Function and
+    // toJSON() returning undefined — a lenient codec still returns a string
+    return output ?? String(input);
 }
 
 /**

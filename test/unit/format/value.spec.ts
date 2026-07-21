@@ -44,6 +44,14 @@ describe('src/format/value.ts', () => {
         expect(deserializeValue('hello world')).toEqual('hello world');
     });
 
+    it('should always return a string, even for non-JSON-serializable input', () => {
+        // JSON.stringify yields undefined for these — the codec falls
+        // back to String(input) instead of breaking its contract
+        expect(serializeValue(() => {})).toBeTypeOf('string');
+        expect(serializeValue(Symbol('x'))).toEqual('Symbol(x)');
+        expect(serializeValue({ toJSON: () => undefined })).toBeTypeOf('string');
+    });
+
     it('should round-trip serializable values', () => {
         for (const value of [true, 123, null, { a: [1, 'two'] }, 'plain']) {
             expect(deserializeValue(serializeValue(value))).toEqual(value);
