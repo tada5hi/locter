@@ -391,6 +391,9 @@ built-in formats are pre-registered:
 - **conf** (`.conf`): `ConfReader` + `ConfWriter`
 - **json** (`.json`): `JSONReader` + `JSONWriter`
 - **yaml** (`.yml`, `.yaml`): `YAMLReader` + `YAMLWriter`
+- **text** (`.txt`): `TextReader` + `TextWriter` — raw string content, no
+  value coercion (`read('notes.txt')` is the file content; writes accept
+  strings only).
 - **module** (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`): `ModuleReader`
   (read-only) — loads modules independent of the environment (cjs or esm).
 
@@ -480,6 +483,23 @@ registry.reset();                           // drop all user rules + cached inst
 The global registry belongs to the **application**. Libraries that need custom
 formats should create their own isolated instance instead of mutating the
 singleton: `new FormatRegistry({ rules: [...] })`.
+
+**Value codec**
+
+For env-var / key-value style contexts, the lenient *value* codec the `.conf`
+format uses per value is exported directly — handy for building lenient
+custom formats (or serializing to stores that hold bare strings):
+
+```typescript
+import { deserializeValue, serializeValue } from 'locter';
+
+serializeValue(true);          // 'true'
+serializeValue(/^a+$/i);       // '/^a+$/i'
+serializeValue({ a: 1 });      // '{"a":1}'
+
+deserializeValue('123');       // 123
+deserializeValue('{ broken');  // '{ broken' — falls back to the raw string, never throws
+```
 
 ### Errors
 

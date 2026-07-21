@@ -10,10 +10,7 @@
 import { flatten } from 'flat';
 import { isObject } from '../../../utils';
 import { TextFileWriter } from '../../text-file';
-
-function serializeValue(value: unknown) : string {
-    return typeof value === 'string' ? value : JSON.stringify(value);
-}
+import { serializeValue } from '../../value';
 
 /**
  * Serializes an object to `key=value` lines (the inverse of ConfReader):
