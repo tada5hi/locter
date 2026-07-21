@@ -23,6 +23,13 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.1.0](https://github.com/tada5hi/locter/compare/v4.0.0...v4.1.0) (2026-07-21)
+
+
+### Features
+
+* add per-call format override and unprefixed error classes ([#872](https://github.com/tada5hi/locter/issues/872)) ([4dc89f2](https://github.com/tada5hi/locter/commit/4dc89f2e10ed5dabc4a9f6088c3247eb8f0ac68b))
+
 ## [4.0.0-beta.2](https://github.com/tada5hi/locter/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-07-20)
 
 
