@@ -114,6 +114,6 @@ Configuration (`release-please-config.json`): `release-type: node`, standard sem
 
 - Prefer **fixture files** in `test/data/` over mocking `fs`. The existing test suite has no `vi.mock` / `vi.fn` calls — keep it that way.
 - When adding a new file format: create `src/format/built-in/<format>/{reader.ts,writer.ts,index.ts}` (writer only if the format is writable), add ONE entry to `BUILT_IN_PRESETS` (`src/format/built-in/registry.ts`), export the classes from `src/format/built-in/index.ts`, and add a corresponding `test/unit/format/<format>.spec.ts` + fixture in `test/data/`. The id unions, extension routing, and lazy instantiation are derived from the registry entry — there is no enum or switch to keep in sync.
-- Always implement both sync and async variants of a public function — derive them from one shared twin body (`src/utils/twin.ts`) rather than duplicating the logic; only `ModuleReader` deliberately hand-writes its twins (divergent fallbacks).
+- Always implement both sync and async variants of a public function — derive them from one shared twin body (`twinop`) rather than duplicating the logic; only `ModuleReader` deliberately hand-writes its twins (divergent fallbacks).
 - In source files that need `require` (e.g. for sync module loading), use `createRequire(import.meta.url)` from `node:module` — the package is ESM, so `require` is not a global.
 - Keep `src/utils/` free of imports from `src/locator/` or `src/format/`.

@@ -15,8 +15,8 @@ import {
 import type { LocatorInfo } from '../../locator';
 import { buildFilePath, pathToLocatorInfo } from '../../locator';
 import { hasOwnProperty, isFilePath } from '../../utils';
-import type { TwinBody } from '../../utils/twin';
-import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
+import type { TwinBody } from 'twinop';
+import { op, runTwinAsync, runTwinSync } from 'twinop';
 import {
     ModuleReader, 
     createModuleRecord, 

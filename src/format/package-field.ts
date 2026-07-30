@@ -15,8 +15,8 @@ import {
     locateUpSync,
 } from '../locator';
 import { hasOwnProperty, isObject, isSafeObjectKey } from '../utils';
-import type { TwinBody } from '../utils/twin';
-import { op, runTwinAsync, runTwinSync } from '../utils/twin';
+import type { TwinBody } from 'twinop';
+import { op, runTwinAsync, runTwinSync } from 'twinop';
 import { JSONWriter } from './built-in';
 import { useFormatRegistry } from './registry';
 

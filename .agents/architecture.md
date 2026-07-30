@@ -16,7 +16,7 @@ The two subsystems are loosely coupled: `format/` depends on `locator/` only for
 
 Every public operation has two variants: `locate` / `locateSync`, `read` / `readSync`, `write` / `writeSync`, and the `IReader` / `IWriter` ports themselves require both. This is a deliberate constraint — consumers (config loaders, CLIs, plugin systems) frequently can't `await`.
 
-Internally, both variants are derived from **one shared body** via the twin protocol (`src/utils/twin.ts`, internal — not exported from the utils barrel): a body is a generator that yields effect pairs (`yield* op(asyncThunk, syncThunk)`), and `runTwinAsync` / `runTwinSync` drive whichever side the public function stands for. Effect errors re-enter the body via `Generator.throw`, so `try/catch` inside a body behaves identically in both variants. Bodies compose via `yield*` delegation (`locateUpBody` delegates to `locateBody`; the package-field bodies delegate to `locatePackageBody`). The bodies live in:
+Internally, both variants are derived from **one shared body** via the twin protocol (the [`twinop`](https://github.com/tada5hi/twinop) package): a body is a generator that yields effect pairs (`yield* op(asyncThunk, syncThunk)`), and `runTwinAsync` / `runTwinSync` drive whichever side the public function stands for. Effect errors re-enter the body via `Generator.throw`, so `try/catch` inside a body behaves identically in both variants. Bodies compose via `yield*` delegation (`locateUpBody` delegates to `locateBody`; the package-field bodies delegate to `locatePackageBody`). The bodies live in:
 
 - `src/locator/core.ts` — `locateBody`, `locateManyBody` (used by `async.ts`, `sync.ts`, `up.ts`)
 - `src/format/text-file/reader.ts` — `TextFileReader.body` (read → parse → wrap errors)
