@@ -8,8 +8,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { wrapWriteError } from '../../errors';
-import type { TwinBody } from '../../utils/twin';
-import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
+import type { TwinBody } from 'twinop';
+import { op, runTwinAsync, runTwinSync } from 'twinop';
 import type { IWriter } from '../type';
 
 function isNotFound(e: unknown) : boolean {

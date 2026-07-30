@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { runTwinSync } from '../utils/twin';
+import { runTwinSync } from 'twinop';
 import { locateBody, locateManyBody } from './core';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
 

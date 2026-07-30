@@ -7,8 +7,8 @@
 
 import fs from 'node:fs';
 import { wrapLoaderError } from '../../errors';
-import type { TwinBody } from '../../utils/twin';
-import { op, runTwinAsync, runTwinSync } from '../../utils/twin';
+import type { TwinBody } from 'twinop';
+import { op, runTwinAsync, runTwinSync } from 'twinop';
 import type { IReader } from '../type';
 
 /**

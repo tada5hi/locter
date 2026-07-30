@@ -6,8 +6,8 @@
  */
 
 import path from 'node:path';
-import type { TwinBody } from '../utils/twin';
-import { runTwinAsync, runTwinSync } from '../utils/twin';
+import type { TwinBody } from 'twinop';
+import { runTwinAsync, runTwinSync } from 'twinop';
 import { locateBody } from './core';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
 

@@ -6,8 +6,8 @@
  */
 
 import fg from 'fast-glob';
-import type { TwinBody } from '../utils/twin';
-import { op } from '../utils/twin';
+import type { TwinBody } from 'twinop';
+import { op } from 'twinop';
 import type { LocatorInfo, LocatorOptionsInput } from './types';
 import { buildLocatorOptions, buildLocatorPatterns, pathToLocatorInfo } from './utils';
 

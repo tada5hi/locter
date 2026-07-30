@@ -56,7 +56,6 @@ locter/
 │   │           ├── writer.ts
 │   │           └── index.ts
 │   └── utils/                      # Shared helpers (no internal deps)
-│       ├── twin.ts                 # sync/async twin protocol: op, runTwinAsync, runTwinSync (internal, NOT in barrel)
 │       ├── file-name.ts            # getFileNameExtension, removeFileNameExtension
 │       ├── file-path.ts            # isFilePath
 │       ├── has-property.ts         # hasOwnProperty, hasStringProperty
@@ -104,6 +103,7 @@ locter/
 | `destr`          | Safe `JSON.parse`-like value coercion in `ConfReader`                         |
 | `flat`           | Unflattens dot-separated `.conf` keys (`ConfReader`) / flattens them back (`ConfWriter`) |
 | `@ebec/core`     | `BaseError` base for the `LocterError` hierarchy (`code`/`message`/`cause`)   |
+| `twinop`         | The sync/async twin protocol: `op`, `runTwinAsync`, `runTwinSync`             |
 
 ## Package Exports
 
