@@ -15,31 +15,68 @@ export function isVitestRuntimeEnvironment() : boolean {
         process.env.VITEST === 'true';
 }
 
-export function isTsNodeRuntimeEnvironment(): boolean {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return !!process[Symbol.for('ts-node.register.instance')];
-}
+// Module-loading options whose VALUE names a loader: --require (-r),
+// --import, --loader / --experimental-loader; both the `=` and the
+// separated form. Only their values are tested against a marker, so an
+// unrelated option carrying the same string (a custom export condition
+// like --conditions=ts-node) never counts as an active runtime.
+const MODULE_OPTION_REGEX = /^(?:-r|--require|--import|--(?:experimental-)?loader)(?:=(.*))?$/;
 
-// matches the bare `tsx` specifier (node --import tsx), optionally with a
-// subpath (tsx/esm), as well as resolved paths into the tsx package
-// (.../node_modules/tsx/dist/loader.mjs)
-const TSX_MARKER_REGEX = /(?:^|=|[\\/])tsx(?:$|[\\/])/;
-
-export function isTsxRuntimeEnvironment() : boolean {
+// A loader marker in a module-loading option value: the bare specifier
+// (node --import tsx, node --loader ts-node/esm), optionally with a
+// subpath (tsx/esm, ts-node/register), a resolved path into the package
+// (.../node_modules/tsx/dist/loader.mjs), or the specifier quoted inside a
+// data: URL (node --import 'data:text/javascript,...register("ts-node/esm")').
+function matchesProcessMarker(regex: RegExp) : boolean {
     if (typeof process === 'undefined') {
         return false;
     }
 
-    if (
-        Array.isArray(process.execArgv) &&
-        process.execArgv.some((arg) => TSX_MARKER_REGEX.test(arg))
-    ) {
-        return true;
+    const { execArgv } = process;
+    if (Array.isArray(execArgv)) {
+        for (let i = 0; i < execArgv.length; i++) {
+            const arg = execArgv[i];
+            if (typeof arg !== 'string') {
+                continue;
+            }
+
+            const option = MODULE_OPTION_REGEX.exec(arg);
+            if (!option) {
+                continue;
+            }
+
+            const value = typeof option[1] === 'string' ? option[1] : execArgv[i + 1];
+            if (typeof value === 'string' && regex.test(value)) {
+                return true;
+            }
+        }
     }
 
     const { _preload_modules: preloadModules } = process as unknown as { _preload_modules?: string[] };
 
     return Array.isArray(preloadModules) &&
-        preloadModules.some((el) => TSX_MARKER_REGEX.test(el));
+        preloadModules.some((el) => regex.test(el));
+}
+
+const TS_NODE_MARKER_REGEX = /(?:^|=|[\\/"'])ts-node(?:$|[\\/"'])/;
+
+export function isTsNodeRuntimeEnvironment(): boolean {
+    // The bare `ts-node` bin and `--require ts-node/register` set this on the
+    // main thread. The ESM hooks (`--loader ts-node/esm`, or
+    // `module.register('ts-node/esm')` via `--import`) run on a separate
+    // loader thread since Node 20, so they set it on THAT thread's process
+    // object and the main thread has to read the arguments instead.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    if (process[Symbol.for('ts-node.register.instance')]) {
+        return true;
+    }
+
+    return matchesProcessMarker(TS_NODE_MARKER_REGEX);
+}
+
+const TSX_MARKER_REGEX = /(?:^|=|[\\/"'])tsx(?:$|[\\/"'])/;
+
+export function isTsxRuntimeEnvironment() : boolean {
+    return matchesProcessMarker(TSX_MARKER_REGEX);
 }
