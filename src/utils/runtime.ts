@@ -15,7 +15,14 @@ export function isVitestRuntimeEnvironment() : boolean {
         process.env.VITEST === 'true';
 }
 
-// A loader marker in the process arguments: the bare specifier
+// Module-loading options whose VALUE names a loader: --require (-r),
+// --import, --loader / --experimental-loader; both the `=` and the
+// separated form. Only their values are tested against a marker, so an
+// unrelated option carrying the same string (a custom export condition
+// like --conditions=ts-node) never counts as an active runtime.
+const MODULE_OPTION_REGEX = /^(?:-r|--require|--import|--(?:experimental-)?loader)(?:=(.*))?$/;
+
+// A loader marker in a module-loading option value: the bare specifier
 // (node --import tsx, node --loader ts-node/esm), optionally with a
 // subpath (tsx/esm, ts-node/register), a resolved path into the package
 // (.../node_modules/tsx/dist/loader.mjs), or the specifier quoted inside a
@@ -25,11 +32,24 @@ function matchesProcessMarker(regex: RegExp) : boolean {
         return false;
     }
 
-    if (
-        Array.isArray(process.execArgv) &&
-        process.execArgv.some((arg) => regex.test(arg))
-    ) {
-        return true;
+    const { execArgv } = process;
+    if (Array.isArray(execArgv)) {
+        for (let i = 0; i < execArgv.length; i++) {
+            const arg = execArgv[i];
+            if (typeof arg !== 'string') {
+                continue;
+            }
+
+            const option = MODULE_OPTION_REGEX.exec(arg);
+            if (!option) {
+                continue;
+            }
+
+            const value = typeof option[1] === 'string' ? option[1] : execArgv[i + 1];
+            if (typeof value === 'string' && regex.test(value)) {
+                return true;
+            }
+        }
     }
 
     const { _preload_modules: preloadModules } = process as unknown as { _preload_modules?: string[] };

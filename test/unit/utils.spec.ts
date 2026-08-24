@@ -98,6 +98,13 @@ describe('src/utils/*.ts', () => {
                 value: ['--inspect'],
             });
             expect(isTsxRuntimeEnvironment()).toEqual(false);
+
+            // a custom export condition is not a loader
+            Object.defineProperty(process, 'execArgv', {
+                configurable: true,
+                value: ['--conditions=tsx'],
+            });
+            expect(isTsxRuntimeEnvironment()).toEqual(false);
         } finally {
             if (previous) {
                 Object.defineProperty(process, 'execArgv', previous);
@@ -150,6 +157,12 @@ describe('src/utils/*.ts', () => {
 
             // packages merely containing the substring must NOT match
             set(['--require', '/repo/node_modules/ts-node-dev/lib/bin.js']);
+            expect(isTsNodeRuntimeEnvironment()).toEqual(false);
+
+            // the -r short form counts, a custom export condition does not
+            set(['-r', 'ts-node/register']);
+            expect(isTsNodeRuntimeEnvironment()).toEqual(true);
+            set(['--conditions=ts-node']);
             expect(isTsNodeRuntimeEnvironment()).toEqual(false);
         } finally {
             if (previous) {
