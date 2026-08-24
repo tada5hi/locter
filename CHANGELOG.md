@@ -23,6 +23,15 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.1.1](https://github.com/tada5hi/locter/compare/v4.1.0...v4.1.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **deps:** bump @ebec/core in the minorandpatch group ([#883](https://github.com/tada5hi/locter/issues/883)) ([af156c6](https://github.com/tada5hi/locter/commit/af156c61f88e923a40354ffee59a2ffe3816b0f0))
+* **deps:** bump the minorandpatch group across 1 directory with 4 updates ([#876](https://github.com/tada5hi/locter/issues/876)) ([8d79c31](https://github.com/tada5hi/locter/commit/8d79c31f5148bfe19d64c404f58fffdd8535a481))
+* detect ts-node from the process arguments as well as the marker ([#885](https://github.com/tada5hi/locter/issues/885)) ([4879db3](https://github.com/tada5hi/locter/commit/4879db310cc1cf6509f87868fe4e03236c097212))
+
 ## [4.1.0](https://github.com/tada5hi/locter/compare/v4.0.0...v4.1.0) (2026-07-21)
 
 
