@@ -23,6 +23,13 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.1.3](https://github.com/tada5hi/locter/compare/v4.1.2...v4.1.3) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** bump tada5hi/monoship from 2.1.0 to 2.2.0 ([#902](https://github.com/tada5hi/locter/issues/902)) ([d3e9807](https://github.com/tada5hi/locter/commit/d3e980782082b487256e53e9f2efbc5a689cfc90))
+
 ## [4.1.2](https://github.com/tada5hi/locter/compare/v4.1.1...v4.1.2) (2026-10-28)
 
 
