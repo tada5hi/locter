@@ -23,6 +23,21 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.1.2](https://github.com/tada5hi/locter/compare/v4.1.1...v4.1.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps-dev:** bump baseline-browser-mapping from 2.10.31 to 2.11.22 ([#892](https://github.com/tada5hi/locter/issues/892)) ([d5ca25d](https://github.com/tada5hi/locter/commit/d5ca25d9d8f2a81e25bce1049aa2ea98c5e34c69))
+* **deps-dev:** bump brace-expansion from 5.0.6 to 5.0.12 ([#896](https://github.com/tada5hi/locter/issues/896)) ([ffdde73](https://github.com/tada5hi/locter/commit/ffdde73edec39c9f46a483bae9c12058d6382869))
+* **deps-dev:** bump browserslist from 4.28.2 to 4.28.8 ([#889](https://github.com/tada5hi/locter/issues/889)) ([5373e3c](https://github.com/tada5hi/locter/commit/5373e3c0e1f9766c503cad3d441c91e9a3cfddd0))
+* **deps-dev:** bump fast-uri from 3.1.2 to 3.1.9 ([#901](https://github.com/tada5hi/locter/issues/901)) ([99ecc92](https://github.com/tada5hi/locter/commit/99ecc92a0e27acf93e7cb8f50109217fa2119a63))
+* **deps-dev:** bump js-yaml from 4.3.0 to 4.3.2 ([#894](https://github.com/tada5hi/locter/issues/894)) ([e7602c6](https://github.com/tada5hi/locter/commit/e7602c6e4b4f5356bfe7e4037fd9f311e285237a))
+* **deps-dev:** bump source-map-js from 1.2.1 to 1.2.2 ([#897](https://github.com/tada5hi/locter/issues/897)) ([a155c6e](https://github.com/tada5hi/locter/commit/a155c6e5afd0cc35fcfd4be77cbcf9779a0b0880))
+* **deps-dev:** bump vite from 8.3.0 to 8.3.5 ([#898](https://github.com/tada5hi/locter/issues/898)) ([3874d6d](https://github.com/tada5hi/locter/commit/3874d6d45322c666cf53efad2228691918044929))
+* **deps-dev:** bump vitest from 4.1.10 to 4.1.11 ([#893](https://github.com/tada5hi/locter/issues/893)) ([31672e8](https://github.com/tada5hi/locter/commit/31672e81cc68196e7c645384ba8380049b69663d))
+* **deps:** bump tada5hi/monoship from 2 to 2.1.0 ([#879](https://github.com/tada5hi/locter/issues/879)) ([bb22ab4](https://github.com/tada5hi/locter/commit/bb22ab4f2d8050ac33855e083ffca0996ae8ba67))
+
 ## [4.1.1](https://github.com/tada5hi/locter/compare/v4.1.0...v4.1.1) (2026-08-24)
 
 
