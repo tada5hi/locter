@@ -6,7 +6,7 @@
  */
 
 import type { LocatorInfo } from '../locator';
-import type { ModuleReaderOptions } from './built-in/module/type';
+import type { ModuleReaderOptions } from './built-in/module/types';
 import {
     type FormatRegistration,
     type ReadOptions,

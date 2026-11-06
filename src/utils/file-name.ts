@@ -12,6 +12,7 @@ export function getFileNameExtension(
     allowed?: string[],
 ) : string | undefined {
     const extension = path.extname(input);
+
     if (extension === '' || extension === '.') {
         return undefined;
     }
@@ -31,6 +32,7 @@ export function removeFileNameExtension(
     extensions?: string[],
 ) {
     const extension = getFileNameExtension(input, extensions);
+
     if (extension) {
         return input.substring(0, input.length - extension.length);
     }

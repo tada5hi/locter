@@ -1,3 +1,4 @@
+import type { LocterErrorInput } from './types';
 /*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
@@ -5,18 +6,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    BaseError,
-    type ErrorOptions,
-    hasInstanceof,
-    markInstanceof,
-} from '@ebec/core';
-
-export type LocterErrorOptions = ErrorOptions & {
-    path?: string,
-};
-
-export type LocterErrorInput = string | LocterErrorOptions;
+import { BaseError, hasInstanceof, markInstanceof } from '@ebec/core';
 
 export const LOCTER_ERROR_MARKER = Symbol.for('@locter/error');
 
@@ -32,6 +22,7 @@ export class LocterError extends BaseError {
             super(input);
         } else {
             const { path, ...rest } = input;
+
             super(rest);
             this.path = path;
         }

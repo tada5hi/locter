@@ -1,3 +1,11 @@
+import type {
+    CompiledRule,
+    FormatRegistration,
+    FormatRegistryOptions,
+    ReadOptions,
+    Rule,
+    WriteOptions,
+} from './types';
 /*
  * Copyright (c) 2023.
  * Author Peter Placzek (tada5hi)
@@ -18,9 +26,9 @@ import { hasOwnProperty, isFilePath } from '../../utils';
 import type { TwinBody } from 'twinop';
 import { op, runTwinAsync, runTwinSync } from 'twinop';
 import {
-    ModuleReader, 
-    createModuleRecord, 
-    isModuleRecord, 
+    ModuleReader,
+    createModuleRecord,
+    isModuleRecord,
     toModuleRecord,
 } from '../built-in';
 import type {
@@ -28,33 +36,9 @@ import type {
     BuiltInReaderOf,
     BuiltInWriterOf,
     WritableBuiltInFormatId,
-} from '../built-in/registry';
+} from '../built-in/types';
 import { BUILT_IN_PRESETS } from '../built-in/registry';
-import type { IReader, IWriter } from '../type';
-import type {
-    FormatRegistration,
-    ReadOptions,
-    Rule,
-    WriteOptions,
-} from './type';
-
-export type FormatRegistryOptions = {
-    /**
-     * Seed user rules (matched before built-ins, in array order).
-     */
-    rules?: Rule[]
-};
-
-/**
- * A rule compiled to memoizing per-slot accessors. Caller-owned Rule
- * objects are never mutated; factory caching lives in the closures.
- */
-type CompiledRule = {
-    id: string,
-    test: RegExp | string[],
-    getReader?: () => IReader,
-    getWriter?: () => IWriter
-};
+import type { IReader, IWriter } from '../types';
 
 function compileSlot<T>(slot: T | (() => T) | undefined) : (() => T) | undefined {
     if (typeof slot === 'undefined') {
@@ -67,6 +51,7 @@ function compileSlot<T>(slot: T | (() => T) | undefined) : (() => T) | undefined
 
     const factory = slot as () => T;
     let cached : T | undefined;
+
     return () => {
         if (!cached) {
             cached = factory();
@@ -107,9 +92,11 @@ export class FormatRegistry {
         this.ruleCounter = 0;
 
         const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInFormatId[];
+
         for (const id of ids) {
             for (const extension of BUILT_IN_PRESETS[id].extensions) {
                 const existing = this.builtInExtensions.get(extension);
+
                 if (existing) {
                     throw new LocterError({ message: `Extension ${extension} is claimed by two built-in formats: ${existing}, ${id}.` });
                 }
@@ -144,6 +131,7 @@ export class FormatRegistry {
         const entry = this.compile(id, rule);
 
         const index = this.rules.findIndex((item) => item.id === id);
+
         if (index === -1) {
             this.rules.push(entry);
         } else {
@@ -164,16 +152,20 @@ export class FormatRegistry {
      */
     unregister(id: string) : boolean {
         const index = this.rules.findIndex((item) => item.id === id);
+
         if (index === -1) {
             return false;
         }
 
         this.rules.splice(index, 1);
+
         return true;
     }
 
     has(id: string) : boolean {
-        if (this.rules.some((item) => item.id === id)) {
+        const hasRule = this.rules.some((item) => item.id === id);
+
+        if (hasRule) {
             return true;
         }
 
@@ -194,6 +186,7 @@ export class FormatRegistry {
         );
 
         const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInFormatId[];
+
         for (const id of ids) {
             output.push({
                 id,
@@ -252,6 +245,7 @@ export class FormatRegistry {
 
     protected* readBody(input: LocatorInfo | string, options: ReadOptions) : TwinBody<any> {
         const { output, reader } = yield* this.executeBody(input, options);
+
         if (reader instanceof ModuleReader) {
             return toModuleRecord(output);
         }
@@ -261,6 +255,7 @@ export class FormatRegistry {
 
     protected* readAsModuleBody(input: LocatorInfo | string, options: ReadOptions) : TwinBody<any> {
         const { output, reader } = yield* this.executeBody(input, options);
+
         return this.toRecord(output, reader);
     }
 
@@ -275,6 +270,7 @@ export class FormatRegistry {
         const filePath = buildFilePath(input);
 
         let reader : IReader | undefined;
+
         if (typeof options.format === 'undefined') {
             reader = this.findReader(filePath);
         } else {
@@ -328,6 +324,7 @@ export class FormatRegistry {
         const filePath = buildFilePath(input);
 
         let writer : IWriter;
+
         if (typeof options.format === 'undefined') {
             if (!isFilePath(filePath)) {
                 throw new WriteError({
@@ -337,6 +334,7 @@ export class FormatRegistry {
             }
 
             const found = this.findWriter(filePath);
+
             if (!found) {
                 if (this.findReader(filePath)) {
                     const info = pathToLocatorInfo(filePath);
@@ -387,6 +385,7 @@ export class FormatRegistry {
      */
     builtInReader<K extends BuiltInFormatId>(id: K) : BuiltInReaderOf<K> {
         let reader = this.builtInReaderCache.get(id);
+
         if (!reader) {
             reader = BUILT_IN_PRESETS[id].reader();
             this.builtInReaderCache.set(id, reader);
@@ -402,6 +401,7 @@ export class FormatRegistry {
      */
     builtInWriter<K extends WritableBuiltInFormatId>(id: K) : BuiltInWriterOf<K> {
         let writer = this.builtInWriterCache.get(id);
+
         if (!writer) {
             writer = BUILT_IN_PRESETS[id].writer();
             this.builtInWriterCache.set(id, writer);
@@ -423,11 +423,13 @@ export class FormatRegistry {
         }
 
         const rule = this.findRule(input, (item) => typeof item.getReader !== 'undefined');
+
         if (rule && rule.getReader) {
             return rule.getReader();
         }
 
         const id = this.findBuiltInId(input);
+
         if (id) {
             return this.builtInReader(id);
         }
@@ -446,11 +448,13 @@ export class FormatRegistry {
         }
 
         const rule = this.findRule(input, (item) => typeof item.getWriter !== 'undefined');
+
         if (rule && rule.getWriter) {
             return rule.getWriter();
         }
 
         const id = this.findBuiltInId(input);
+
         if (id && 'writer' in BUILT_IN_PRESETS[id]) {
             return this.builtInWriter(id as WritableBuiltInFormatId);
         }
@@ -465,6 +469,7 @@ export class FormatRegistry {
      */
     protected resolveReader(id: string) : IReader {
         const rule = this.rules.find((item) => item.id === id);
+
         if (rule) {
             if (rule.getReader) {
                 return rule.getReader();
@@ -487,6 +492,7 @@ export class FormatRegistry {
      */
     protected resolveWriter(id: string, path: string) : IWriter {
         const rule = this.rules.find((item) => item.id === id);
+
         if (rule) {
             if (rule.getWriter) {
                 return rule.getWriter();
@@ -524,6 +530,7 @@ export class FormatRegistry {
             }
 
             const { test } = rule;
+
             if (Array.isArray(test)) {
                 if (
                     info.extension &&
@@ -536,8 +543,11 @@ export class FormatRegistry {
                 // test(), which would make repeated dispatch alternate and
                 // leak state back into the caller-owned RegExp
                 test.lastIndex = 0;
+
                 const matched = test.test(buildFilePath(info));
+
                 test.lastIndex = 0;
+
                 if (matched) {
                     return rule;
                 }
@@ -549,6 +559,7 @@ export class FormatRegistry {
 
     protected findBuiltInId(input: string) : BuiltInFormatId | undefined {
         const info = pathToLocatorInfo(input);
+
         if (!info.extension) {
             return undefined;
         }
@@ -558,6 +569,7 @@ export class FormatRegistry {
 
     protected unknownExtensionError(input: string) : UnknownExtensionError {
         const info = pathToLocatorInfo(input);
+
         return new UnknownExtensionError({
             message: `No format registered for extension: ${info.extension ?? 'unknown'}`,
             path: input,
@@ -579,10 +591,14 @@ export class FormatRegistry {
 
     protected generateRuleId() : string {
         let id : string;
+
+        let idExists: boolean;
+
         do {
             this.ruleCounter++;
             id = `rule:${this.ruleCounter}`;
-        } while (this.rules.some((item) => item.id === id));
+            idExists = this.rules.some((item) => item.id === id);
+        } while (idExists);
 
         return id;
     }

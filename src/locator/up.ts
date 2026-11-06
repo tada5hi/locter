@@ -1,3 +1,4 @@
+import type { LocatorInfo, LocatorUpOptionsInput, WalkStep  } from './types';
 /*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
@@ -9,18 +10,6 @@ import path from 'node:path';
 import type { TwinBody } from 'twinop';
 import { runTwinAsync, runTwinSync } from 'twinop';
 import { locateBody } from './core';
-import type { LocatorInfo, LocatorOptionsInput } from './types';
-
-export type LocatorUpOptionsInput = Omit<LocatorOptionsInput, 'cwd'> & {
-    cwd?: string,
-    stopAt?: string,
-};
-
-type WalkStep = {
-    current: string,
-    stopAt: string,
-    baseOptions: Omit<LocatorOptionsInput, 'cwd'>,
-};
 
 function startWalk(options: LocatorUpOptionsInput) : WalkStep {
     const {
@@ -46,6 +35,7 @@ function nextDirectory(current: string, stopAt: string) : string | undefined {
     }
 
     const parent = path.dirname(current);
+
     if (parent === current) {
         return undefined;
     }
@@ -61,11 +51,13 @@ function* locateUpBody(
 
     while (true) {
         const found = yield* locateBody(pattern, { ...walk.baseOptions, cwd: walk.current });
+
         if (found) {
             return found;
         }
 
         const next = nextDirectory(walk.current, walk.stopAt);
+
         if (!next) {
             return undefined;
         }

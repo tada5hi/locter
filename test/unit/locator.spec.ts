@@ -24,7 +24,9 @@ describe('src/locator.ts', () => {
             onlyDirectories: true,
             cwd: path.join(import.meta.dirname, '..'),
         });
+
         expect(locatorInfo).toBeDefined();
+
         if (locatorInfo) {
             expect(locatorInfo.name).toEqual('data');
         }
@@ -34,6 +36,7 @@ describe('src/locator.ts', () => {
             cwd: path.join(import.meta.dirname, '..'),
         });
         expect(locatorInfo).toBeDefined();
+
         if (locatorInfo) {
             expect(locatorInfo.name).toEqual('unit');
         }
@@ -49,12 +52,14 @@ describe('src/locator.ts', () => {
             () => locateMany(['*'], options),
             () => locateManySync(['*'], options),
         );
+
         expect(locatorInfo.length).toEqual(3);
         expect(locatorInfo.map((el) => el.name)).toEqual(['data', 'helpers', 'unit']);
     });
 
     it('should locate .[cm]js file', async () => {
         let locatorInfo = await locate(['file.[cf]js'], { cwd: [basePath] });
+
         expect(locatorInfo).toBeDefined();
         expect(locatorInfo).toEqual({
             directory: basePath,
@@ -92,6 +97,7 @@ describe('src/locator.ts', () => {
             () => locateMany(['file.[cm]ts'], { cwd: [basePath] }),
             () => locateManySync(['file.[cm]ts'], { cwd: [basePath] }),
         );
+
         expect(locatorInfo).toEqual(files);
     });
 
@@ -100,6 +106,7 @@ describe('src/locator.ts', () => {
             () => locate('file.json', { cwd: [basePath] }),
             () => locateSync('file.json', { cwd: [basePath] }),
         );
+
         expect(locatorInfo).toEqual({
             directory: basePath,
             name: 'file',
@@ -113,6 +120,7 @@ describe('src/locator.ts', () => {
             () => locate('file.foo', { cwd: [basePath] }),
             () => locateSync('file.foo', { cwd: [basePath] }),
         );
+
         expect(locatorInfo).toBeUndefined();
     });
 
@@ -121,6 +129,7 @@ describe('src/locator.ts', () => {
             () => locateMany('*', { cwd: [basePath] }),
             () => locateManySync('*', { cwd: [basePath] }),
         );
+
         expect(result.map((r) => r.name)).not.toContain('.hidden');
     });
 
@@ -136,6 +145,7 @@ describe('src/locator.ts', () => {
             () => locateMany('*', { cwd: [basePath], dot: true }),
             () => locateManySync('*', { cwd: [basePath], dot: true }),
         );
+
         expect(result).toContainEqual(expected);
     });
 
@@ -148,36 +158,36 @@ describe('src/locator.ts', () => {
             directories: boolean,
         }[] = [
             {
-                options: {}, 
-                files: true, 
-                directories: false, 
+                options: {},
+                files: true,
+                directories: false,
             },
             {
-                options: { onlyFiles: true }, 
-                files: true, 
-                directories: false, 
+                options: { onlyFiles: true },
+                files: true,
+                directories: false,
             },
             {
-                options: { onlyDirectories: true }, 
-                files: false, 
-                directories: true, 
+                options: { onlyDirectories: true },
+                files: false,
+                directories: true,
             },
             // the formerly contradictory pair: onlyDirectories wins
             {
-                options: { onlyFiles: true, onlyDirectories: true }, 
-                files: false, 
-                directories: true, 
+                options: { onlyFiles: true, onlyDirectories: true },
+                files: false,
+                directories: true,
             },
             // no restriction requested: everything matches
             {
-                options: { onlyFiles: false }, 
-                files: true, 
-                directories: true, 
+                options: { onlyFiles: false },
+                files: true,
+                directories: true,
             },
             {
-                options: { onlyFiles: false, onlyDirectories: false }, 
-                files: true, 
-                directories: true, 
+                options: { onlyFiles: false, onlyDirectories: false },
+                files: true,
+                directories: true,
             },
         ];
 
@@ -189,6 +199,7 @@ describe('src/locator.ts', () => {
             );
 
             const names = result.map((r) => r.name);
+
             expect(names.includes('file'), `${label} files`).toBe(item.files);
             expect(names.includes('pkg'), `${label} directories`).toBe(item.directories);
         }

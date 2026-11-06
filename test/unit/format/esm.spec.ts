@@ -7,9 +7,9 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    read, 
-    readAsModule, 
-    readAsModuleSync, 
+    read,
+    readAsModule,
+    readAsModuleSync,
     readSync,
 } from '../../../src';
 import { expectParity } from '../../helpers/parity';
@@ -20,6 +20,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file.mjs'),
             () => readSync('./test/data/file.mjs'),
         );
+
         expect(loaderContent).toBeDefined();
         expect(loaderContent.foo).toEqual('bar');
         expect(loaderContent.default).toEqual({ foo: 'bar' });
@@ -30,6 +31,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file.mts'),
             () => readSync('./test/data/file.mts'),
         );
+
         expect(loaderContent).toBeDefined();
         expect(loaderContent.bar).toEqual('baz');
         expect(loaderContent.default).toEqual({ bar: 'baz' });
@@ -40,6 +42,7 @@ describe('src/format/**', () => {
             () => readAsModule('./test/data/file-default.mjs'),
             () => readAsModuleSync('./test/data/file-default.mjs'),
         );
+
         expect(record.bar).toEqual('baz');
         expect(record.default).toBeDefined();
         expect(record.default.foo).toEqual('bar');
@@ -49,6 +52,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file-default.mjs'),
             () => readSync('./test/data/file-default.mjs'),
         );
+
         expect(value.default.foo).toEqual('bar');
     });
 
@@ -57,6 +61,7 @@ describe('src/format/**', () => {
             () => readAsModule('./test/data/file-default.mts'),
             () => readAsModuleSync('./test/data/file-default.mts'),
         );
+
         expect(record.foo).toEqual('bar');
         expect(record.default).toBeDefined();
         expect(record.default.bar).toEqual('baz');
@@ -66,6 +71,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file-default.mts'),
             () => readSync('./test/data/file-default.mts'),
         );
+
         expect(value.default.bar).toEqual('baz');
     });
 });

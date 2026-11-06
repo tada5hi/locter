@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { FormatPreset } from '../registry/type';
-import type { IWriter } from '../type';
+import type { FormatPreset } from '../registry/types';
+
 import { ConfReader, ConfWriter } from './conf';
 import { JSONReader, JSONWriter } from './json';
 import { ModuleReader } from './module';
@@ -45,17 +45,3 @@ export const BUILT_IN_PRESETS = {
         writer: () => new TextWriter(),
     },
 } as const satisfies Record<string, FormatPreset>;
-
-export type BuiltInFormatId = keyof typeof BUILT_IN_PRESETS;
-
-export type BuiltInReaderOf<K extends BuiltInFormatId> = ReturnType<(typeof BUILT_IN_PRESETS)[K]['reader']>;
-
-/**
- * Built-in format ids whose preset declares a writer — derived at the type
- * level, so builtInWriter('module') is a compile error, not a runtime one.
- */
-export type WritableBuiltInFormatId = {
-    [K in BuiltInFormatId]: (typeof BUILT_IN_PRESETS)[K] extends { writer: () => IWriter } ? K : never
-}[BuiltInFormatId];
-
-export type BuiltInWriterOf<K extends WritableBuiltInFormatId> = ReturnType<(typeof BUILT_IN_PRESETS)[K]['writer']>;

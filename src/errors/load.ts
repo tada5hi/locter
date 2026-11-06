@@ -6,7 +6,8 @@
  */
 
 import { hasInstanceof, markInstanceof } from '@ebec/core';
-import { LocterError, type LocterErrorInput } from './base';
+import { LocterError } from './base';
+import type { LocterErrorInput } from './types';
 
 export const LOCTER_LOAD_ERROR_MARKER = Symbol.for('@locter/load-error');
 

@@ -24,6 +24,7 @@ function buildGlobJobs(
     const opts = buildLocatorOptions(options);
 
     const jobs : GlobJob[] = [];
+
     for (const p of patterns) {
         for (const cwd of opts.cwd) {
             jobs.push({
@@ -58,6 +59,7 @@ export function* locateBody(
         const files = yield* glob(job);
 
         const element = files.shift();
+
         if (element) {
             return pathToLocatorInfo(element, true);
         }

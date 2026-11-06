@@ -144,6 +144,7 @@ describe('src/errors/**', () => {
         // (e.g. duplicate npm install). Its prototype is unrelated to our
         // LocterError class, but it carries the same `@instanceof` markers.
         const alien = Object.create(Error.prototype) as object;
+
         markInstanceof(alien, LOCTER_ERROR_MARKER);
         markInstanceof(alien, LOCTER_NOT_FOUND_ERROR_MARKER);
 
@@ -178,27 +179,35 @@ describe('src/errors/**', () => {
         const refErr = new ReferenceError('missing');
 
         const restore = setModuleReader({
-            load: () => { throw syntaxErr; },
-            loadSync: () => { throw refErr; },
+            load: () => {
+                throw syntaxErr;
+            },
+            loadSync: () => {
+                throw refErr;
+            },
         });
 
         try {
             let asyncError: unknown;
+
             try {
                 await read('any-id');
             } catch (e) {
                 asyncError = e;
             }
+
             expect(asyncError).toBeInstanceOf(LoadError);
             expect((asyncError as LoadError).cause).toBe(syntaxErr);
             expect((asyncError as LoadError).path).toEqual('any-id');
 
             let syncError: unknown;
+
             try {
                 readSync('any-id');
             } catch (e) {
                 syncError = e;
             }
+
             expect(syncError).toBeInstanceOf(LoadError);
             expect((syncError as LoadError).cause).toBe(refErr);
             expect((syncError as LoadError).path).toEqual('any-id');

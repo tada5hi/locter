@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import { wrapLoaderError } from '../../errors';
 import type { TwinBody } from 'twinop';
 import { op, runTwinAsync, runTwinSync } from 'twinop';
-import type { IReader } from '../type';
+import type { IReader } from '../types';
 
 /**
  * Base class for readers of text-based file formats: reads the file as

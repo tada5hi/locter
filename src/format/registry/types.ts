@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IReader, IWriter } from '../type';
+import type { IReader, IWriter } from '../types';
 
 /**
  * Lazy reader construction. Invoked on the first input that matches the
@@ -97,4 +97,22 @@ export type FormatPreset = {
     reader: () => IReader,
     /** Lazy writer factory — invoked at most once per FormatRegistry instance. */
     writer?: () => IWriter
+};
+
+export type FormatRegistryOptions = {
+    /**
+     * Seed user rules (matched before built-ins, in array order).
+     */
+    rules?: Rule[]
+};
+
+export /**
+ * A rule compiled to memoizing per-slot accessors. Caller-owned Rule
+ * objects are never mutated; factory caching lives in the closures.
+ */
+type CompiledRule = {
+    id: string,
+    test: RegExp | string[],
+    getReader?: () => IReader,
+    getWriter?: () => IWriter
 };

@@ -9,16 +9,16 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterAll, 
-    describe, 
-    expect, 
+    afterAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
-    WriteError, 
-    read, 
-    readSync, 
-    write, 
+    WriteError,
+    read,
+    readSync,
+    write,
     writeSync,
 } from '../../../src';
 import { expectParity } from '../../helpers/parity';
@@ -35,6 +35,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file.yml'),
             () => readSync('./test/data/file.yml'),
         );
+
         expect(content).toBeDefined();
         expect(content.YAML).toBeDefined();
         expect(content.yaml).toBeDefined();
@@ -45,6 +46,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file-es-module.yml'),
             () => readSync('./test/data/file-es-module.yml'),
         );
+
         expect(content).toEqual({ __esModule: true, foo: 'bar' });
     });
 
@@ -57,6 +59,7 @@ describe('src/format/**', () => {
         writeSync(syncPath, value);
 
         const content = fs.readFileSync(asyncPath, 'utf-8');
+
         expect(content).toEqual('port: 3000\ndb:\n  host: localhost\n');
         expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(content);
 
@@ -65,6 +68,7 @@ describe('src/format/**', () => {
 
     it('should preserve comments of surviving keys on write-back', async () => {
         const target = path.join(tmpDir, 'comments.yml');
+
         fs.writeFileSync(target, [
             '# port used by the dev server',
             'port: 3000 # trailing note',
@@ -75,6 +79,7 @@ describe('src/format/**', () => {
         await write(target, { port: 8080, host: 'localhost' });
 
         const content = fs.readFileSync(target, 'utf-8');
+
         expect(content).toContain('# port used by the dev server');
         expect(content).toContain('port: 8080 # trailing note');
         expect(content).toContain('host: localhost');
@@ -82,6 +87,7 @@ describe('src/format/**', () => {
 
     it('should preserve sibling comments when changing nested values', async () => {
         const target = path.join(tmpDir, 'nested.yml');
+
         fs.writeFileSync(target, [
             'db:',
             '  # keep me',
@@ -93,6 +99,7 @@ describe('src/format/**', () => {
         writeSync(target, { db: { host: 'localhost', port: 5433 } });
 
         const content = fs.readFileSync(target, 'utf-8');
+
         expect(content).toContain('# keep me');
         expect(content).toContain('host: localhost');
         expect(content).toContain('port: 5433');
@@ -100,11 +107,13 @@ describe('src/format/**', () => {
 
     it('should delete keys absent from the new value', async () => {
         const target = path.join(tmpDir, 'delete.yml');
+
         fs.writeFileSync(target, '# header\nkeep: 1\ndrop: 2\n');
 
         await write(target, { keep: 1 });
 
         const content = fs.readFileSync(target, 'utf-8');
+
         expect(content).toContain('# header');
         expect(content).toContain('keep: 1');
         expect(content).not.toContain('drop');
@@ -112,11 +121,13 @@ describe('src/format/**', () => {
 
     it('should add new keys on write-back', async () => {
         const target = path.join(tmpDir, 'add.yml');
+
         fs.writeFileSync(target, '# header\nport: 3000\n');
 
         await write(target, { port: 3000, host: 'localhost' });
 
         const content = fs.readFileSync(target, 'utf-8');
+
         expect(content).toContain('# header');
         expect(content).toContain('host: localhost');
 
@@ -125,6 +136,7 @@ describe('src/format/**', () => {
 
     it('should replace arrays and type-changed nodes wholesale', async () => {
         const target = path.join(tmpDir, 'replace.yml');
+
         fs.writeFileSync(target, 'tags:\n  - a\n  - b\nvalue:\n  nested: 1\n');
 
         await write(target, { tags: ['c'], value: 'scalar' });
@@ -135,6 +147,7 @@ describe('src/format/**', () => {
     it('should throw instead of overwriting a corrupt existing file', async () => {
         const target = path.join(tmpDir, 'corrupt.yml');
         const corrupt = 'key: [unclosed\n  - broken: {\n';
+
         fs.writeFileSync(target, corrupt);
 
         await expect(write(target, { a: 1 })).rejects.toBeInstanceOf(WriteError);
