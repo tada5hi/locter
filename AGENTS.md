@@ -30,6 +30,8 @@ No standalone documentation site. Public usage examples live in `README.MD`. Whe
 
 ## Detailed Guides
 
+
+AGENTS.md is the loaded entry point and the guide index. Read the linked guides when working on their topics.
 - **[Project Structure](.agents/structure.md)** — `src/` layout (locator, format, utils), public `package.json` exports, and module responsibilities
 - **[Architecture](.agents/architecture.md)** — Locator/Format split, the `IReader`/`IWriter` ports + rule-based dispatcher, and the `FormatRegistry` singleton
 - **[Testing](.agents/testing.md)** — Vitest + `test/data/` fixture files, and the per-file-extension test suites
