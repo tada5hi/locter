@@ -87,7 +87,7 @@ install ──▶ build ──▶ lint
                  └──▶ tests
 ```
 
-All jobs run against `PRIMARY_NODE_VERSION=24` only. There is no Node version matrix. Note that `engines.node` in `package.json` requires `>=22` — CI runs newer but the package supports Node 22+.
+All jobs use the workflow's `PRIMARY_NODE_VERSION` selector. There is no Node version matrix. Published consumer runtime support is declared independently in `engines.node`.
 
 ## Writing New Tests
 
