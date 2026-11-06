@@ -40,7 +40,7 @@ When adding a new public operation, implement **both** variants by writing one t
 
 ### Reader/Writer ports + registry
 
-The core abstraction is the pair of ports (`src/format/type.ts`):
+The core abstraction is the pair of ports (`src/format/types.ts`):
 
 ```typescript
 export interface IReader {

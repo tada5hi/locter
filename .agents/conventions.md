@@ -6,7 +6,7 @@
 |-------------------------------------|--------------------------------------------------------------------------|
 | TypeScript 6                        | Source language. `tsc --noEmit` (`build:types`) typechecks only.         |
 | tsdown                              | Bundles `src/index.ts` to `dist/index.mjs` and emits `dist/index.d.mts` (`build:js`). |
-| Vitest 4 + `@vitest/coverage-v8`    | Test runner + coverage                                                   |
+| Vitest 5 + `@vitest/coverage-v8`    | Test runner + coverage                                                   |
 | ESLint 10 (flat) + `@tada5hi/eslint-config` | Lint TypeScript source                                           |
 | typescript-eslint 8                 | Brought in transitively by `@tada5hi/eslint-config` for TS rules         |
 | Husky + commitlint                  | `commit-msg` hook validates Conventional Commits                         |
@@ -41,10 +41,10 @@
 ## File Organization
 
 - One main concept per file. The file name is `kebab-case` and matches the dominant export's role (`file-path.ts` exports `isFilePath`, `has-property.ts` exports `hasOwnProperty`/`hasStringProperty`).
-- Each directory has an `index.ts` barrel (internal convenience). The PUBLIC surface is the curated named-export list in `src/index.ts`, checked by `test/unit/public-api.spec.ts` — new symbols only become public when named there (plus snapshot + README updates).
+- Each directory has an `index.ts` barrel (internal convenience). The public surface is the curated named-export list in `src/index.ts`. `test/unit/public-api.spec.ts` checks runtime exports; type-only exports require a type check. Update the README for public changes and the snapshot for runtime exports.
 - Types live next to their implementation:
     - In `src/locator/` they're separated into `types.ts` (re-exported from the barrel).
-    - In `src/format/` and `src/format/built-in/<format>/` they live in `type.ts` (singular) — keep this convention for parity with existing folders.
+    - In `src/format/` and `src/format/built-in/<format>/` they live in `types.ts`.
 
 ## Pre-commit Hooks
 

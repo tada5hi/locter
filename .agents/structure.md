@@ -19,7 +19,7 @@ locter/
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
 │   ├── format/                     # Pluggable per-format readers + writers
 │   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, text-file, type)
-│   │   ├── type.ts                 # IReader + IWriter interfaces — the ports every format implements
+│   │   ├── types.ts                 # IReader + IWriter interfaces — the ports every format implements
 │   │   ├── text-file/
 │   │   │   ├── reader.ts           # abstract TextFileReader — read + parse + error-wrap base for text formats
 │   │   │   ├── writer.ts           # abstract TextFileWriter — stringify + mkdir -p + write + error-wrap base
@@ -27,7 +27,7 @@ locter/
 │   │   ├── registry/               # FormatRegistry + its vocabulary + the process-global singleton
 │   │   │   ├── module.ts           # FormatRegistry class (dispatch: read, write, findReader, findWriter, builtInReader, builtInWriter; lifecycle: register, unregister, entries, has, reset)
 │   │   │   ├── singleton.ts        # useFormatRegistry() — lazy process-global FormatRegistry instance
-│   │   │   ├── type.ts             # Rule, ReaderFactory, WriterFactory, FormatRegistration, FormatPreset
+│   │   │   ├── types.ts             # Rule, ReaderFactory, WriterFactory, FormatRegistration, FormatPreset
 │   │   │   └── index.ts            # Barrel
 │   │   ├── helpers.ts              # registerFormat, unregisterFormat, read/readAsModule/write (+Sync), setModuleReader (delegate to the singleton)
 │   │   ├── value.ts                # serializeValue / deserializeValue — lenient value codec (destr; shared by conf, public)
@@ -38,7 +38,7 @@ locter/
 │   │       │   ├── reader.ts
 │   │       │   ├── constants.ts    # MODULE_FILE_EXTENSIONS (shared by registry + jiti config)
 │   │       │   ├── utils.ts        # toModuleRecord, createModuleRecord, isModuleRecord, isESModule, getModuleExport
-│   │       │   └── type.ts
+│   │       │   └── types.ts
 │   │       ├── json/               # JSONReader (fs + JSON.parse) + JSONWriter (indent: number | string | 'auto')
 │   │       │   ├── reader.ts
 │   │       │   ├── writer.ts
@@ -119,7 +119,7 @@ locter/
 
 The package is ESM-only (`"type": "module"`). There is no CJS entry point.
 
-The public API is the curated, NAMED export list in `src/index.ts` — checked by `test/unit/public-api.spec.ts`. Per-directory barrels remain full (internal convenience for source and tests), but a symbol is only public once it is named in `src/index.ts`; adding one is a deliberate act that must update the snapshot test and the README.
+The public API is the curated named-export list in `src/index.ts`. `test/unit/public-api.spec.ts` checks runtime exports and cannot detect removed type-only exports. Per-directory barrels remain full (internal convenience for source and tests), but a symbol is only public once it is named in `src/index.ts`; adding one is a deliberate act that must update the snapshot test and the README.
 
 ## Separation of Concerns
 
