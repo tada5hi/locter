@@ -6,6 +6,7 @@
  */
 
 export * from './base';
+export type { LocterErrorOptions, LocterErrorInput } from './types';
 export * from './load';
 export * from './not-found';
 export * from './unknown-extension';

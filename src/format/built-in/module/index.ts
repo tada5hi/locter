@@ -7,5 +7,5 @@
 
 export * from './constants';
 export * from './reader';
-export * from './type';
+export * from './types';
 export * from './utils';

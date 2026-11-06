@@ -33,19 +33,23 @@ function matchesProcessMarker(regex: RegExp) : boolean {
     }
 
     const { execArgv } = process;
+
     if (Array.isArray(execArgv)) {
         for (let i = 0; i < execArgv.length; i++) {
             const arg = execArgv[i];
+
             if (typeof arg !== 'string') {
                 continue;
             }
 
             const option = MODULE_OPTION_REGEX.exec(arg);
+
             if (!option) {
                 continue;
             }
 
             const value = typeof option[1] === 'string' ? option[1] : execArgv[i + 1];
+
             if (typeof value === 'string' && regex.test(value)) {
                 return true;
             }

@@ -21,6 +21,7 @@ import { pathToLocatorInfo } from '../../src/locator/utils';
 describe('src/utils/*.ts', () => {
     it('should remove file name extension', () => {
         let data = removeFileNameExtension('test.js', ['.js', '.ts']);
+
         expect(data).toEqual('test');
 
         data = removeFileNameExtension('test.mts', ['.js', '.ts']);

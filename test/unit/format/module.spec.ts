@@ -40,10 +40,12 @@ describe('src/format/**', () => {
 
         for (const fixture of fixtures) {
             const record = await readAsModule(`./test/data/${fixture}`);
+
             expect(record.__esModule, fixture).toBe(true);
             expect(record.default, fixture).toBeDefined();
 
             const recordSync = readAsModuleSync(`./test/data/${fixture}`);
+
             expect(recordSync.__esModule, fixture).toBe(true);
             expect(recordSync.default, fixture).toBeDefined();
         }
@@ -56,6 +58,7 @@ describe('src/format/**', () => {
             () => read('./test/data/file.json'),
             () => readSync('./test/data/file.json'),
         );
+
         expect(value).toEqual({ foo: 'bar' });
         expect(value).toEqual(record.default);
 
@@ -64,15 +67,18 @@ describe('src/format/**', () => {
             () => read('./test/data/file-default.mjs'),
             () => readSync('./test/data/file-default.mjs'),
         );
+
         expect(withDefault.bar).toEqual('baz');
         expect(withDefault.default).toEqual({ foo: 'bar' });
 
         const withoutDefault = await read('./test/data/file.mjs');
+
         expect(withoutDefault.foo).toEqual('bar');
     });
 
     it('should wrap user-reader output even when it carries an __esModule key', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.foo'],
             reader: {
@@ -86,16 +92,19 @@ describe('src/format/**', () => {
         });
 
         const record = await manager.readAsModule('file.foo');
+
         expect(record.foo).toEqual('bar');
         expect(record.default).toEqual({ __esModule: true, foo: 'bar' });
 
         const recordSync = manager.readAsModuleSync('file.foo');
+
         expect(recordSync.foo).toEqual('bar');
         expect(recordSync.default).toEqual({ __esModule: true, foo: 'bar' });
 
         // read() hands back the parsed data untouched — a literal
         // __esModule key in DATA never triggers module unwrapping
         const value = await manager.read('file.foo');
+
         expect(value).toEqual({ __esModule: true, foo: 'bar' });
     });
 
@@ -106,6 +115,7 @@ describe('src/format/**', () => {
         );
 
         const moduleContent = getModuleExport(record, (key) => key === 'bar');
+
         expect(moduleContent).toBeDefined();
         expect(moduleContent?.key).toEqual('bar');
         expect(moduleContent?.value).toEqual('baz');
@@ -118,6 +128,7 @@ describe('src/format/**', () => {
 
     it('should readAsModule a bare specifier', async () => {
         const yaml = await readAsModule('yaml');
+
         expect(yaml).toBeDefined();
         expect(yaml.parse).toBeDefined();
         expect(yaml.default.parse).toBeDefined();
@@ -125,6 +136,7 @@ describe('src/format/**', () => {
 
     it('should readAsModule a bare specifier sync', async () => {
         const yaml = readAsModuleSync('yaml');
+
         expect(yaml).toBeDefined();
         expect(yaml.parse).toBeDefined();
         expect(yaml.default.parse).toBeDefined();
@@ -132,10 +144,12 @@ describe('src/format/**', () => {
 
     it('should read a bare specifier as module record', async () => {
         const yaml = await read('yaml');
+
         expect(yaml.parse).toBeDefined();
         expect(yaml.default.parse).toBeDefined();
 
         const yamlSync = readSync('yaml');
+
         expect(yamlSync.parse).toBeDefined();
         expect(yamlSync.default.parse).toBeDefined();
     });
@@ -177,6 +191,7 @@ describe('src/format/**', () => {
 
     it('should read with a user rule id regardless of its test', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             id: 'upper',
             test: ['.up'],
@@ -208,6 +223,7 @@ describe('src/format/**', () => {
 
     it('should throw when the explicit format id resolves to a writer-only rule', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             id: 'sink',
             test: ['.sink'],
@@ -218,12 +234,14 @@ describe('src/format/**', () => {
         });
 
         const filePath = path.join(dataDir, 'file.json');
+
         await expect(manager.read(filePath, { format: 'sink' })).rejects.toThrow('The format sink has no reader.');
         expect(() => manager.readSync(filePath, { format: 'sink' })).toThrow('The format sink has no reader.');
     });
 
     it('should register reader rule', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.foo'],
             reader: {
@@ -237,6 +255,7 @@ describe('src/format/**', () => {
         });
 
         const record = await manager.readAsModule('file.foo');
+
         expect(record.default).toEqual('file.foo');
 
         // value semantics: the reader output itself
@@ -246,6 +265,7 @@ describe('src/format/**', () => {
 
     it('should register reader rule with regexp test', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: /\.foo$/,
             reader: {
@@ -259,14 +279,17 @@ describe('src/format/**', () => {
         });
 
         const record = await manager.read('file.foo');
+
         expect(record.matched).toBe(true);
 
         const recordSync = manager.readSync('file.foo');
+
         expect(recordSync.matched).toBe(true);
     });
 
     it('should dispatch a stateful (global) regexp rule consistently', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: /\.foo$/g,
             reader: {
@@ -283,9 +306,11 @@ describe('src/format/**', () => {
         // inputs must not alternate between matching and falling through
         for (let i = 0; i < 3; i++) {
             const record = await manager.read('file.foo');
+
             expect(record.matched).toBe(true);
 
             const recordSync = manager.readSync('file.foo');
+
             expect(recordSync.matched).toBe(true);
         }
     });
@@ -293,10 +318,12 @@ describe('src/format/**', () => {
     it('should register reader lazily via factory', async () => {
         let constructed = 0;
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.foo'],
             reader: () => {
                 constructed++;
+
                 return {
                     async read(input) {
                         return input;
@@ -318,6 +345,7 @@ describe('src/format/**', () => {
 
     it('should override a built-in reader', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.json'],
             reader: {
@@ -331,14 +359,17 @@ describe('src/format/**', () => {
         });
 
         const record = await manager.read('./test/data/file.json');
+
         expect(record.sentinel).toBe(true);
 
         const recordSync = manager.readSync('./test/data/file.json');
+
         expect(recordSync.sentinel).toBe(true);
     });
 
     it('should cache built-in reader instances', () => {
         const manager = new FormatRegistry();
+
         expect(manager.builtInReader('json')).toBe(manager.builtInReader('json'));
     });
 
@@ -368,6 +399,7 @@ describe('src/format/**', () => {
 
     it('should replace rule registered with an existing id', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             id: 'custom',
             test: ['.foo'],
@@ -394,17 +426,21 @@ describe('src/format/**', () => {
         });
 
         const record = await manager.read('file.foo');
+
         expect(record.version).toEqual(2);
 
         const recordSync = manager.readSync('file.foo');
+
         expect(recordSync.version).toEqual(2);
 
         const ids = manager.entries().map((entry) => entry.id);
+
         expect(ids.filter((id) => id === 'custom')).toHaveLength(1);
     });
 
     it('should reject rules with a built-in id', () => {
         const manager = new FormatRegistry();
+
         expect(() => manager.register({
             id: 'json',
             test: ['.foo'],
@@ -421,6 +457,7 @@ describe('src/format/**', () => {
 
     it('should list registrations in match order', () => {
         const manager = new FormatRegistry();
+
         manager.register({
             id: 'custom',
             test: ['.foo'],
@@ -435,6 +472,7 @@ describe('src/format/**', () => {
         });
 
         const entries = manager.entries();
+
         expect(entries[0]).toEqual({
             id: 'custom',
             test: ['.foo'],
@@ -442,6 +480,7 @@ describe('src/format/**', () => {
         });
 
         const builtIns = entries.filter((entry) => entry.builtIn);
+
         expect(builtIns.map((entry) => entry.id)).toEqual(['module', 'conf', 'json', 'yaml', 'text']);
         expect(manager.has('json')).toBe(true);
     });
@@ -449,10 +488,12 @@ describe('src/format/**', () => {
     it('should reset to construction state', async () => {
         let constructed = 0;
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.foo'],
             reader: () => {
                 constructed++;
+
                 return {
                     async read(input) {
                         return input;
@@ -475,6 +516,7 @@ describe('src/format/**', () => {
 
     it('should use module reader as fallback', () => {
         const manager = new FormatRegistry();
+
         expect(manager.findReader('foo')).toBe(manager.builtInReader('module'));
     });
 
@@ -483,19 +525,23 @@ describe('src/format/**', () => {
         const moduleReader = new ModuleReader({
             load: (id) => {
                 calls.push({ id, sync: false });
+
                 return { injected: 'async', id };
             },
             loadSync: (id) => {
                 calls.push({ id, sync: true });
+
                 return { injected: 'sync', id };
             },
         });
 
         const asyncResult = await moduleReader.load('virtual-module-id');
+
         expect(calls).toEqual([{ id: 'virtual-module-id', sync: false }]);
         expect(asyncResult).toEqual({ injected: 'async', id: 'virtual-module-id' });
 
         const syncResult = moduleReader.loadSync('virtual-module-id');
+
         expect(calls).toEqual([
             { id: 'virtual-module-id', sync: false },
             { id: 'virtual-module-id', sync: true },
@@ -506,14 +552,17 @@ describe('src/format/**', () => {
     it('should reconfigure module reader at runtime', async () => {
         const moduleReader = new ModuleReader();
         let called = false;
+
         moduleReader.configure({
             load: (id) => {
                 called = true;
+
                 return { id };
             },
         });
 
         const result = await moduleReader.load('any-id');
+
         expect(called).toBe(true);
         expect(result).toEqual({ id: 'any-id' });
     });
@@ -522,6 +571,7 @@ describe('src/format/**', () => {
         const moduleReader = new ModuleReader({ load: () => ({ source: 'injected' }) });
 
         let result = await moduleReader.load('yaml');
+
         expect(result).toEqual({ source: 'injected' });
 
         moduleReader.configure({ load: undefined });
@@ -538,6 +588,7 @@ describe('src/format/**', () => {
         const restore = setModuleReader({
             load: (id) => {
                 seenAsync.push(id);
+
                 return {
                     __esModule: true,
                     from: 'setModuleReader-async',
@@ -546,6 +597,7 @@ describe('src/format/**', () => {
             },
             loadSync: (id) => {
                 seenSync.push(id);
+
                 return {
                     __esModule: true,
                     from: 'setModuleReader-sync',
@@ -556,11 +608,13 @@ describe('src/format/**', () => {
 
         try {
             const asyncResult = await read('yaml');
+
             expect(seenAsync).toEqual(['yaml']);
             expect(asyncResult.from).toEqual('setModuleReader-async');
             expect(asyncResult.id).toEqual('yaml');
 
             const syncResult = readSync('yaml');
+
             expect(seenSync).toEqual(['yaml']);
             expect(syncResult.from).toEqual('setModuleReader-sync');
             expect(syncResult.id).toEqual('yaml');
@@ -571,6 +625,7 @@ describe('src/format/**', () => {
 
         // verify the singleton is fully restored
         const restored = await read('yaml');
+
         expect(restored).toBeDefined();
         expect(restored.parse).toBeDefined();
     });
@@ -585,6 +640,7 @@ describe('src/format/**', () => {
         });
 
         const configured = await read('yaml');
+
         expect(configured.from).toEqual('pre-reset');
 
         // reset() discards the configured module reader instance; a stale
@@ -593,6 +649,7 @@ describe('src/format/**', () => {
         restore();
 
         const fresh = await read('yaml');
+
         expect(fresh.from).toBeUndefined();
         expect(fresh.parse).toBeDefined();
     });
@@ -608,6 +665,7 @@ describe('src/format/**', () => {
         });
 
         const result = await moduleReader.read(path.join(dataDir, 'file.cjs'));
+
         expect(result.foo).toEqual('bar');
     });
 
@@ -619,12 +677,14 @@ describe('src/format/**', () => {
         });
 
         const result = moduleReader.readSync(path.join(dataDir, 'file.cjs'));
+
         expect(result.foo).toEqual('bar');
     });
 
     it('should fall back to loadSync under ts-node when the async load fails recoverably', async () => {
         const tsNodeSymbol = Symbol.for('ts-node.register.instance');
         const proc = process as unknown as Record<symbol, unknown>;
+
         proc[tsNodeSymbol] = {};
 
         try {
@@ -636,6 +696,7 @@ describe('src/format/**', () => {
             });
 
             const result = await moduleReader.read('virtual-module-id');
+
             expect(result.from).toEqual('load-sync-fallback');
         } finally {
             delete proc[tsNodeSymbol];
@@ -651,11 +712,13 @@ describe('src/format/**', () => {
         });
 
         let asyncError : unknown;
+
         try {
             await asyncReader.read(path.join(dataDir, 'file.cjs'));
         } catch (e) {
             asyncError = e;
         }
+
         expect(asyncError).toBeInstanceOf(LocterError);
         expect((asyncError as LocterError).cause).toBeInstanceOf(SyntaxError);
 
@@ -666,11 +729,13 @@ describe('src/format/**', () => {
         });
 
         let syncError : unknown;
+
         try {
             syncReader.readSync(path.join(dataDir, 'file.cjs'));
         } catch (e) {
             syncError = e;
         }
+
         expect(syncError).toBeInstanceOf(LocterError);
         expect((syncError as LocterError).cause).toBeInstanceOf(SyntaxError);
     });

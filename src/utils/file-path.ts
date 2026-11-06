@@ -8,5 +8,6 @@ import path from 'node:path';
 
 export function isFilePath(input: string) {
     const extension = path.extname(input);
+
     return extension && extension !== '';
 }

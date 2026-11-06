@@ -9,9 +9,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterAll, 
-    describe, 
-    expect, 
+    afterAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
@@ -36,9 +36,12 @@ let tmpCounter = 0;
 
 function makePkgDir(content: string) : string {
     tmpCounter++;
+
     const dir = path.join(tmpBase, `pkg-${tmpCounter}`);
+
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'package.json'), content);
+
     return dir;
 }
 
@@ -52,6 +55,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField<string>('name', { cwd: withField }),
             () => readPackageFieldSync<string>('name', { cwd: withField }),
         );
+
         expect(result).toEqual('with-field');
     });
 
@@ -60,6 +64,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField<{ foo: string }>('myapp', { cwd: withField }),
             () => readPackageFieldSync<{ foo: string }>('myapp', { cwd: withField }),
         );
+
         expect(result).toEqual({ foo: 'bar' });
     });
 
@@ -68,6 +73,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField('does-not-exist', { cwd: withField }),
             () => readPackageFieldSync('does-not-exist', { cwd: withField }),
         );
+
         expect(result).toBeUndefined();
     });
 
@@ -79,6 +85,7 @@ describe('src/format/package-field.ts', () => {
                 () => readPackageField(field, { cwd: withField }),
                 () => readPackageFieldSync(field, { cwd: withField }),
             );
+
             expect(result, field).toBeUndefined();
         }
     });
@@ -88,6 +95,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField('name', { cwd: emptyDir }),
             () => readPackageFieldSync('name', { cwd: emptyDir }),
         );
+
         expect(result).toBeUndefined();
     });
 
@@ -102,6 +110,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField<string>('name', options),
             () => readPackageFieldSync<string>('name', options),
         );
+
         expect(result).toEqual('with-field');
     });
 
@@ -116,24 +125,29 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField('name', options),
             () => readPackageFieldSync('name', options),
         );
+
         expect(result).toBeUndefined();
     });
 
     it('should throw LoadError when package.json is malformed', async () => {
         let asyncError: unknown;
+
         try {
             await readPackageField('name', { cwd: malformed });
         } catch (e) {
             asyncError = e;
         }
+
         expect(asyncError).toBeInstanceOf(LoadError);
 
         let syncError: unknown;
+
         try {
             readPackageFieldSync('name', { cwd: malformed });
         } catch (e) {
             syncError = e;
         }
+
         expect(syncError).toBeInstanceOf(LoadError);
     });
 
@@ -146,6 +160,7 @@ describe('src/format/package-field.ts', () => {
         writePackageFieldSync('myapp', { entry: 'src' }, { cwd: syncDir });
 
         const written = fs.readFileSync(path.join(asyncDir, 'package.json'), 'utf-8');
+
         expect(written).toEqual([
             '{',
             '  "name": "app",',
@@ -162,6 +177,7 @@ describe('src/format/package-field.ts', () => {
             () => readPackageField('myapp', { cwd: asyncDir }),
             () => readPackageFieldSync('myapp', { cwd: syncDir }),
         );
+
         expect(value).toEqual({ entry: 'src' });
     });
 
@@ -179,6 +195,7 @@ describe('src/format/package-field.ts', () => {
         await writePackageField('myapp', undefined, { cwd: dir });
 
         const written = fs.readFileSync(path.join(dir, 'package.json'), 'utf-8');
+
         expect(written).not.toContain('myapp');
         expect(await readPackageField('myapp', { cwd: dir })).toBeUndefined();
     });
@@ -186,6 +203,7 @@ describe('src/format/package-field.ts', () => {
     it('should walk up to the nearest package.json when `walkUp: true`', async () => {
         const dir = makePkgDir('{\n  "name": "app"\n}\n');
         const nested = path.join(dir, 'deeply', 'nested');
+
         fs.mkdirSync(nested, { recursive: true });
 
         await writePackageField('myapp', 'from-nested', { cwd: nested, walkUp: true });

@@ -24,7 +24,7 @@ Internally, both variants are derived from **one shared body** via the twin prot
 - `src/format/registry/module.ts` — `FormatRegistry.executeBody` (dispatch → execute → wrap errors), shared via `yield*` by `readBody` (raw / provenance-shaped) and `readAsModuleBody` (uniform record via `toRecord`), plus `FormatRegistry.writeBody` (dispatch → unwrap record → write → wrap)
 - `src/format/package-field.ts` — `readPackageFieldBody`, `writePackageFieldBody`, `locatePackageBody`
 
-**The one deliberate exception is `ModuleReader`**: `read` / `readSync` are hand-written twins because their recovery paths genuinely diverge (async falls back to `loadSync` under ts-node and to jiti otherwise; sync only has the jiti fallback). The divergence is documented on `read` and pinned by explicit fallback tests in `test/unit/format/module.spec.ts`.
+**The one deliberate exception is `ModuleReader`**: `read` / `readSync` are hand-written twins because their recovery paths genuinely diverge (async falls back to `loadSync` under ts-node and to jiti otherwise; sync only has the jiti fallback). The divergence is documented on `read` and checked by explicit fallback tests in `test/unit/format/module.spec.ts`.
 
 When adding a new public operation, implement **both** variants by writing one twin body and two thin driver wrappers. Tests assert sync/async parity via the `expectParity` helper (`test/helpers/parity.ts`).
 

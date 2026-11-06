@@ -9,4 +9,5 @@ export * from './async';
 export * from './sync';
 export * from './types';
 export * from './up';
+export type { LocatorUpOptionsInput, WalkStep } from './types';
 export * from './utils';

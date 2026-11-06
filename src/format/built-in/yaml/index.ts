@@ -7,3 +7,4 @@
 
 export * from './reader';
 export * from './writer';
+export type { YAMLWriterOptions } from './types';

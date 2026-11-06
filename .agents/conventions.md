@@ -41,7 +41,7 @@
 ## File Organization
 
 - One main concept per file. The file name is `kebab-case` and matches the dominant export's role (`file-path.ts` exports `isFilePath`, `has-property.ts` exports `hasOwnProperty`/`hasStringProperty`).
-- Each directory has an `index.ts` barrel (internal convenience). The PUBLIC surface is the curated named-export list in `src/index.ts`, pinned by `test/unit/public-api.spec.ts` — new symbols only become public when named there (plus snapshot + README updates).
+- Each directory has an `index.ts` barrel (internal convenience). The PUBLIC surface is the curated named-export list in `src/index.ts`, checked by `test/unit/public-api.spec.ts` — new symbols only become public when named there (plus snapshot + README updates).
 - Types live next to their implementation:
     - In `src/locator/` they're separated into `types.ts` (re-exported from the barrel).
     - In `src/format/` and `src/format/built-in/<format>/` they live in `type.ts` (singular) — keep this convention for parity with existing folders.

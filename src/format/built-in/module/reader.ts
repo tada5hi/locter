@@ -22,14 +22,14 @@ import {
     isTsNodeRuntimeEnvironment,
     isTypeScriptError,
 } from '../../../utils';
-import type { IReader } from '../../type';
+import type { IReader } from '../../types';
 import { MODULE_FILE_EXTENSIONS } from './constants';
 import type {
     ModuleLoadFn,
     ModuleLoadOptions,
     ModuleLoadSyncFn,
     ModuleReaderOptions,
-} from './type';
+} from './types';
 
 const require = createRequire(import.meta.url);
 
@@ -41,6 +41,7 @@ function originalPath(data: LocatorInfo | string) : string {
 
 function isUnrecoverableError(error: unknown) : boolean {
     const underlying = error instanceof LocterError ? error.cause : error;
+
     return underlying instanceof SyntaxError ||
         underlying instanceof ReferenceError ||
         isTypeScriptError(underlying);
@@ -73,6 +74,7 @@ export class ModuleReader implements IReader {
         if ('load' in options) {
             this.loadFn = options.load;
         }
+
         if ('loadSync' in options) {
             this.loadSyncFn = options.loadSync;
         }

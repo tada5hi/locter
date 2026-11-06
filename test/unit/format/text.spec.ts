@@ -9,16 +9,16 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterAll, 
-    describe, 
-    expect, 
+    afterAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
-    read, 
-    readAsModule, 
-    readSync, 
-    write, 
+    read,
+    readAsModule,
+    readSync,
+    write,
     writeSync,
 } from '../../../src';
 import { expectParity } from '../../helpers/parity';
@@ -35,11 +35,13 @@ describe('src/format/**', () => {
             () => read('./test/data/file.txt'),
             () => readSync('./test/data/file.txt'),
         );
+
         expect(content).toEqual('hello\nworld\n');
     });
 
     it('should not coerce numeric text content', async () => {
         const target = path.join(tmpDir, 'count.txt');
+
         fs.writeFileSync(target, '123\n');
 
         expect(await read(target)).toEqual('123\n');
@@ -47,6 +49,7 @@ describe('src/format/**', () => {
 
     it('should readAsModule .txt file as module record', async () => {
         const record = await readAsModule('./test/data/file.txt');
+
         expect(record.default).toEqual('hello\nworld\n');
     });
 
@@ -58,6 +61,7 @@ describe('src/format/**', () => {
         writeSync(syncPath, 'hello');
 
         const content = fs.readFileSync(asyncPath, 'utf-8');
+
         expect(content).toEqual('hello\n');
         expect(fs.readFileSync(syncPath, 'utf-8')).toEqual(content);
 
@@ -68,6 +72,7 @@ describe('src/format/**', () => {
 
     it('should reject non-string values', async () => {
         const target = path.join(tmpDir, 'non-string.txt');
+
         await expect(write(target, { a: 1 })).rejects.toThrow('must be a string');
         expect(() => writeSync(target, 42)).toThrow('must be a string');
     });

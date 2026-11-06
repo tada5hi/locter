@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 2022.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
 export type LocatorInfo = {
     directory: string,
     name: string,
@@ -23,4 +16,15 @@ export type LocatorOptions = {
 export type LocatorOptionsInput = Partial<Omit<LocatorOptions, 'cwd' | 'ignore'>> & {
     cwd?: string | string[],
     ignore?: string | string[],
+};
+
+export type LocatorUpOptionsInput = Omit<LocatorOptionsInput, 'cwd'> & {
+    cwd?: string,
+    stopAt?: string,
+};
+
+export type WalkStep = {
+    current: string,
+    stopAt: string,
+    baseOptions: Omit<LocatorOptionsInput, 'cwd'>,
 };

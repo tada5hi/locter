@@ -8,7 +8,8 @@
 export * from './built-in';
 export * from './helpers';
 export * from './package-field';
+export type { ReadPackageFieldOptions, WritePackageFieldOptions } from './types';
 export * from './registry';
 export * from './text-file';
-export * from './type';
+export * from './types';
 export * from './value';

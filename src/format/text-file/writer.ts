@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-error-is-error -- Keep compatibility with the published Node.js runtime requirement. */
 /*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
@@ -10,10 +11,10 @@ import path from 'node:path';
 import { wrapWriteError } from '../../errors';
 import type { TwinBody } from 'twinop';
 import { op, runTwinAsync, runTwinSync } from 'twinop';
-import type { IWriter } from '../type';
+import type { IWriter } from '../types';
 
 function isNotFound(e: unknown) : boolean {
-    return e instanceof Error && 'code' in e && e.code === 'ENOENT';
+    return (e instanceof Error) && 'code' in e && e.code === 'ENOENT';
 }
 
 /**
@@ -49,6 +50,7 @@ export abstract class TextFileWriter implements IWriter {
 
         try {
             let existing : string | undefined;
+
             if (this.usesExistingContent) {
                 existing = yield* op(
                     () => fs.promises.readFile(filePath, { encoding: 'utf-8' })
@@ -56,6 +58,7 @@ export abstract class TextFileWriter implements IWriter {
                             if (isNotFound(e)) {
                                 return undefined;
                             }
+
                             throw e;
                         }),
                     () => {
@@ -65,6 +68,7 @@ export abstract class TextFileWriter implements IWriter {
                             if (isNotFound(e)) {
                                 return undefined;
                             }
+
                             throw e;
                         }
                     },
@@ -72,11 +76,13 @@ export abstract class TextFileWriter implements IWriter {
             }
 
             let content = this.stringify(value, existing);
+
             if (!content.endsWith('\n')) {
                 content += '\n';
             }
 
             const directory = path.dirname(filePath);
+
             yield* op(
                 async () => {
                     await fs.promises.mkdir(directory, { recursive: true });

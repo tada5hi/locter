@@ -9,9 +9,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-    afterAll, 
-    describe, 
-    expect, 
+    afterAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import {
@@ -49,25 +49,32 @@ describe('src/format/** (write)', () => {
 
     it('should unwrap records produced by readAsModule() on write-back', async () => {
         const source = path.join(tmpDir, 'roundtrip.json');
+
         await write(source, { port: 3000 });
 
         const record = await readAsModule(source);
+
         expect(isModuleRecord(record)).toBe(true);
 
         record.default.port = 8080;
+
         const target = path.join(tmpDir, 'roundtrip-out.json');
+
         await write(target, record);
 
         // no default / __esModule wrapper ends up in the file
         const written = JSON.parse(fs.readFileSync(target, 'utf-8'));
+
         expect(written).toEqual({ port: 8080 });
     });
 
     it('should round-trip read() values symmetrically', async () => {
         const source = path.join(tmpDir, 'symmetric.yml');
+
         await write(source, { port: 3000 });
 
         const value = await read(source);
+
         value.port = 8080;
         await write(source, value);
 
@@ -77,6 +84,7 @@ describe('src/format/** (write)', () => {
     it('should write plain values carrying a literal __esModule key as-is', async () => {
         const target = path.join(tmpDir, 'esmodule-key.json');
         const value = { __esModule: true, foo: 'bar' };
+
         expect(isModuleRecord(value)).toBe(false);
 
         await write(target, value);
@@ -85,16 +93,19 @@ describe('src/format/** (write)', () => {
 
     it('should create missing parent directories', async () => {
         const target = path.join(tmpDir, 'deep', 'nested', 'dir', 'file.json');
+
         await write(target, { ok: true });
         expect(JSON.parse(fs.readFileSync(target, 'utf-8'))).toEqual({ ok: true });
 
         const targetSync = path.join(tmpDir, 'deep-sync', 'nested', 'file.json');
+
         writeSync(targetSync, { ok: true });
         expect(JSON.parse(fs.readFileSync(targetSync, 'utf-8'))).toEqual({ ok: true });
     });
 
     it('should throw WriteError for read-only formats', async () => {
         const target = path.join(tmpDir, 'file.ts');
+
         await expect(write(target, {})).rejects.toBeInstanceOf(WriteError);
         expect(() => writeSync(target, {})).toThrow(WriteError);
 
@@ -108,6 +119,7 @@ describe('src/format/** (write)', () => {
 
     it('should throw UnknownExtensionError for unknown extensions', async () => {
         const target = path.join(tmpDir, 'file.foo');
+
         await expect(write(target, {})).rejects.toBeInstanceOf(UnknownExtensionError);
         expect(() => writeSync(target, {})).toThrow(UnknownExtensionError);
     });
@@ -159,6 +171,7 @@ describe('src/format/** (write)', () => {
 
     it('should throw when the explicit format id resolves to a reader-only rule', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             id: 'peek',
             test: ['.peek'],
@@ -173,6 +186,7 @@ describe('src/format/** (write)', () => {
         });
 
         const target = path.join(tmpDir, 'explicit-reader-only.json');
+
         await expect(manager.write(target, {}, { format: 'peek' })).rejects.toThrow('The format peek is read-only.');
         expect(() => manager.writeSync(target, {}, { format: 'peek' })).toThrow('The format peek is read-only.');
     });
@@ -186,6 +200,7 @@ describe('src/format/** (write)', () => {
 
     it('should not shadow the built-in writer with a reader-only rule', async () => {
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.json'],
             reader: {
@@ -199,16 +214,19 @@ describe('src/format/** (write)', () => {
         });
 
         const target = path.join(tmpDir, 'reader-only.json');
+
         await manager.write(target, { a: 1 });
         expect(JSON.parse(fs.readFileSync(target, 'utf-8'))).toEqual({ a: 1 });
 
         const record = await manager.read(target);
+
         expect(record.sentinel).toBe(true);
     });
 
     it('should not shadow the built-in reader with a writer-only rule', async () => {
         const manager = new FormatRegistry();
         const written : unknown[] = [];
+
         manager.register({
             test: ['.json'],
             writer: {
@@ -222,23 +240,28 @@ describe('src/format/** (write)', () => {
         });
 
         const target = path.join(tmpDir, 'writer-only.json');
+
         await manager.write(target, { a: 1 });
         manager.writeSync(target, { b: 2 });
         expect(written).toEqual([{ a: 1 }, { b: 2 }]);
 
         // read still routes to the built-in JSON reader
         fs.writeFileSync(target, '{"real": true}');
+
         const record = await manager.read(target);
+
         expect(record.real).toBe(true);
     });
 
     it('should register writer lazily via factory', async () => {
         let constructed = 0;
         const manager = new FormatRegistry();
+
         manager.register({
             test: ['.custom'],
             writer: () => {
                 constructed++;
+
                 return {
                     async write() { /* noop */ },
                     writeSync() { /* noop */ },
@@ -255,12 +278,14 @@ describe('src/format/** (write)', () => {
 
     it('should reject rules with neither reader nor writer', () => {
         const manager = new FormatRegistry();
+
         expect(() => manager.register({ test: ['.foo'] })).toThrow('at least one');
     });
 
     it('should cache built-in writer instances and evict them on reset', () => {
         const manager = new FormatRegistry();
         const writer = manager.builtInWriter('json');
+
         expect(manager.builtInWriter('json')).toBe(writer);
 
         manager.reset();

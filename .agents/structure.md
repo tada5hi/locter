@@ -119,7 +119,7 @@ locter/
 
 The package is ESM-only (`"type": "module"`). There is no CJS entry point.
 
-The public API is the curated, NAMED export list in `src/index.ts` — pinned by `test/unit/public-api.spec.ts`. Per-directory barrels remain full (internal convenience for source and tests), but a symbol is only public once it is named in `src/index.ts`; adding one is a deliberate act that must update the snapshot test and the README.
+The public API is the curated, NAMED export list in `src/index.ts` — checked by `test/unit/public-api.spec.ts`. Per-directory barrels remain full (internal convenience for source and tests), but a symbol is only public once it is named in `src/index.ts`; adding one is a deliberate act that must update the snapshot test and the README.
 
 ## Separation of Concerns
 

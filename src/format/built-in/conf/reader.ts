@@ -20,6 +20,7 @@ export class ConfReader extends TextFileReader {
 
         for (const line of lines) {
             const match = line.match(/^\s*([^\s=]+)\s*=\s*(.*)?\s*$/);
+
             if (!match) {
                 continue;
             }
@@ -35,7 +36,9 @@ export class ConfReader extends TextFileReader {
 
             if (key.endsWith('[]')) {
                 const arrKey = key.slice(0, Math.max(0, key.length - 2));
+
                 config[arrKey] = (config[arrKey] || []).concat(value);
+
                 continue;
             }
 

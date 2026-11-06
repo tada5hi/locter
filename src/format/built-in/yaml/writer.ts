@@ -1,3 +1,4 @@
+import type { YAMLWriterOptions } from './types';
 /*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
@@ -5,7 +6,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Document, ToStringOptions, YAMLMap } from 'yaml';
+import type { Document, YAMLMap } from 'yaml';
 import {
     isMap,
     isNode,
@@ -15,8 +16,6 @@ import {
 } from 'yaml';
 import { hasOwnProperty, isObject } from '../../../utils';
 import { TextFileWriter } from '../../text-file';
-
-export type YAMLWriterOptions = ToStringOptions;
 
 function pairKey(key: unknown) : string {
     return isScalar(key) ? String(key.value) : String(key);
@@ -36,16 +35,17 @@ function graftMap(doc: Document, node: YAMLMap, value: Record<string, unknown>) 
         }
     }
 
-    for (const key of Object.keys(value)) {
-        const entry = value[key];
+    for (const [key, entry] of Object.entries(value)) {
         const current = node.get(key, true);
 
         if (isMap(current) && isObject(entry)) {
             graftMap(doc, current, entry);
+
             continue;
         }
 
         const replacement = doc.createNode(entry);
+
         if (isNode(current)) {
             // keep comments anchored to the value node itself
             // (`key: value # trailing`, standalone lines above the value)
@@ -86,6 +86,7 @@ export class YAMLWriter extends TextFileWriter {
         // widen from Document.Parsed: contents is replaced with
         // freshly created (non-parsed) nodes while grafting
         const doc : Document = parseDocument(existing);
+
         if (doc.errors.length > 0) {
             throw doc.errors[0];
         }

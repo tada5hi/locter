@@ -14,3 +14,13 @@ export interface IWriter {
     write: (path: string, value: unknown) => Promise<void>,
     writeSync: (path: string, value: unknown) => void
 }
+
+
+
+export type ReadPackageFieldOptions = {
+    cwd?: string,
+    walkUp?: boolean,
+    stopAt?: string,
+};
+
+export type WritePackageFieldOptions = ReadPackageFieldOptions;

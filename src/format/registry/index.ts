@@ -6,5 +6,6 @@
  */
 
 export * from './module';
+export type { FormatRegistryOptions, CompiledRule } from './types';
 export * from './singleton';
-export * from './type';
+export * from './types';

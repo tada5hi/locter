@@ -29,8 +29,8 @@ export class ConfWriter extends TextFileWriter {
         const flat : Record<string, unknown> = flatten(value, { safe: true });
 
         const lines : string[] = [];
-        for (const key of Object.keys(flat)) {
-            const entry = flat[key];
+
+        for (const [key, entry] of Object.entries(flat)) {
             if (typeof entry === 'undefined') {
                 continue;
             }
@@ -39,6 +39,7 @@ export class ConfWriter extends TextFileWriter {
                 for (const item of entry) {
                     lines.push(`${key}[]=${serializeValue(item)}`);
                 }
+
                 continue;
             }
 

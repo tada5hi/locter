@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty, isObject } from '../../../utils';
-import type { ModuleExport, ModuleExportFilterFn } from './type';
+import type { ModuleExport, ModuleExportFilterFn } from './types';
 
 type ESModule = { [key: string]: any, __esModule: boolean };
 
@@ -64,6 +64,7 @@ export function createModuleRecord(data: unknown) {
             }
 
             let descriptor = Object.getOwnPropertyDescriptor(data, key);
+
             if (
                 !descriptor ||
                 ('get' in descriptor || descriptor.writable || descriptor.configurable)
@@ -126,6 +127,7 @@ export function getModuleExport(
     filterFn: ModuleExportFilterFn,
 ): ModuleExport | undefined {
     const keys = Object.keys(data);
+
     for (const key of keys) {
         if (filterFn(key as string, data[key as string])) {
             return {

@@ -1,3 +1,4 @@
+import type { ReadPackageFieldOptions, WritePackageFieldOptions } from './types';
 /*
  * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
@@ -20,18 +21,11 @@ import { op, runTwinAsync, runTwinSync } from 'twinop';
 import { JSONWriter } from './built-in';
 import { useFormatRegistry } from './registry';
 
-export type ReadPackageFieldOptions = {
-    cwd?: string,
-    walkUp?: boolean,
-    stopAt?: string,
-};
-
-export type WritePackageFieldOptions = ReadPackageFieldOptions;
-
 function extractField<T>(pkg: unknown, field: string) : T | undefined {
     if (!isObject(pkg) || !hasOwnProperty(pkg, field)) {
         return undefined;
     }
+
     return pkg[field] as T;
 }
 
@@ -56,6 +50,7 @@ function* readPackageFieldBody<T>(
     options: ReadPackageFieldOptions,
 ) : TwinBody<T | undefined> {
     const info = yield* locatePackageBody(options);
+
     if (!info) {
         return undefined;
     }
@@ -77,6 +72,7 @@ function* readPackageFieldBody<T>(
         if (e instanceof NotFoundError) {
             return undefined;
         }
+
         throw e;
     }
 }
@@ -105,6 +101,7 @@ function* writePackageFieldBody(
     }
 
     const info = yield* locatePackageBody(options);
+
     if (!info) {
         // unlike the reader, there is nothing sensible to return —
         // a write without a target is an error
@@ -131,6 +128,7 @@ function* writePackageFieldBody(
     // dedicated writer instance: keeps the indentation (and the built-in
     // registry writer's configuration untouched)
     const writer = new JSONWriter({ indent: 'auto' });
+
     yield* op(
         () => writer.write(filePath, pkg),
         () => writer.writeSync(filePath, pkg),

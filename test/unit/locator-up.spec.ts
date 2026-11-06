@@ -18,10 +18,12 @@ describe('src/locator/up.ts', () => {
         const expectedPath = path.join(upBase, 'up.config.json');
 
         const asyncResult = await locateUp('up.config.json', { cwd: deep });
+
         expect(asyncResult).toBeDefined();
         expect(asyncResult?.path).toEqual(expectedPath);
 
         const syncResult = locateUpSync('up.config.json', { cwd: deep });
+
         expect(syncResult).toBeDefined();
         expect(syncResult?.path).toEqual(expectedPath);
     });
@@ -30,9 +32,11 @@ describe('src/locator/up.ts', () => {
         const expectedPath = path.join(upBase, 'up.config.json');
 
         const asyncResult = await locateUp('up.config.json', { cwd: upBase });
+
         expect(asyncResult?.path).toEqual(expectedPath);
 
         const syncResult = locateUpSync('up.config.json', { cwd: upBase });
+
         expect(syncResult?.path).toEqual(expectedPath);
     });
 
@@ -41,12 +45,14 @@ describe('src/locator/up.ts', () => {
             cwd: deep,
             stopAt: path.join(upBase, 'nested'),
         });
+
         expect(asyncResult).toBeUndefined();
 
         const syncResult = locateUpSync('up.config.json', {
             cwd: deep,
             stopAt: path.join(upBase, 'nested'),
         });
+
         expect(syncResult).toBeUndefined();
     });
 
@@ -54,9 +60,11 @@ describe('src/locator/up.ts', () => {
         const expectedPath = path.join(upBase, 'up.config.json');
 
         const asyncResult = await locateUp('up.config.json', { cwd: deep, stopAt: upBase });
+
         expect(asyncResult?.path).toEqual(expectedPath);
 
         const syncResult = locateUpSync('up.config.json', { cwd: deep, stopAt: upBase });
+
         expect(syncResult?.path).toEqual(expectedPath);
     });
 
@@ -64,17 +72,21 @@ describe('src/locator/up.ts', () => {
         const expectedPath = path.join(upBase, 'up.config.json');
 
         const asyncResult = await locateUp('up.config.{ts,json,yaml}', { cwd: deep, stopAt: upBase });
+
         expect(asyncResult?.path).toEqual(expectedPath);
 
         const syncResult = locateUpSync('up.config.{ts,json,yaml}', { cwd: deep, stopAt: upBase });
+
         expect(syncResult?.path).toEqual(expectedPath);
     });
 
     it('should return undefined when nothing matches up to the root', async () => {
         const asyncResult = await locateUp('definitely-not-here.json', { cwd: deep });
+
         expect(asyncResult).toBeUndefined();
 
         const syncResult = locateUpSync('definitely-not-here.json', { cwd: deep });
+
         expect(syncResult).toBeUndefined();
     });
 
@@ -85,17 +97,21 @@ describe('src/locator/up.ts', () => {
         // the walk find the file. The previous implementation resolved against
         // process.cwd() instead, which would cap at an unrelated directory.
         const asyncResult = await locateUp('up.config.json', { cwd: deep, stopAt: '../..' });
+
         expect(asyncResult?.path).toEqual(expectedPath);
 
         const syncResult = locateUpSync('up.config.json', { cwd: deep, stopAt: '../..' });
+
         expect(syncResult?.path).toEqual(expectedPath);
 
         // `stopAt: '..'` resolves to `upBase/nested` → cap before reaching
         // `upBase` → no match. Confirms the resolution is relative to `cwd`.
         const asyncCapped = await locateUp('up.config.json', { cwd: deep, stopAt: '..' });
+
         expect(asyncCapped).toBeUndefined();
 
         const syncCapped = locateUpSync('up.config.json', { cwd: deep, stopAt: '..' });
+
         expect(syncCapped).toBeUndefined();
     });
 });
