@@ -20,7 +20,8 @@ npm run lint            # eslint (flat config in eslint.config.js)
 npm run lint:fix        # eslint --fix
 ```
 
-- **Node.js**: `>=22.0.0` (CI runs on Node 24)
+- **Runtime Node.js**: `>=22.0.0` (CI runs on Node 24)
+- **Development Node.js**: 24.11+ on the 24.x line, or 26+; `.nvmrc` selects Node 24 for the installed tooling.
 - **Package manager**: npm (lockfile committed)
 - **Module system**: ESM-only (`"type": "module"`)
 - **Build**: TypeScript only typechecks (`noEmit: true`); `tsdown` bundles `src/index.ts` to `dist/index.mjs` and emits `dist/index.d.mts`
