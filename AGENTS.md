@@ -1,5 +1,3 @@
-<!-- NOTE: Keep this file and all corresponding files in the .agents directory updated as the project evolves. When making architectural changes, adding new patterns, or discovering important conventions, update the relevant sections. -->
-
 # Locter — Agent Guide
 
 Locter is a small Node.js/TypeScript library that locates files via glob patterns and reads and writes them on demand. Each supported file format couples a reader with an optional writer: `.json`, `.yml`/`.yaml`, and `.conf` are read- and writable, JavaScript/TypeScript modules (`.js`, `.mjs`, `.mts`, `.cjs`, `.cts`, `.ts`) are read-only. A singleton `FormatRegistry` dispatches by extension and can be extended with custom formats. The package ships as ESM-only.
@@ -36,6 +34,15 @@ No standalone documentation site. Public usage examples live in `README.MD`. Whe
 - **[Architecture](.agents/architecture.md)** — Locator/Format split, the `IReader`/`IWriter` ports + rule-based dispatcher, and the `FormatRegistry` singleton
 - **[Testing](.agents/testing.md)** — Vitest + `test/data/` fixture files, and the per-file-extension test suites
 - **[Conventions](.agents/conventions.md)** — Conventional Commits via commitlint/husky, flat ESLint config, release-please + monoship, and CI
+
+### Writing agent docs
+
+Keep the guides factual and focused on contracts a future change could silently break.
+
+- Update an existing line when an invariant or cross-cutting rule changes. Put defect stories and verification details in the PR, and user-facing changes in the documentation site or release notes.
+- Keep subsystem detail in `.agents/topics/` and link it from the relevant guide; do not import topic files into `CLAUDE.md`.
+- Describe current behavior and cite issues or PRs, rather than local plan files or a running history of completed work.
+- `npm run lint` enforces the shared config's agent-doc size, import-budget and history checks. Preserve the critical contracts when splitting a guide.
 
 ## Commits, Issues & Pull Requests
 
