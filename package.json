@@ -57,7 +57,7 @@
     },
     "license": "MIT",
     "devDependencies": {
-        "@tada5hi/commitlint-config": "^1.3.1",
+        "@tada5hi/commitlint-config": "^1.3.3",
         "@tada5hi/eslint-config": "^3.3.1",
         "@tada5hi/tsconfig": "^0.7.2",
         "@vitest/coverage-v8": "^5.1.0",
@@ -65,11 +65,11 @@
         "husky": "^9.1.7",
         "tsdown": "^0.23.7",
         "typescript": "^6.0.3",
-        "typescript-eslint": "^8.72.1",
+        "typescript-eslint": "^8.72.2",
         "vitest": "^5.1.0"
     },
     "dependencies": {
-        "@ebec/core": "^1.3.1",
+        "@ebec/core": "^1.3.2",
         "destr": "^2.0.5",
         "fast-glob": "^3.3.3",
         "flat": "^6.0.1",
