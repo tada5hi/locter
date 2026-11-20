@@ -15,6 +15,7 @@ import {
     it,
 } from 'vitest';
 import {
+    FormatRegistry,
     LoadError,
     LocterError,
     ModuleReader,
@@ -280,5 +281,67 @@ describe('src/format/built-in/module (options)', () => {
 
         expect(current.strategy).toBeUndefined();
         expect(current.cache).toBeUndefined();
+    });
+
+    it('should configure the built-in module reader of a scoped registry', async () => {
+        const { entry, dir } = createEntryWithDependency(1);
+        const registry = new FormatRegistry({
+            module: {
+                strategy: 'transpile',
+                cache: false,
+                transpileCache: false,
+            },
+        });
+
+        expect((await registry.read(entry)).default).toEqual(1);
+        writeModule(dir, 'dep.ts', 'export const value = 2;\n');
+        expect((await registry.read(entry)).default).toEqual(2);
+        expect(registry.readSync(entry).default).toEqual(2);
+
+        // the global registry is unaffected
+        const globalReader = useFormatRegistry().builtInReader('module');
+        const current = globalReader.configure({});
+
+        expect(current.strategy).toBeUndefined();
+    });
+
+    it('should reject an invalid module configuration at construction', () => {
+        expect(() => new FormatRegistry({ module: { cache: false } })).toThrow(LocterError);
+    });
+
+    it('should read bare specifiers with the transpile strategy', async () => {
+        const registry = new FormatRegistry({
+            module: {
+                strategy: 'transpile',
+                cache: false,
+                transpileCache: false,
+            },
+        });
+
+        const result = await registry.read('yaml');
+
+        expect(typeof result.parse).toEqual('function');
+
+        const resultSync = registry.readSync('yaml');
+
+        expect(typeof resultSync.parse).toEqual('function');
+    });
+
+    it('should restore construction module options on reset', async () => {
+        const { entry, dir } = createEntryWithDependency(1);
+        const registry = new FormatRegistry({
+            module: {
+                strategy: 'transpile',
+                cache: false,
+                transpileCache: false,
+            },
+        });
+
+        registry.builtInReader('module').configure({ strategy: 'native', cache: true });
+        registry.reset();
+
+        expect((await registry.read(entry)).default).toEqual(1);
+        writeModule(dir, 'dep.ts', 'export const value = 2;\n');
+        expect((await registry.read(entry)).default).toEqual(2);
     });
 });

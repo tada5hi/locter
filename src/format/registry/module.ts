@@ -1,3 +1,4 @@
+import type { ModuleReaderOptions } from '../built-in/module/types';
 import type {
     CompiledRule,
     FormatRegistration,
@@ -84,12 +85,23 @@ export class FormatRegistry {
 
     protected ruleCounter : number;
 
+    /**
+     * Construction options of the built-in module reader.
+     */
+    protected moduleOptions? : ModuleReaderOptions;
+
     constructor(options: FormatRegistryOptions = {}) {
         this.rules = [];
         this.builtInReaderCache = new Map();
         this.builtInWriterCache = new Map();
         this.builtInExtensions = new Map();
         this.ruleCounter = 0;
+
+        if (options.module) {
+            this.moduleOptions = { ...options.module };
+            // eager: an invalid configuration fails at construction
+            this.builtInReaderCache.set('module', new ModuleReader(this.moduleOptions));
+        }
 
         const ids = Object.keys(BUILT_IN_PRESETS) as BuiltInFormatId[];
 
@@ -387,7 +399,9 @@ export class FormatRegistry {
         let reader = this.builtInReaderCache.get(id);
 
         if (!reader) {
-            reader = BUILT_IN_PRESETS[id].reader();
+            reader = id === 'module' && this.moduleOptions ?
+                new ModuleReader(this.moduleOptions) :
+                BUILT_IN_PRESETS[id].reader();
             this.builtInReaderCache.set(id, reader);
         }
 
