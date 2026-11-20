@@ -725,7 +725,7 @@ const registry = new FormatRegistry({
     module: {
         // load through the transpiling loader only (no native import())
         strategy: 'transpile',
-        // every read is fresh, including transitively imported local files
+        // every read reloads TypeScript files, including their TypeScript imports
         cache: false,
         // don't persist transpiled output (e.g. on a read-only file system)
         transpileCache: false,
@@ -755,6 +755,16 @@ and by `setModuleReader(options)` for the global registry. Two combinations
 are rejected with a `LocterError`: `cache: false` with the `'native'`
 strategy (native imports cannot be loaded fresh), and custom `load` /
 `loadSync` functions with the `'transpile'` strategy.
+
+Limits of fresh reads:
+
+- `cache: false` reloads TypeScript files (`.ts`, `.mts`, `.cts`). Plain
+  JavaScript files (`.js`, `.mjs`, `.cjs`), as entries or as imports of a
+  TypeScript file, are loaded by Node itself and stay cached for the life of
+  the process.
+- With the cache enabled, changing `alias` (via `configure` /
+  `setModuleReader`) only affects modules that were not loaded yet; already
+  loaded modules are not re-evaluated. Use `cache: false` for that.
 
 ## Migration
 

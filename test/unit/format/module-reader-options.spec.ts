@@ -421,5 +421,48 @@ describe('src/format/built-in/module (options)', () => {
             process.chdir(cwd);
         }
     });
+
+    it('should apply alias changes only to modules not loaded yet when cache is enabled', async () => {
+        // documented boundary: like native imports, a cached module is not
+        // re-evaluated when resolution settings change (use cache: false)
+        const dir = createScenario();
+        const a = writeModule(dir, 'a.ts', 'export default \'a\';\n');
+        const b = writeModule(dir, 'b.ts', 'export default \'b\';\n');
+        const entry = writeModule(dir, 'uses-alias.ts', 'import v from \'locter-cached-alias\';\nexport default v;\n');
+        const other = writeModule(dir, 'other.ts', 'import v from \'locter-cached-alias\';\nexport default v;\n');
+
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            transpileCache: false,
+            alias: { 'locter-cached-alias': a },
+        });
+
+        expect(defaultOf(await reader.read(entry))).toEqual('a');
+
+        reader.configure({ alias: { 'locter-cached-alias': b } });
+
+        expect(defaultOf(await reader.read(entry))).toEqual('a');
+        expect(defaultOf(await reader.read(other))).toEqual('b');
+    });
+
+    it('should keep plain JavaScript cached natively even with cache disabled', async () => {
+        // documented boundary: cache: false reloads TypeScript files; plain
+        // JavaScript is loaded by Node itself, whose cache cannot be bypassed
+        const dir = createScenario();
+
+        writeModule(dir, 'dep.mjs', 'export const value = 1;\n');
+
+        const entry = writeModule(dir, 'entry.ts', 'import { value } from \'./dep.mjs\';\nexport default value;\n');
+
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        expect(defaultOf(await reader.read(entry))).toEqual(1);
+        writeModule(dir, 'dep.mjs', 'export const value = 2;\n');
+        expect(defaultOf(await reader.read(entry))).toEqual(1);
+    });
 });
 

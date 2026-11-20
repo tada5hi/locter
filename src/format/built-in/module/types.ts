@@ -39,10 +39,11 @@ export type ModuleReaderOptions = {
      */
     strategy?: ModuleReaderStrategy,
     /**
-     * Keep loaded modules in memory. `false` makes every read load the
-     * module (and its transitively imported local files) fresh, e.g. for
-     * live reloads. Requires strategy `transpile`: native imports cannot
-     * be loaded fresh. Default: `true`.
+     * Keep loaded modules in memory. `false` makes every read load
+     * TypeScript files (`.ts`, `.mts`, `.cts`) and their TypeScript imports
+     * fresh, e.g. for live reloads. Plain JavaScript (`.js`, `.mjs`, `.cjs`)
+     * is loaded by Node itself and stays cached. Requires strategy
+     * `transpile`: native imports cannot be loaded fresh. Default: `true`.
      */
     cache?: boolean,
     /**
@@ -53,7 +54,8 @@ export type ModuleReaderOptions = {
     transpileCache?: boolean | string,
     /**
      * Map bare specifiers to fixed paths, e.g. to pin a package to the
-     * host's own installed copy. Applies to transpiled loads.
+     * host's own installed copy. Applies to transpiled loads. With `cache`
+     * enabled, changing it only affects modules not loaded yet.
      */
     alias?: Record<string, string>,
     /**
