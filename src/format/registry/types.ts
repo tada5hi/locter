@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ModuleReaderOptions } from '../built-in/module/types';
 import type { IReader, IWriter } from '../types';
 
 /**
@@ -103,7 +104,13 @@ export type FormatRegistryOptions = {
     /**
      * Seed user rules (matched before built-ins, in array order).
      */
-    rules?: Rule[]
+    rules?: Rule[],
+    /**
+     * Options for this registry's built-in module reader (strategy, cache,
+     * transpile cache, aliases). Scoped to this registry, validated at
+     * construction, and kept across reset().
+     */
+    module?: ModuleReaderOptions
 };
 
 export /**

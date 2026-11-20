@@ -97,6 +97,7 @@ export type {
     ModuleLoadOptions,
     ModuleLoadSyncFn,
     ModuleReaderOptions,
+    ModuleReaderStrategy,
     ReadOptions,
     ReadPackageFieldOptions,
     ReaderFactory,

@@ -724,6 +724,61 @@ export default defineConfig({
 });
 ```
 
+#### Reloading modules
+
+Native `import()` caches every module for the lifetime of the process, so by
+default a second `read('agent.ts')` after an edit returns the old code. The
+module reader can be switched to a transpiling strategy that loads modules
+fresh:
+
+```typescript
+import { FormatRegistry } from 'locter';
+
+const registry = new FormatRegistry({
+    module: {
+        // load through the transpiling loader only (no native import())
+        strategy: 'transpile',
+        // every read reloads TypeScript files, including their TypeScript imports
+        cache: false,
+        // don't persist transpiled output (e.g. on a read-only file system)
+        transpileCache: false,
+        // pin bare specifiers to the host's own installed copies
+        alias: { '@my/core': '/app/node_modules/@my/core/dist/index.mjs' },
+    },
+});
+
+const agent = await registry.read('./agents/foo/agent.ts');
+```
+
+| Option           | Default    | Meaning                                                                                 |
+|------------------|------------|-----------------------------------------------------------------------------------------|
+| `strategy`       | `'native'` | `'native'`: `import()`/`require()` first, transpiling loader as fallback. `'transpile'`: transpiling loader only for file paths; bare specifiers are read as with `'native'`. |
+| `cache`          | `true`     | Keep loaded modules in memory. `false` requires `strategy: 'transpile'`.                |
+| `transpileCache` | on         | Persist transpiled output on disk: `false`, `true`, or a directory path.                |
+| `alias`          | none       | Map bare specifiers to fixed paths.                                                     |
+
+Under `'transpile'`, ESM packages from `node_modules` are still imported
+natively by `read`, so they stay one shared instance with the host's own
+imports (`instanceof` and identity checks keep working). `readSync` has no
+native path there and resolves the `require` condition, so a dual package can
+load as a separate CJS copy through it.
+
+The same options are accepted by `new ModuleReader(options)` (e.g. in a rule)
+and by `setModuleReader(options)` for the global registry. Two combinations
+are rejected with a `LocterError`: `cache: false` with the `'native'`
+strategy (native imports cannot be loaded fresh), and custom `load` /
+`loadSync` functions with the `'transpile'` strategy.
+
+Limits of fresh reads:
+
+- `cache: false` reloads TypeScript files (`.ts`, `.mts`, `.cts`). Plain
+  JavaScript files (`.js`, `.mjs`, `.cjs`), as entries or as imports of a
+  TypeScript file, are loaded by Node itself and stay cached for the life of
+  the process.
+- With the cache enabled, changing `alias` (via `configure` /
+  `setModuleReader`) only affects modules that were not loaded yet; already
+  loaded modules are not re-evaluated. Use `cache: false` for that.
+
 ## Migration
 
 ### Migrating from 3.x
