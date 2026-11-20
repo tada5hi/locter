@@ -36,9 +36,11 @@ type BabelAPI = {
         classPrivateProperty(key: Node, value: Node) : Node,
         cloneNode(node: Node) : Node,
         identifier(name: string) : Node,
+        numericLiteral(value: number) : Node,
         privateName(id: Node) : Node,
         stringLiteral(value: string) : Node,
         thisExpression() : Node,
+        unaryExpression(operator: string, argument: Node) : Node,
     },
 };
 
@@ -103,7 +105,7 @@ function collectPrivateNames(classBody: NodePath) : Set<string> {
  * reflection (Object.keys, Reflect.ownKeys, JSON).
  *
  * It also replaces jiti's `Reflect.metadata?.(...) || ((t) => t)` fallback
- * by `() => undefined`, as TypeScript's `__metadata` helper does: for a
+ * by `() => void 0`, as TypeScript's `__metadata` helper does: for a
  * property decorator, a returned target is taken as the new descriptor and
  * drops the field's initial value.
  */
@@ -121,7 +123,8 @@ export function createDecoratorFieldsPlugin(api: BabelAPI) {
                     isReflectMetadataCall(node.left) &&
                     isIdentityArrow(node.right)
                 ) {
-                    node.right = t.arrowFunctionExpression([], t.identifier('undefined'));
+                    // void 0: an enclosing binding named undefined can not shadow it
+                    node.right = t.arrowFunctionExpression([], t.unaryExpression('void', t.numericLiteral(0)));
                 }
             },
             ClassProperty(path: NodePath, state: PluginState) {

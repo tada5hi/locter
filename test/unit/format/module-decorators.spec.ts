@@ -139,6 +139,37 @@ describe('src/format/built-in/module (decorators)', () => {
         });
     });
 
+    it('should keep initial values in a scope that shadows undefined', async () => {
+        expect(reflect.metadata).toBeUndefined();
+
+        counter++;
+
+        const dir = path.join(tmpDir, `scenario-${counter}`);
+
+        fs.mkdirSync(dir);
+
+        const entry = path.join(dir, 'shadowed.ts');
+
+        fs.writeFileSync(entry, `
+function Field() : PropertyDecorator {
+    return () => {};
+}
+
+export function make(undefined: any) {
+    class Entity {
+        @Field() count: number = 1;
+    }
+
+    return new Entity();
+}
+`);
+
+        const reader = new ModuleReader({ strategy: 'transpile', transpileCache: false });
+        const { make } = await reader.read(entry) as { make: (input: unknown) => { count: number } };
+
+        expect(make({ enumerable: true }).count).toEqual(1);
+    });
+
     it('should emit design:type metadata for decorated fields', async () => {
         const types : Record<string, string> = {};
 
