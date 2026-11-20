@@ -41,6 +41,7 @@ locter/
 │   │       ├── module/             # ModuleReader (jiti-backed JS/TS/ESM/CJS reader; read-only format)
 │   │       │   ├── reader.ts
 │   │       │   ├── constants.ts    # MODULE_FILE_EXTENSIONS (shared by registry + jiti config)
+│   │       │   ├── decorators.ts   # Babel plugin for jiti: legacy decorator fields + TRANSFORM_REVISION (transpile cache folder)
 │   │       │   ├── utils.ts        # toModuleRecord, createModuleRecord, isModuleRecord, isESModule, getModuleExport
 │   │       │   └── types.ts
 │   │       ├── json/               # JSONReader (fs + JSON.parse) + JSONWriter (indent: number | string | 'auto')

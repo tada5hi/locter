@@ -8,6 +8,7 @@
 import { createJiti } from 'jiti';
 import type { JitiOptions } from 'jiti';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { LocterError, wrapLoaderError } from '../../../errors';
@@ -26,6 +27,7 @@ import {
 } from '../../../utils';
 import type { IReader } from '../../types';
 import { MODULE_FILE_EXTENSIONS } from './constants';
+import { TRANSFORM_REVISION, createDecoratorFieldsPlugin } from './decorators';
 import type {
     ModuleLoadFn,
     ModuleLoadOptions,
@@ -57,6 +59,25 @@ function isUnrecoverableError(error: unknown) : boolean {
  */
 function isFileSystemPath(input: string) : boolean {
     return path.isAbsolute(input) || /^\.\.?([\\/]|$)/.test(input);
+}
+
+/**
+ * jiti keys its transpile cache by its own version and the source only,
+ * not by the transform options. locter adds a plugin, so it keeps its
+ * output apart: in a directory of its own, named by the transform
+ * revision. Otherwise output cached by an older locter, or by another
+ * tool using jiti on the same file, would be served.
+ */
+function buildTranspileCacheDirectory(input?: boolean | string) : string | false {
+    if (input === false) {
+        return false;
+    }
+
+    const base = typeof input === 'string' ?
+        input :
+        path.join(os.tmpdir(), 'jiti');
+
+    return path.join(base, `locter-r${TRANSFORM_REVISION}`);
 }
 
 function validateOptions(options: ModuleReaderOptions) : void {
@@ -114,14 +135,14 @@ export class ModuleReader implements IReader {
      */
     protected useInstance() : Jiti {
         if (!this.instance) {
-            const options : JitiOptions = { extensions: [...MODULE_FILE_EXTENSIONS] };
+            const options : JitiOptions = {
+                extensions: [...MODULE_FILE_EXTENSIONS],
+                transformOptions: { babel: { plugins: [createDecoratorFieldsPlugin] } },
+                fsCache: buildTranspileCacheDirectory(this.transpileCache),
+            };
 
             if (typeof this.cache !== 'undefined') {
                 options.moduleCache = this.cache;
-            }
-
-            if (typeof this.transpileCache !== 'undefined') {
-                options.fsCache = this.transpileCache;
             }
 
             if (typeof this.alias !== 'undefined') {
