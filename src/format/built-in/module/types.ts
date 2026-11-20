@@ -25,7 +25,8 @@ export type ModuleLoadSyncFn = (id: string) => unknown;
  *
  * - `native`: Node's own `import()` / `require()` first, a transpiling
  *   loader only as fallback for recoverable failures.
- * - `transpile`: the transpiling loader only. Local TS/JS files are
+ * - `transpile`: the transpiling loader only, for file paths (bare
+ *   specifiers are read like under `native`). Local TS/JS files are
  *   transpiled (so they can be loaded fresh, see `cache`), while ESM
  *   packages from node_modules are still imported natively and stay one
  *   shared instance with the host's own imports.

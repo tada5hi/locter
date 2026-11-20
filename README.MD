@@ -734,12 +734,12 @@ const registry = new FormatRegistry({
     },
 });
 
-const agent = await registry.read('agents/foo/agent.ts');
+const agent = await registry.read('./agents/foo/agent.ts');
 ```
 
 | Option           | Default    | Meaning                                                                                 |
 |------------------|------------|-----------------------------------------------------------------------------------------|
-| `strategy`       | `'native'` | `'native'`: `import()`/`require()` first, transpiling loader as fallback. `'transpile'`: transpiling loader only. |
+| `strategy`       | `'native'` | `'native'`: `import()`/`require()` first, transpiling loader as fallback. `'transpile'`: transpiling loader only for file paths; bare specifiers are read as with `'native'`. |
 | `cache`          | `true`     | Keep loaded modules in memory. `false` requires `strategy: 'transpile'`.                |
 | `transpileCache` | on         | Persist transpiled output on disk: `false`, `true`, or a directory path.                |
 | `alias`          | none       | Map bare specifiers to fixed paths.                                                     |

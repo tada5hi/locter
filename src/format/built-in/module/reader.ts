@@ -177,14 +177,16 @@ export class ModuleReader implements IReader {
      * jiti fallback. The divergence is pinned by the fallback tests in
      * test/unit/format/module.spec.ts.
      *
-     * With strategy 'transpile' both variants go through the transpiling
-     * loader only, without native import()/require() and without any
-     * fallback. The async variant imports ESM packages natively (one shared
+     * With strategy 'transpile' both variants load FILE PATHS through the
+     * transpiling loader only, without native import()/require() and
+     * without any fallback. Bare specifiers (package names) are read like
+     * under 'native', so they resolve from the same base (locter's own
+     * location) instead of the working directory. The async variant imports ESM packages natively (one shared
      * instance with the host); the sync variant resolves the `require`
      * condition, so a dual package may load as a separate CJS instance there.
      */
     async read(input: string) {
-        if (this.strategy === 'transpile') {
+        if (this.strategy === 'transpile' && isFilePath(input)) {
             try {
                 return await this.useInstance().import(this.build(input));
             } catch (e) {
@@ -210,7 +212,7 @@ export class ModuleReader implements IReader {
     }
 
     readSync(input: string) {
-        if (this.strategy === 'transpile') {
+        if (this.strategy === 'transpile' && isFilePath(input)) {
             try {
                 return this.useInstance()(this.build(input));
             } catch (e) {

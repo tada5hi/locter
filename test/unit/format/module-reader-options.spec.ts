@@ -344,4 +344,29 @@ describe('src/format/built-in/module (options)', () => {
         writeModule(dir, 'dep.ts', 'export const value = 2;\n');
         expect((await registry.read(entry)).default).toEqual(2);
     });
+
+    it('should resolve bare specifiers like the native strategy, independent of the working directory', async () => {
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        const cwd = process.cwd();
+
+        // a directory from which the yaml package is not resolvable
+        process.chdir(createScenario());
+
+        try {
+            const result = await reader.read('yaml') as { parse: unknown };
+
+            expect(typeof result.parse).toEqual('function');
+
+            const resultSync = reader.readSync('yaml') as { parse: unknown };
+
+            expect(typeof resultSync.parse).toEqual('function');
+        } finally {
+            process.chdir(cwd);
+        }
+    });
 });
