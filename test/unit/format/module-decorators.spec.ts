@@ -24,7 +24,8 @@ let counter = 0;
 
 /**
  * Legacy (experimentalDecorators) property decorators, as used by e.g.
- * TypeORM entities: plain and initialized fields, inheritance, a field
+ * TypeORM entities: plain, definitely assigned (`!`) and initialized
+ * fields, inheritance, a field
  * read by a later initializer, a decorator returning an accessor, a static
  * field and a private field of the class itself.
  */
@@ -44,7 +45,7 @@ function Computed() : any {
 }
 
 export class Base {
-    @Field() id: number;
+    @Field() id!: number;
 }
 
 export class Entity extends Base {

@@ -104,6 +104,12 @@ function collectPrivateNames(classBody: NodePath) : Set<string> {
  * shadowed. The private field holds no value and is invisible to
  * reflection (Object.keys, Reflect.ownKeys, JSON).
  *
+ * A decorated field declared with definite assignment (`id!: number`)
+ * loses its `!` first: the decorators transform gives the field an
+ * initializer, which the TypeScript transform rejects for such a field
+ * ("Definitely assigned fields cannot be initialized here"). `!` has no
+ * runtime meaning, so the field then behaves like `id: number`.
+ *
  * It also replaces jiti's `Reflect.metadata?.(...) || ((t) => t)` fallback
  * by `() => void 0`, as TypeScript's `__metadata` helper does: for a
  * property decorator, a returned target is taken as the new descriptor and
@@ -115,6 +121,17 @@ export function createDecoratorFieldsPlugin(api: BabelAPI) {
     return {
         name: 'locter:legacy-decorator-fields',
         visitor: {
+            Program(path: NodePath) {
+                // before any class is visited, i.e. before the decorators
+                // and the TypeScript transform touch its fields
+                path.traverse({
+                    ClassProperty(field) {
+                        if (field.node.definite && field.node.decorators?.length) {
+                            field.node.definite = false;
+                        }
+                    },
+                });
+            },
             LogicalExpression(path: NodePath) {
                 const { node } = path;
 
