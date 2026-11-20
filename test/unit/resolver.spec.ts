@@ -16,7 +16,6 @@ import {
     it,
 } from 'vitest';
 import {
-    LoadError,
     LocterError,
     NotFoundError,
     resolveModule,
@@ -138,12 +137,49 @@ describe('src/resolver', () => {
         expect(error).toBeInstanceOf(NotFoundError);
     });
 
-    it('should not report a non-exported subpath as not found', async () => {
+    it('should throw NotFoundError for a non-exported subpath', async () => {
         const error = await catchBoth('fake-pkg/internal.js', { cwd: basePath });
 
-        expect(error).toBeInstanceOf(LoadError);
-        expect(error).not.toBeInstanceOf(NotFoundError);
-        expect((error as LoadError).code).toEqual('ERR_PACKAGE_PATH_NOT_EXPORTED');
+        expect(error).toBeInstanceOf(NotFoundError);
+    });
+
+    it('should not fall back to require entries', async () => {
+        const error = await catchBoth('require-only', { cwd: basePath });
+
+        expect(error).toBeInstanceOf(NotFoundError);
+    });
+
+    it('should resolve require entries when the require condition is given', async () => {
+        const result = await resolveBoth('require-only', {
+            cwd: basePath,
+            conditions: ['require'],
+        });
+
+        expect(result).toEqual(path.join(basePath, 'node_modules', 'require-only', 'index.cjs'));
+    });
+
+    it('should not probe extensions or directory indexes by default', async () => {
+        expect(await catchBoth('./local', { cwd: basePath })).toBeInstanceOf(NotFoundError);
+        expect(await catchBoth('./dir', { cwd: basePath })).toBeInstanceOf(NotFoundError);
+    });
+
+    it('should probe extensions when opted in', async () => {
+        const result = await resolveBoth('./local', {
+            cwd: basePath,
+            extensions: ['.js'],
+        });
+
+        expect(result).toEqual(path.join(basePath, 'local.js'));
+    });
+
+    it('should resolve a directory index when opted in', async () => {
+        const result = await resolveBoth('./dir', {
+            cwd: basePath,
+            extensions: ['.js'],
+            suffixes: ['', '/index'],
+        });
+
+        expect(result).toEqual(path.join(basePath, 'dir', 'index.js'));
     });
 
     it('should reject builtin modules (no file path)', async () => {

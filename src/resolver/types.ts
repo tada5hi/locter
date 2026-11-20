@@ -7,7 +7,7 @@
 
 export type ResolveModuleOptions = {
     /**
-     * Directory to resolve from (same semantics as locate()).
+     * Directory to resolve from.
      *
      * default: process.cwd()
      */
@@ -18,7 +18,21 @@ export type ResolveModuleOptions = {
      */
     parentURL?: string | URL,
     /**
-     * Export conditions, prepended to the defaults ['node', 'import'].
+     * Export conditions, added to the defaults ['node', 'import'].
+     * The key order of the package's "exports" decides which entry
+     * matches, not the order of this list.
      */
     conditions?: string[],
+    /**
+     * Opt-in: extensions to try for extensionless specifiers
+     * (e.g. ['.ts', '.js'] lets './file' resolve to './file.ts').
+     * Strict ESM resolution (no extension probing) by default.
+     */
+    extensions?: string[],
+    /**
+     * Opt-in: path suffixes to try (e.g. ['', '/index'] lets './dir'
+     * resolve to './dir/index.js' together with extensions).
+     * Strict ESM resolution by default.
+     */
+    suffixes?: string[],
 };

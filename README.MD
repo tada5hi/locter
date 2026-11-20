@@ -204,7 +204,7 @@ import { resolveModule, resolveModuleSync, NotFoundError } from 'locter';
 await resolveModule('yaml', { cwd: '/path/to/app' });
 // '/path/to/app/node_modules/yaml/dist/index.js'
 
-// custom export conditions are prepended to the defaults ['node', 'import']
+// custom export conditions are added to the defaults ['node', 'import']
 resolveModuleSync('my-lib/sub', {
     cwd: '/path/to/app',
     conditions: ['development'],
@@ -226,18 +226,36 @@ try {
 
 | Option       | Type              | Default         | Notes                                                              |
 |--------------|-------------------|-----------------|--------------------------------------------------------------------|
-| `cwd`        | `string`          | `process.cwd()` | Directory to resolve from (same semantics as `locate()`)           |
+| `cwd`        | `string`          | `process.cwd()` | Directory to resolve from                                          |
 | `parentURL`  | `string \| URL`   | -               | Resolve relative to this file (path or `file:` URL); wins over `cwd` |
-| `conditions` | `string[]`        | `[]`            | Export conditions, prepended to `['node', 'import']` (deduplicated) |
+| `conditions` | `string[]`        | `[]`            | Export conditions, added to `['node', 'import']` (deduplicated)    |
+| `extensions` | `string[]`        | -               | Opt-in: extensions to try for extensionless specifiers (e.g. `['.ts', '.js']`) |
+| `suffixes`   | `string[]`        | -               | Opt-in: path suffixes to try (e.g. `['', '/index']` for directory index files) |
+
+Resolution follows Node's ESM rules (powered by
+[`exsolve`](https://github.com/unjs/exsolve)): only the given conditions
+plus `node` and `import` can match, with no fallback to `require` entries,
+so a package that only exports a `require` entry does not resolve unless
+you pass `conditions: ['require']` to ask for CommonJS entries. As in
+Node, the key order of the package's `exports` map decides which entry
+matches, not the order of `conditions`. Extensionless (`./file`) and
+directory (`./dir`) specifiers only resolve when you opt in:
+
+```typescript
+resolveModuleSync('./dir', {
+    extensions: ['.ts', '.js'],
+    suffixes: ['', '/index'],
+}); // '/path/to/dir/index.ts'
+```
 
 Results are always real paths: like Node's default resolution, the
 resolver follows symlinks (e.g. workspace links), so a package linked into
 `node_modules` resolves to the file at its real location.
 
-Errors: a specifier that does not resolve throws `NotFoundError`. Other
-failures, such as a subpath that the package does not export
-(`ERR_PACKAGE_PATH_NOT_EXPORTED`), throw `LoadError`. Builtin modules
-(`node:fs`) have no file path and throw `LocterError`.
+Errors: a specifier that does not resolve throws `NotFoundError`, whatever
+the reason (not installed, a subpath the package does not export, or no
+entry matching the conditions). Builtin modules (`node:fs`) have no file
+path and throw `LocterError`.
 
 ### Reader
 

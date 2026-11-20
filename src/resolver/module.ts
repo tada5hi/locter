@@ -7,8 +7,8 @@
 
 import { isBuiltin } from 'node:module';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createJiti } from 'jiti';
+import { pathToFileURL } from 'node:url';
+import { resolveModulePath } from 'exsolve';
 import { LocterError, wrapLoaderError } from '../errors';
 import type { ResolveModuleOptions } from './types';
 
@@ -46,19 +46,15 @@ function resolveFilePath(specifier: string, options: ResolveModuleOptions = {}) 
         });
     }
 
-    const parentURL = buildParentURL(options);
-    const jiti = createJiti(parentURL, {
-        moduleCache: false,
-        fsCache: false,
-    });
-
     try {
-        const url = jiti.esmResolve(specifier, {
-            parentURL,
+        return resolveModulePath(specifier, {
+            from: buildParentURL(options),
             conditions: buildConditions(options.conditions),
+            extensions: options.extensions,
+            suffixes: options.suffixes,
+            // no shared cache: installs and links may change between calls
+            cache: false,
         });
-
-        return fileURLToPath(url);
     } catch (e) {
         throw wrapLoaderError(e, specifier);
     }
@@ -69,15 +65,14 @@ function resolveFilePath(specifier: string, options: ResolveModuleOptions = {}) 
  * file path, honoring package "exports" with the given export conditions.
  * Symlinks are always resolved: the result is the real path.
  *
- * @throws NotFoundError when the specifier does not resolve.
- * @throws LoadError for other resolution failures (e.g. a subpath that is
- *         not exported).
+ * @throws NotFoundError when the specifier does not resolve (not installed,
+ *         not exported, or no entry matching the conditions).
  */
 export async function resolveModule(
     specifier: string,
     options?: ResolveModuleOptions,
 ) : Promise<string> {
-    // jiti's esmResolve is sync-only, so the async variant shares the sync path.
+    // exsolve resolves synchronously, so the async variant shares the sync path.
     return resolveFilePath(specifier, options);
 }
 
