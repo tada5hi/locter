@@ -23,6 +23,14 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.3.0](https://github.com/tada5hi/locter/compare/v4.2.0...v4.3.0) (2026-11-20)
+
+
+### Features
+
+* add defaultConditions option to resolveModule ([#920](https://github.com/tada5hi/locter/issues/920)) ([0ddd656](https://github.com/tada5hi/locter/commit/0ddd6564cfeb687eac2fd31cc33fd6b189c6f305))
+* **format:** configurable module reader with a transpile strategy ([#922](https://github.com/tada5hi/locter/issues/922)) ([0153662](https://github.com/tada5hi/locter/commit/0153662d3a8adcf999efa18ef1d59eccd37f9e19))
+
 ## [4.2.0](https://github.com/tada5hi/locter/compare/v4.1.2...v4.2.0) (2026-11-20)
 
 
