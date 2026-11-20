@@ -23,6 +23,20 @@ locter 4.0 turns the library from a locator + loader into a **locator + reader +
 
 The `4.0.0-beta.*` entries below record how the line evolved during the prerelease phase.
 
+## [4.2.0](https://github.com/tada5hi/locter/compare/v4.1.2...v4.2.0) (2026-11-20)
+
+
+### Features
+
+* add resolveModule for specifier resolution with export conditions ([#919](https://github.com/tada5hi/locter/issues/919)) ([eed34c8](https://github.com/tada5hi/locter/commit/eed34c8a4fa1e50d72b6c7bfcfdee588975285c0))
+
+
+### Bug Fixes
+
+* **ci:** publish with an explicit npm provenance attestation ([#918](https://github.com/tada5hi/locter/issues/918)) ([7179fb1](https://github.com/tada5hi/locter/commit/7179fb10f549042fb162a6f58fd45dc9c683b5bd)), closes [#915](https://github.com/tada5hi/locter/issues/915)
+* **deps:** bump tada5hi/monoship from 2.1.0 to 2.2.0 ([#902](https://github.com/tada5hi/locter/issues/902)) ([d3e9807](https://github.com/tada5hi/locter/commit/d3e980782082b487256e53e9f2efbc5a689cfc90))
+* **deps:** bump the minorandpatch group across 1 directory with 4 updates ([#913](https://github.com/tada5hi/locter/issues/913)) ([8adf0e3](https://github.com/tada5hi/locter/commit/8adf0e3d3c36584944b8c85901ba2763094221dc))
+
 ## [4.1.2](https://github.com/tada5hi/locter/compare/v4.1.1...v4.1.2) (2026-10-28)
 
 
