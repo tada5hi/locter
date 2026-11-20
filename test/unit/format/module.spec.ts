@@ -7,7 +7,9 @@
 
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
     FormatRegistry,
@@ -748,12 +750,25 @@ describe('src/format/**', () => {
 
     const typeStrippingFile = path.join(dataDir, 'type-stripping.ts');
 
-    function nodeSyntaxError(message: string, code?: string) : SyntaxError {
+    // Node raises these while loading: only its own frames are on the
+    // stack (as printed by Node 22 / 24 / 26).
+    const LOADING_FRAMES = [
+        '    at compileSourceTextModule (node:internal/modules/esm/utils:355:16)',
+        '    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:94:18)',
+    ];
+
+    function nodeSyntaxError(
+        message: string,
+        code?: string,
+        frames: string[] = LOADING_FRAMES,
+    ) : SyntaxError {
         const error = new SyntaxError(message);
 
         if (code) {
             Object.assign(error, { code });
         }
+
+        error.stack = [`SyntaxError: ${message}`, ...frames].join('\n');
 
         return error;
     }
@@ -863,6 +878,72 @@ describe('src/format/**', () => {
             expect(() => reader.readSync(input)).toThrow(LoadError);
             expect(cached()).toEqual([]);
         });
+    });
+
+    it('should not retry a module which threw a SyntaxError while running', async () => {
+        // a real run: the module counts its runs, then JSON.parse throws
+        const counter = globalThis as { __locterRuntimeAsync?: number, __locterRuntimeSync?: number };
+        const reader = new ModuleReader();
+
+        await withTypeScriptFeature('strip', async () => {
+            await expect(reader.read(path.join(dataDir, 'type-stripping-runtime', 'async.ts')))
+                .rejects.toBeInstanceOf(LocterError);
+            expect(counter.__locterRuntimeAsync).toEqual(1);
+
+            expect(() => reader.readSync(path.join(dataDir, 'type-stripping-runtime', 'sync.ts')))
+                .toThrow(LocterError);
+            expect(counter.__locterRuntimeSync).toEqual(1);
+        });
+    });
+
+    it('should not retry an unsupported syntax error raised by running code', async () => {
+        // stripTypeScriptTypes() called by a module: Node's frames on top,
+        // but a frame of the running module below them
+        const reader = createFailingReader(nodeSyntaxError(
+            'TypeScript enum is not supported in strip-only mode',
+            'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX',
+            [
+                '    at parseTypeScript (node:internal/modules/typescript:57:40)',
+                '    at stripTypeScriptTypes (node:module:12:3)',
+                `    at ${pathToFileURL(path.join(dataDir, 'elsewhere', 'module.ts')).href}:2:1`,
+                '    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)',
+            ],
+        ));
+
+        await withTypeScriptFeature('strip', () => expectRethrown(reader, typeStrippingFile));
+    });
+
+    it('should only remove the modules of a failed retry from require.cache', async () => {
+        const nodeRequire = createRequire(import.meta.url);
+        const input = path.join(dataDir, 'type-stripping-runtime', 'slow-failure.ts');
+        const reader = createFailingReader(nodeSyntaxError('Invalid or unexpected token'));
+
+        // a module another caller loads while the retry is pending
+        // real path: require.cache keys are real paths (/var -> /private/var on macOS)
+        const otherDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'locter-overlap-')));
+        const other = path.join(otherDir, 'other.cjs');
+
+        fs.writeFileSync(other, 'module.exports = { loaded: true };\n');
+
+        try {
+            await withTypeScriptFeature('strip', async () => {
+                const pending = reader.read(input);
+                const settled = pending.catch((e: unknown) => e);
+
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 10);
+                });
+
+                expect(nodeRequire(other)).toEqual({ loaded: true });
+                expect(await settled).toBeInstanceOf(LoadError);
+            });
+
+            expect(Object.keys(nodeRequire.cache)).not.toContain(input);
+            expect(Object.keys(nodeRequire.cache)).toContain(other);
+        } finally {
+            delete nodeRequire.cache[other];
+            fs.rmSync(otherDir, { recursive: true, force: true });
+        }
     });
 
     it('should rethrow a plain syntax error when Node does not strip types', async () => {

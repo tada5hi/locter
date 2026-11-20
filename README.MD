@@ -761,9 +761,11 @@ Node 23.6+ strips TypeScript types itself, but rejects TypeScript it can not
 strip: enums, parameter properties and namespaces
 (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`), and decorators (a `SyntaxError` without
 a code, also when only an imported file uses them). With `'native'`, such a
-TypeScript file is read again through the transpiling loader. Invalid
-TypeScript (`ERR_INVALID_TYPESCRIPT_SYNTAX`) is not retried, and when the retry
-fails as well, its error is thrown as a `LoadError`.
+TypeScript file is read again through the transpiling loader. Only errors
+Node raises while loading count: a `SyntaxError` a module throws while
+running (e.g. from `JSON.parse`) is final, so no module runs twice. Invalid
+TypeScript (`ERR_INVALID_TYPESCRIPT_SYNTAX`) is not retried either, and when
+the retry fails as well, its error is thrown as a `LoadError`.
 
 Under `'transpile'`, ESM packages from `node_modules` are still imported
 natively by `read`, so they stay one shared instance with the host's own
