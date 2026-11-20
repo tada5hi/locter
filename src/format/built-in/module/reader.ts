@@ -8,6 +8,7 @@
 import { createJiti } from 'jiti';
 import type { JitiOptions } from 'jiti';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { LocterError, wrapLoaderError } from '../../../errors';
 import type { LocatorInfo } from '../../../locator';
@@ -51,6 +52,10 @@ function isUnrecoverableError(error: unknown) : boolean {
 
 function validateOptions(options: ModuleReaderOptions) : void {
     const strategy = options.strategy ?? 'native';
+
+    if (strategy !== 'native' && strategy !== 'transpile') {
+        throw new LocterError({ message: `Unknown module reader strategy: ${String(strategy)} (expected 'native' or 'transpile').` });
+    }
 
     if (strategy === 'native' && options.cache === false) {
         throw new LocterError({ message: 'The module reader option cache: false requires strategy: \'transpile\' (native imports cannot be loaded fresh).' });
@@ -188,7 +193,7 @@ export class ModuleReader implements IReader {
     async read(input: string) {
         if (this.strategy === 'transpile' && isFilePath(input)) {
             try {
-                return await this.useInstance().import(this.build(input));
+                return await this.useInstance().import(path.resolve(input));
             } catch (e) {
                 throw wrapLoaderError(e, input);
             }
@@ -214,7 +219,7 @@ export class ModuleReader implements IReader {
     readSync(input: string) {
         if (this.strategy === 'transpile' && isFilePath(input)) {
             try {
-                return this.useInstance()(this.build(input));
+                return this.useInstance()(path.resolve(input));
             } catch (e) {
                 throw wrapLoaderError(e, input);
             }

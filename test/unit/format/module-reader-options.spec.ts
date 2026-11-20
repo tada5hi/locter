@@ -369,4 +369,37 @@ describe('src/format/built-in/module (options)', () => {
             process.chdir(cwd);
         }
     });
+
+    it('should reject an unknown strategy', () => {
+        expect(() => new ModuleReader({ strategy: 'jiti' as never })).toThrow(LocterError);
+        expect(() => new ModuleReader().configure({ strategy: 'jiti' as never })).toThrow(LocterError);
+    });
+
+    it('should resolve relative file paths against the current working directory on every read', async () => {
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        const a = createScenario();
+        const b = createScenario();
+
+        writeModule(a, 'rel.ts', 'export default \'a\';\n');
+        writeModule(b, 'rel.ts', 'export default \'b\';\n');
+
+        const cwd = process.cwd();
+
+        try {
+            process.chdir(a);
+            expect(defaultOf(await reader.read('./rel.ts'))).toEqual('a');
+
+            process.chdir(b);
+            expect(defaultOf(await reader.read('./rel.ts'))).toEqual('b');
+            expect(defaultOf(reader.readSync('./rel.ts'))).toEqual('b');
+        } finally {
+            process.chdir(cwd);
+        }
+    });
 });
+
