@@ -7,8 +7,8 @@
 
 import { isBuiltin } from 'node:module';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { resolveModulePath } from 'exsolve';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { resolveModuleURL } from 'exsolve';
 import { LocterError, wrapLoaderError } from '../errors';
 import type { ResolveModuleOptions } from './types';
 
@@ -47,7 +47,7 @@ function resolveFilePath(specifier: string, options: ResolveModuleOptions = {}) 
     }
 
     try {
-        return resolveModulePath(specifier, {
+        const url = resolveModuleURL(specifier, {
             from: buildParentURL(options),
             conditions: buildConditions(options.conditions),
             extensions: options.extensions,
@@ -55,6 +55,10 @@ function resolveFilePath(specifier: string, options: ResolveModuleOptions = {}) 
             // no shared cache: installs and links may change between calls
             cache: false,
         });
+
+        // fileURLToPath (unlike exsolve's resolveModulePath, which always
+        // uses forward slashes) yields native separators on Windows.
+        return fileURLToPath(url);
     } catch (e) {
         throw wrapLoaderError(e, specifier);
     }
