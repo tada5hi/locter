@@ -754,7 +754,7 @@ const agent = await registry.read('./agents/foo/agent.ts');
 |------------------|------------|-----------------------------------------------------------------------------------------|
 | `strategy`       | `'native'` | `'native'`: `import()`/`require()` first, transpiling loader as fallback. `'transpile'`: transpiling loader only for file paths; bare specifiers are read as with `'native'`. |
 | `cache`          | `true`     | Keep loaded modules in memory. `false` requires `strategy: 'transpile'`.                |
-| `transpileCache` | on         | Persist transpiled output on disk: `false`, `true`, or a directory path.                |
+| `transpileCache` | on         | Persist transpiled output on disk: `false`, `true` (a `jiti` folder in the OS temp directory), or a directory path. locter writes into a `locter-r<revision>` subfolder of it. |
 | `alias`          | none       | Map bare specifiers to fixed paths.                                                     |
 
 Under `'transpile'`, ESM packages from `node_modules` are still imported
@@ -768,6 +768,13 @@ and by `setModuleReader(options)` for the global registry. Two combinations
 are rejected with a `LocterError`: `cache: false` with the `'native'`
 strategy (native imports cannot be loaded fresh), and custom `load` /
 `loadSync` functions with the `'transpile'` strategy.
+
+Legacy decorators (TypeScript's `experimentalDecorators`, e.g. TypeORM
+entities) are transpiled with `design:type` metadata, and decorated class
+fields are initialized as TypeScript does, in declaration order. Load
+`reflect-metadata` yourself if the decorators read that metadata. Native
+`import()` can not load such files when Node strips the types itself (Node
+23.6+): Node rejects decorator syntax, so use `strategy: 'transpile'` for them.
 
 Limits of fresh reads:
 
