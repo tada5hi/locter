@@ -88,6 +88,34 @@ describe('src/resolver', () => {
         expect(result).toEqual(path.join(pkgPath, 'import.js'));
     });
 
+    it('should skip an import entry when the defaults are disabled', async () => {
+        const result = await resolveBoth('fake-pkg', {
+            cwd: basePath,
+            conditions: ['node', 'require'],
+            defaultConditions: false,
+        });
+
+        expect(result).toEqual(path.join(pkgPath, 'default.js'));
+    });
+
+    it('should still match the default entry without any condition', async () => {
+        const result = await resolveBoth('fake-pkg', {
+            cwd: basePath,
+            defaultConditions: false,
+        });
+
+        expect(result).toEqual(path.join(pkgPath, 'default.js'));
+    });
+
+    it('should still reject a require-only package without the require condition', async () => {
+        const error = await catchBoth('require-only', {
+            cwd: basePath,
+            defaultConditions: false,
+        });
+
+        expect(error).toBeInstanceOf(NotFoundError);
+    });
+
     it('should resolve a subpath export', async () => {
         const result = await resolveBoth('fake-pkg/sub', { cwd: basePath });
 

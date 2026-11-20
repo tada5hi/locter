@@ -34,7 +34,13 @@ function buildParentURL(options: ResolveModuleOptions) : string {
     return href.endsWith('/') ? href : `${href}/`;
 }
 
-function buildConditions(conditions: string[] = []) : string[] {
+function buildConditions(options: ResolveModuleOptions) : string[] {
+    const conditions = options.conditions || [];
+
+    if (options.defaultConditions === false) {
+        return [...new Set(conditions)];
+    }
+
     return [...new Set([...conditions, ...DEFAULT_CONDITIONS])];
 }
 
@@ -49,7 +55,7 @@ function resolveFilePath(specifier: string, options: ResolveModuleOptions = {}) 
     try {
         const url = resolveModuleURL(specifier, {
             from: buildParentURL(options),
-            conditions: buildConditions(options.conditions),
+            conditions: buildConditions(options),
             extensions: options.extensions,
             suffixes: options.suffixes,
             // no shared cache: installs and links may change between calls
