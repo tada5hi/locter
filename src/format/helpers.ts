@@ -94,6 +94,12 @@ export function writeSync(input: LocatorInfo | string, value: unknown, options?:
  * setModuleReader({
  *     load: (id) => import(id),
  * });
+ *
+ * // fresh reads for live reloads
+ * const restore = setModuleReader({
+ *     strategy: 'transpile',
+ *     cache: false,
+ * });
  * ```
  */
 export function setModuleReader(options: ModuleReaderOptions) : () => void {

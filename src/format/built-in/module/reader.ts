@@ -125,17 +125,41 @@ export class ModuleReader implements IReader {
      */
     configure(options: ModuleReaderOptions) : ModuleReaderOptions {
         const previous : ModuleReaderOptions = {
+            strategy: this.strategy,
+            cache: this.cache,
+            transpileCache: this.transpileCache,
+            alias: this.alias,
             load: this.loadFn,
             loadSync: this.loadSyncFn,
         };
 
-        if ('load' in options) {
-            this.loadFn = options.load;
+        const next : ModuleReaderOptions = { ...previous };
+        const keys = Object.keys(previous) as (keyof ModuleReaderOptions)[];
+
+        for (const key of keys) {
+            if (key in options) {
+                (next as Record<string, unknown>)[key] = options[key];
+            }
         }
 
-        if ('loadSync' in options) {
-            this.loadSyncFn = options.loadSync;
+        // validate the merged result BEFORE mutating: a rejected
+        // configuration leaves the reader untouched
+        validateOptions(next);
+
+        if (
+            next.cache !== this.cache ||
+            next.transpileCache !== this.transpileCache ||
+            next.alias !== this.alias
+        ) {
+            this.instance = undefined;
         }
+
+        this.strategy = next.strategy;
+        this.cache = next.cache;
+        this.transpileCache = next.transpileCache;
+        this.alias = next.alias;
+        this.loadFn = next.load;
+        this.loadSyncFn = next.loadSync;
 
         return previous;
     }

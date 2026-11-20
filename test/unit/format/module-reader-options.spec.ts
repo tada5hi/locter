@@ -19,6 +19,9 @@ import {
     LocterError,
     ModuleReader,
     NotFoundError,
+    read,
+    setModuleReader,
+    useFormatRegistry,
 } from '../../../src';
 import { expectParity } from '../../helpers/parity';
 
@@ -178,5 +181,104 @@ describe('src/format/built-in/module (options)', () => {
 
         await expect(reader.read(broken)).rejects.toThrow(LoadError);
         expect(() => reader.readSync(broken)).toThrow(LoadError);
+    });
+
+    it('should switch strategy at runtime via configure and restore', async () => {
+        const { entry, dir } = createEntryWithDependency(1);
+        const reader = new ModuleReader();
+
+        const previous = reader.configure({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        expect(previous).toEqual({
+            load: undefined,
+            loadSync: undefined,
+            strategy: undefined,
+            cache: undefined,
+            transpileCache: undefined,
+            alias: undefined,
+        });
+
+        expect(defaultOf(await reader.read(entry))).toEqual(1);
+        writeModule(dir, 'dep.ts', 'export const value = 2;\n');
+        expect(defaultOf(await reader.read(entry))).toEqual(2);
+
+        const current = reader.configure(previous);
+
+        expect(current).toEqual({
+            load: undefined,
+            loadSync: undefined,
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+            alias: undefined,
+        });
+    });
+
+    it('should validate the merged configuration', () => {
+        const reader = new ModuleReader({ load: (id) => import(id) });
+
+        expect(() => reader.configure({ strategy: 'transpile' })).toThrow(LocterError);
+    });
+
+    it('should keep the previous configuration when configure fails', async () => {
+        const { entry, dir } = createEntryWithDependency(1);
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        expect(() => reader.configure({ strategy: 'native' })).toThrow(LocterError);
+
+        expect(defaultOf(await reader.read(entry))).toEqual(1);
+        writeModule(dir, 'dep.ts', 'export const value = 2;\n');
+        expect(defaultOf(await reader.read(entry))).toEqual(2);
+    });
+
+    it('should rebuild the transpiling loader when alias changes', async () => {
+        const dir = createScenario();
+        const a = writeModule(dir, 'a.ts', 'export default \'a\';\n');
+        const b = writeModule(dir, 'b.ts', 'export default \'b\';\n');
+        const entry = writeModule(dir, 'uses-alias.ts', 'import v from \'locter-test-switch\';\nexport default v;\n');
+
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+            alias: { 'locter-test-switch': a },
+        });
+
+        expect(defaultOf(await reader.read(entry))).toEqual('a');
+
+        reader.configure({ alias: { 'locter-test-switch': b } });
+
+        expect(defaultOf(await reader.read(entry))).toEqual('b');
+    });
+
+    it('should configure the singleton through setModuleReader and restore it', async () => {
+        const { entry, dir } = createEntryWithDependency(1);
+        const restore = setModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        try {
+            expect((await read(entry)).default).toEqual(1);
+            writeModule(dir, 'dep.ts', 'export const value = 2;\n');
+            expect((await read(entry)).default).toEqual(2);
+        } finally {
+            restore();
+        }
+
+        const reader = useFormatRegistry().builtInReader('module');
+        const current = reader.configure({});
+
+        expect(current.strategy).toBeUndefined();
+        expect(current.cache).toBeUndefined();
     });
 });
