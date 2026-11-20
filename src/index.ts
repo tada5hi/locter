@@ -107,6 +107,15 @@ export type {
     YAMLWriterOptions,
 } from './format';
 
+// resolver
+export {
+    resolveModule,
+    resolveModuleSync,
+} from './resolver';
+export type {
+    ResolveModuleOptions,
+} from './resolver';
+
 // utils
 export {
     getFileNameExtension,

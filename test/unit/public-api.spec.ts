@@ -62,6 +62,8 @@ describe('src/index.ts (public API)', () => {
             'readSync',
             'registerFormat',
             'removeFileNameExtension',
+            'resolveModule',
+            'resolveModuleSync',
             'serializeValue',
             'setModuleReader',
             'unregisterFormat',

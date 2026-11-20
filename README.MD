@@ -37,6 +37,7 @@
 - 🔍 **Locate** — `locate`, `locateMany`, `locateUp`: fast-glob discovery returning structured `LocatorInfo` records.
 - 📖 **Read** — one `read()` for JSON, YAML, `.conf`, and JS/TS modules in any runtime (powered by `jiti`); `readAsModule()` for the uniform module-record shape.
 - ✍️ **Write** — `write()` values back without pulling serializers into your app: comment-preserving YAML, indent-preserving JSON, rc9-style `.conf`.
+- 🧭 **Resolve**: `resolveModule()` turns a module specifier into an absolute file path, honoring package `exports` with custom export conditions.
 - 🔁 **Sync twins** — every operation ships as `fn` / `fnSync`, derived from one shared implementation.
 - 🧩 **Extensible** — register custom formats with independent reader/writer slots; override built-ins per extension.
 - 🚨 **Typed errors** — `NotFoundError`, `LoadError`, `WriteError`, … each carrying `path` and `cause`.
@@ -46,6 +47,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [Locator](#locator)
+  - [Resolver](#resolver)
   - [Reader](#reader)
   - [Writer](#writer)
   - [Formats](#formats)
@@ -186,6 +188,56 @@ getFileNameExtension('seed.ts', ['.js', '.mjs']);   // undefined (not allowed)
 removeFileNameExtension('seed.ts');                 // 'seed'
 removeFileNameExtension('seed.ts', ['.js']);        // 'seed.ts' (not matched)
 ```
+
+### Resolver
+
+`resolveModule` / `resolveModuleSync` resolve a module specifier (bare,
+subpath, or relative) to an **absolute file path** (not a `file:` URL),
+following package `exports` with the export conditions you choose at runtime.
+Unlike `import.meta.resolve`, custom conditions do not need a `--conditions`
+flag at process start.
+
+```typescript
+import { resolveModule, resolveModuleSync, NotFoundError } from 'locter';
+
+// resolve from a directory (default: process.cwd())
+await resolveModule('yaml', { cwd: '/path/to/app' });
+// '/path/to/app/node_modules/yaml/dist/index.js'
+
+// custom export conditions are prepended to the defaults ['node', 'import']
+resolveModuleSync('my-lib/sub', {
+    cwd: '/path/to/app',
+    conditions: ['development'],
+});
+
+// resolve relative to a specific file (path or file: URL)
+await resolveModule('./helper.ts', { parentURL: import.meta.url });
+
+try {
+    await resolveModule('not-installed');
+} catch (e) {
+    if (e instanceof NotFoundError) {
+        // the specifier does not resolve; the original error is on e.cause
+    }
+}
+```
+
+**Options**
+
+| Option       | Type              | Default         | Notes                                                              |
+|--------------|-------------------|-----------------|--------------------------------------------------------------------|
+| `cwd`        | `string`          | `process.cwd()` | Directory to resolve from (same semantics as `locate()`)           |
+| `parentURL`  | `string \| URL`   | -               | Resolve relative to this file (path or `file:` URL); wins over `cwd` |
+| `conditions` | `string[]`        | `[]`            | Export conditions, prepended to `['node', 'import']` (deduplicated) |
+
+Results are always real paths: like Node's default resolution, the
+resolver follows symlinks (e.g. workspace links), so a package linked into
+`node_modules` resolves to the file at its real location.
+
+Errors: a specifier that does not resolve throws `NotFoundError`. Other
+failures, such as a subpath that the package does not export
+(`ERR_PACKAGE_PATH_NOT_EXPORTED`), throw `LoadError`. Builtin modules
+(`node:fs`) have no file path and throw `LocterError`.
 
 ### Reader
 

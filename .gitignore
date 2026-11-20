@@ -10,3 +10,4 @@ npm-debug.log*
 cache
 .claude/settings.local.json
 .agents/plans
+!/test/data/resolver/node_modules
