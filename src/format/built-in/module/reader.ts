@@ -50,6 +50,40 @@ function isUnrecoverableError(error: unknown) : boolean {
         isTypeScriptError(underlying);
 }
 
+const TYPESCRIPT_FILE = /\.[cm]?ts$/;
+
+/**
+ * Node (23.6+) strips TypeScript types itself. Valid TypeScript it can not
+ * strip fails to load with a SyntaxError, although jiti can load it:
+ *
+ * - ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX: enums, parameter properties,
+ *   namespaces.
+ * - No code: syntax that stripping leaves behind, i.e. decorators. The
+ *   error does not name its file, so it only counts for a TypeScript file
+ *   read while Node strips types (it may come from a file it imports).
+ *
+ * Invalid TypeScript (ERR_INVALID_TYPESCRIPT_SYNTAX) stays unrecoverable.
+ */
+function isTypeStrippingError(error: unknown, input: string) : boolean {
+    const underlying = error instanceof LocterError ? error.cause : error;
+
+    if (!(underlying instanceof SyntaxError)) {
+        return false;
+    }
+
+    const code = isObject(underlying) && hasStringProperty(underlying, 'code') ?
+        underlying.code :
+        undefined;
+
+    if (code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX') {
+        return true;
+    }
+
+    return typeof code === 'undefined' &&
+        !!process.features.typescript &&
+        TYPESCRIPT_FILE.test(input);
+}
+
 /**
  * Absolute or explicitly relative ('./', '../') paths. Anything else, even
  * with an extension ('pkg/feature.js'), is a package specifier and must
@@ -57,6 +91,24 @@ function isUnrecoverableError(error: unknown) : boolean {
  */
 function isFileSystemPath(input: string) : boolean {
     return path.isAbsolute(input) || /^\.\.?([\\/]|$)/.test(input);
+}
+
+/**
+ * File system paths are made absolute (jiti resolves relative ones from
+ * its own base), package specifiers are passed through.
+ */
+function toTranspileId(input: string) : string {
+    return isFileSystemPath(input) ? path.resolve(input) : input;
+}
+
+function removeCacheEntriesSince(before: Set<string>) : void {
+    const keys = Object.keys(require.cache);
+
+    for (const key of keys) {
+        if (!before.has(key)) {
+            delete require.cache[key];
+        }
+    }
 }
 
 function validateOptions(options: ModuleReaderOptions) : void {
@@ -213,6 +265,10 @@ export class ModuleReader implements IReader {
         try {
             return await this.load(input);
         } catch (e) {
+            if (isTypeStrippingError(e, input)) {
+                return this.readTranspiled(input);
+            }
+
             if (isUnrecoverableError(e)) {
                 throw e;
             }
@@ -239,11 +295,49 @@ export class ModuleReader implements IReader {
         try {
             return this.loadSync(input);
         } catch (e) {
+            if (isTypeStrippingError(e, input)) {
+                return this.readTranspiledSync(input);
+            }
+
             if (isUnrecoverableError(e)) {
                 throw e;
             }
 
             return this.useInstance()(input);
+        }
+    }
+
+    /**
+     * The jiti retry after a type stripping error. Its error is wrapped
+     * like a native one, so a real syntax error (e.g. in a JavaScript file
+     * the TypeScript file imports) still surfaces as a LoadError.
+     *
+     * A failed retry leaves the modules it registered in require.cache
+     * (jiti does not remove them, unlike Node's own loader), so a later
+     * native require() would return the half-evaluated module instead of
+     * the error. Those entries are removed again.
+     */
+    protected async readTranspiled(input: string) : Promise<unknown> {
+        const before = new Set(Object.keys(require.cache));
+
+        try {
+            return await this.useInstance().import(toTranspileId(input));
+        } catch (e) {
+            removeCacheEntriesSince(before);
+
+            throw wrapLoaderError(e, input);
+        }
+    }
+
+    protected readTranspiledSync(input: string) : unknown {
+        const before = new Set(Object.keys(require.cache));
+
+        try {
+            return this.useInstance()(toTranspileId(input));
+        } catch (e) {
+            removeCacheEntriesSince(before);
+
+            throw wrapLoaderError(e, input);
         }
     }
 
