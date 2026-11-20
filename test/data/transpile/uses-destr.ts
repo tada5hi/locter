@@ -1,0 +1,1 @@
+export { destr } from 'destr';

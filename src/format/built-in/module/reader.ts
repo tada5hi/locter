@@ -6,6 +6,7 @@
  */
 
 import { createJiti } from 'jiti';
+import type { JitiOptions } from 'jiti';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { LocterError, wrapLoaderError } from '../../../errors';
@@ -29,6 +30,7 @@ import type {
     ModuleLoadOptions,
     ModuleLoadSyncFn,
     ModuleReaderOptions,
+    ModuleReaderStrategy,
 } from './types';
 
 const require = createRequire(import.meta.url);
@@ -47,19 +49,75 @@ function isUnrecoverableError(error: unknown) : boolean {
         isTypeScriptError(underlying);
 }
 
+function validateOptions(options: ModuleReaderOptions) : void {
+    const strategy = options.strategy ?? 'native';
+
+    if (strategy === 'native' && options.cache === false) {
+        throw new LocterError({ message: 'The module reader option cache: false requires strategy: \'transpile\' (native imports cannot be loaded fresh).' });
+    }
+
+    if (
+        strategy === 'transpile' &&
+        (typeof options.load !== 'undefined' || typeof options.loadSync !== 'undefined')
+    ) {
+        throw new LocterError({ message: 'The module reader options load/loadSync require strategy: \'native\'.' });
+    }
+}
+
 export class ModuleReader implements IReader {
-    protected instance : Jiti;
+    /**
+     * The transpiling loader, built lazily from the current options and
+     * dropped whenever they change.
+     */
+    protected instance?: Jiti;
+
+    protected strategy?: ModuleReaderStrategy;
+
+    protected cache?: boolean;
+
+    protected transpileCache?: boolean | string;
+
+    protected alias?: Record<string, string>;
 
     protected loadFn?: ModuleLoadFn;
 
     protected loadSyncFn?: ModuleLoadSyncFn;
 
     constructor(options: ModuleReaderOptions = {}) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.instance = createJiti(undefined, { extensions: [...MODULE_FILE_EXTENSIONS] });
+        validateOptions(options);
+
+        this.strategy = options.strategy;
+        this.cache = options.cache;
+        this.transpileCache = options.transpileCache;
+        this.alias = options.alias;
         this.loadFn = options.load;
         this.loadSyncFn = options.loadSync;
+    }
+
+    /**
+     * The only place locter's options are translated to the transpiling
+     * loader's (jiti) options; its types never reach the public API.
+     */
+    protected useInstance() : Jiti {
+        if (!this.instance) {
+            const options : JitiOptions = { extensions: [...MODULE_FILE_EXTENSIONS] };
+
+            if (typeof this.cache !== 'undefined') {
+                options.moduleCache = this.cache;
+            }
+
+            if (typeof this.transpileCache !== 'undefined') {
+                options.fsCache = this.transpileCache;
+            }
+
+            if (typeof this.alias !== 'undefined') {
+                options.alias = this.alias;
+            }
+
+            this.instance = createJiti(undefined as unknown as string, options);
+        }
+
+        return this.instance;
     }
 
     /**
@@ -94,8 +152,22 @@ export class ModuleReader implements IReader {
      * and to the jiti instance otherwise; the sync variant only has the
      * jiti fallback. The divergence is pinned by the fallback tests in
      * test/unit/format/module.spec.ts.
+     *
+     * With strategy 'transpile' both variants go through the transpiling
+     * loader only, without native import()/require() and without any
+     * fallback. The async variant imports ESM packages natively (one shared
+     * instance with the host); the sync variant resolves the `require`
+     * condition, so a dual package may load as a separate CJS instance there.
      */
     async read(input: string) {
+        if (this.strategy === 'transpile') {
+            try {
+                return await this.useInstance().import(this.build(input));
+            } catch (e) {
+                throw wrapLoaderError(e, input);
+            }
+        }
+
         try {
             return await this.load(input);
         } catch (e) {
@@ -109,11 +181,19 @@ export class ModuleReader implements IReader {
                 return this.loadSync(input);
             }
 
-            return this.instance(input);
+            return this.useInstance()(input);
         }
     }
 
     readSync(input: string) {
+        if (this.strategy === 'transpile') {
+            try {
+                return this.useInstance()(this.build(input));
+            } catch (e) {
+                throw wrapLoaderError(e, input);
+            }
+        }
+
         try {
             return this.loadSync(input);
         } catch (e) {
@@ -121,7 +201,7 @@ export class ModuleReader implements IReader {
                 throw e;
             }
 
-            return this.instance(input);
+            return this.useInstance()(input);
         }
     }
 
