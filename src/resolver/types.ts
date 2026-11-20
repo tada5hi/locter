@@ -18,11 +18,20 @@ export type ResolveModuleOptions = {
      */
     parentURL?: string | URL,
     /**
-     * Export conditions, added to the defaults ['node', 'import'].
-     * The key order of the package's "exports" decides which entry
-     * matches, not the order of this list.
+     * Export conditions, added to the defaults ['node', 'import']
+     * (see defaultConditions). The key order of the package's "exports"
+     * decides which entry matches, not the order of this list.
      */
     conditions?: string[],
+    /**
+     * Add the default conditions ['node', 'import'] to `conditions`.
+     * false: only `conditions` (and, as always, "default") can match,
+     * e.g. to resolve the way require() does without an "import" entry
+     * taking precedence: { conditions: ['node', 'require'], defaultConditions: false }.
+     *
+     * default: true
+     */
+    defaultConditions?: boolean,
     /**
      * Opt-in: extensions to try for extensionless specifiers
      * (e.g. ['.ts', '.js'] lets './file' resolve to './file.ts').

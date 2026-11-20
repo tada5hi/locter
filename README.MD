@@ -229,6 +229,7 @@ try {
 | `cwd`        | `string`          | `process.cwd()` | Directory to resolve from                                          |
 | `parentURL`  | `string \| URL`   | -               | Resolve relative to this file (path or `file:` URL); wins over `cwd` |
 | `conditions` | `string[]`        | `[]`            | Export conditions, added to `['node', 'import']` (deduplicated)    |
+| `defaultConditions` | `boolean`  | `true`          | `false`: only `conditions` (plus `default`) can match, without `['node', 'import']` |
 | `extensions` | `string[]`        | -               | Opt-in: extensions to try for extensionless specifiers (e.g. `['.ts', '.js']`) |
 | `suffixes`   | `string[]`        | -               | Opt-in: path suffixes to try (e.g. `['', '/index']` for directory index files) |
 
@@ -238,8 +239,20 @@ plus `node` and `import` can match, with no fallback to `require` entries,
 so a package that only exports a `require` entry does not resolve unless
 you pass `conditions: ['require']` to ask for CommonJS entries. As in
 Node, the key order of the package's `exports` map decides which entry
-matches, not the order of `conditions`. Extensionless (`./file`) and
-directory (`./dir`) specifiers only resolve when you opt in:
+matches, not the order of `conditions`. Because `import` is always among
+the defaults, an `import` entry listed before a `require` entry wins even
+with `conditions: ['require']`. To resolve the way `require()` does, turn
+the defaults off:
+
+```typescript
+resolveModuleSync('my-lib/config', {
+    conditions: ['node', 'require'],
+    defaultConditions: false,
+});
+```
+
+Extensionless (`./file`) and directory (`./dir`) specifiers only resolve
+when you opt in:
 
 ```typescript
 resolveModuleSync('./dir', {
