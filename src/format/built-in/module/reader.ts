@@ -50,6 +50,15 @@ function isUnrecoverableError(error: unknown) : boolean {
         isTypeScriptError(underlying);
 }
 
+/**
+ * Absolute or explicitly relative ('./', '../') paths. Anything else, even
+ * with an extension ('pkg/feature.js'), is a package specifier and must
+ * resolve like one (Node semantics).
+ */
+function isFileSystemPath(input: string) : boolean {
+    return path.isAbsolute(input) || /^\.\.?([\\/]|$)/.test(input);
+}
+
 function validateOptions(options: ModuleReaderOptions) : void {
     const strategy = options.strategy ?? 'native';
 
@@ -182,16 +191,18 @@ export class ModuleReader implements IReader {
      * jiti fallback. The divergence is pinned by the fallback tests in
      * test/unit/format/module.spec.ts.
      *
-     * With strategy 'transpile' both variants load FILE PATHS through the
+     * With strategy 'transpile' both variants load file system paths
+     * (absolute, or relative with './' / '../') through the
      * transpiling loader only, without native import()/require() and
-     * without any fallback. Bare specifiers (package names) are read like
+     * without any fallback. Package specifiers (incl. subpaths such as
+     * 'pkg/feature.js') are read like
      * under 'native', so they resolve from the same base (locter's own
      * location) instead of the working directory. The async variant imports ESM packages natively (one shared
      * instance with the host); the sync variant resolves the `require`
      * condition, so a dual package may load as a separate CJS instance there.
      */
     async read(input: string) {
-        if (this.strategy === 'transpile' && isFilePath(input)) {
+        if (this.strategy === 'transpile' && isFileSystemPath(input)) {
             try {
                 return await this.useInstance().import(path.resolve(input));
             } catch (e) {
@@ -217,7 +228,7 @@ export class ModuleReader implements IReader {
     }
 
     readSync(input: string) {
-        if (this.strategy === 'transpile' && isFilePath(input)) {
+        if (this.strategy === 'transpile' && isFileSystemPath(input)) {
             try {
                 return this.useInstance()(path.resolve(input));
             } catch (e) {

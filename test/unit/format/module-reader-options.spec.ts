@@ -401,5 +401,25 @@ describe('src/format/built-in/module (options)', () => {
             process.chdir(cwd);
         }
     });
+
+    it('should read package subpaths with an extension as packages, not as cwd-relative files', async () => {
+        const reader = new ModuleReader({
+            strategy: 'transpile',
+            cache: false,
+            transpileCache: false,
+        });
+
+        const cwd = process.cwd();
+
+        // sub-pkg is only resolvable from this directory
+        process.chdir(path.join(dataDir, 'transpile'));
+
+        try {
+            expect(defaultOf(await reader.read('sub-pkg/feature.js'))).toEqual('feature');
+            expect(defaultOf(reader.readSync('sub-pkg/feature.js'))).toEqual('feature');
+        } finally {
+            process.chdir(cwd);
+        }
+    });
 });
 
