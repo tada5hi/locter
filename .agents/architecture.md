@@ -6,7 +6,8 @@ Locter is structured as two cooperating subsystems plus a utility layer:
 
 1. **Locator** (`src/locator/`) — pure file discovery over `fast-glob`. Takes a glob pattern + options, returns `LocatorInfo` records `{ path, name, extension? }`. Has parallel sync/async surfaces.
 2. **Format** (`src/format/`) — pluggable file reading and writing. A `FormatRegistry` dispatches to `IReader` / `IWriter` implementations: user-registered `Rule`s (matched first, in registration order) plus a built-in extension table derived from the `BUILT_IN_PRESETS` registry (`src/format/built-in/registry.ts`). A process-wide singleton (`useFormatRegistry`) is exposed via the `read` / `readAsModule` / `write` (+Sync) / `registerFormat` helpers. `read` is raw (plain parsed value for data; normalized module record for modules — raw module output would break twin parity, since import() and require() disagree on CJS shapes); `readAsModule` presents EVERY result as the uniform module record.
-3. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
+3. **Resolver** (`src/resolver/`): `resolveModule` / `resolveModuleSync` resolve a module specifier to an absolute file path via `exsolve` (strict Node ESM rules, no CJS fallback) with caller-chosen export conditions (added to `['node', 'import']`). Every resolution failure maps to `NotFoundError` via `wrapLoaderError` (exsolve reports all of them as `ERR_MODULE_NOT_FOUND`, without the underlying Node code). Independent of `locator/` and `format/`.
+4. **Utils** (`src/utils/`) — stateless helpers shared by both subsystems.
 
 The two subsystems are loosely coupled: `format/` depends on `locator/` only for `pathToLocatorInfo` and `buildFilePath` (to derive the extension and the on-disk path from a `LocatorInfo`). `locator/` does not import from `format/`.
 
@@ -22,6 +23,7 @@ Internally, both variants are derived from **one shared body** via the twin prot
 - `src/format/text-file/reader.ts` — `TextFileReader.body` (read → parse → wrap errors)
 - `src/format/text-file/writer.ts` — `TextFileWriter.body` (optional read-existing → stringify → mkdir → write → wrap errors)
 - `src/format/registry/module.ts` — `FormatRegistry.executeBody` (dispatch → execute → wrap errors), shared via `yield*` by `readBody` (raw / provenance-shaped) and `readAsModuleBody` (uniform record via `toRecord`), plus `FormatRegistry.writeBody` (dispatch → unwrap record → write → wrap)
+- `src/resolver/module.ts`: `resolveModule` / `resolveModuleSync` share one sync path (exsolve is sync-only, so there is no twin body; resolve cache disabled; results are always real paths, like Node by default)
 - `src/format/package-field.ts` — `readPackageFieldBody`, `writePackageFieldBody`, `locatePackageBody`
 
 **The one deliberate exception is `ModuleReader`**: `read` / `readSync` are hand-written twins because their recovery paths genuinely diverge (async falls back to `loadSync` under ts-node and to jiti otherwise; sync only has the jiti fallback). The divergence is documented on `read` and checked by explicit fallback tests in `test/unit/format/module.spec.ts`.
@@ -179,6 +181,7 @@ Output:
 ```text
 src/locator/        → Locator subsystem (fast-glob)
 src/format/         → Format dispatcher + helpers + singleton
+src/resolver/       → Module specifier resolution (exsolve)
 src/format/built-in/<format>/   → Per-format reader/writer implementations
 src/utils/          → Stateless helpers (allowed to be imported anywhere)
 ```

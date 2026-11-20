@@ -17,6 +17,10 @@ locter/
 │   │   ├── up.ts                   # locateUp, locateUpSync (walk-up body delegates to locateBody)
 │   │   ├── utils.ts                # buildLocatorOptions, pathToLocatorInfo, buildFilePath, isLocatorInfo
 │   │   └── types.ts                # LocatorInfo, LocatorOptions, LocatorOptionsInput
+│   ├── resolver/                   # Module specifier resolution (exsolve, strict ESM + export conditions)
+│   │   ├── index.ts                # Barrel
+│   │   ├── module.ts               # resolveModule, resolveModuleSync (exsolve is sync-only; no twin body)
+│   │   └── types.ts                # ResolveModuleOptions
 │   ├── format/                     # Pluggable per-format readers + writers
 │   │   ├── index.ts                # Barrel (re-exports built-in, helpers, package-field, registry, text-file, type)
 │   │   ├── types.ts                 # IReader + IWriter interfaces — the ports every format implements
@@ -91,6 +95,7 @@ locter/
 | `src/format/built-in/yaml/`     | `yaml.parse` / comment-preserving write-back via the yaml Document API           |
 | `src/format/built-in/conf/`     | Line-based `key=value` parser (`destr` + `flat.unflatten`) / rc9-style serializer (`flat.flatten`) |
 | `src/format/package-field.ts`   | `readPackageField` / `writePackageField` — top-level package.json field access with walk-up support |
+| `src/resolver/`                 | `resolveModule` / `resolveModuleSync`: specifier → absolute file path via `exsolve` (strict Node ESM rules), custom export conditions, opt-in extensions/suffixes, always the real path |
 | `src/utils/`                    | Stateless helpers — no imports from `locator/` or `format/`                      |
 
 ## Key Dependencies
@@ -99,6 +104,7 @@ locter/
 |------------------|-------------------------------------------------------------------------------|
 | `fast-glob`      | Glob matcher backing every `locate*` function                                  |
 | `jiti`           | Runtime require/import of `.ts`/`.mts`/`.cts` in CJS or ESM contexts          |
+| `exsolve`        | Strict ESM module resolution with custom export conditions (`resolveModule`) |
 | `yaml`           | YAML parsing (`YAMLReader`) and Document-based grafting (`YAMLWriter`)        |
 | `destr`          | Safe `JSON.parse`-like value coercion in `ConfReader`                         |
 | `flat`           | Unflattens dot-separated `.conf` keys (`ConfReader`) / flattens them back (`ConfWriter`) |
@@ -124,7 +130,8 @@ The public API is the curated named-export list in `src/index.ts`. `test/unit/pu
 ## Separation of Concerns
 
 - **File discovery** → `src/locator/` (globs → `LocatorInfo[]`)
+- **Module specifier resolution** → `src/resolver/` (specifier → absolute file path)
 - **Read/write dispatch** → `src/format/registry/` + `src/format/helpers.ts`
 - **Per-format parsing/serialization** → `src/format/built-in/<format>/`
 - **Pure helpers (no domain knowledge)** → `src/utils/`
-- `src/utils/` must not import from `src/locator/` or `src/format/`. `src/format/` may import from `src/locator/` (it uses `pathToLocatorInfo`, `buildFilePath`).
+- `src/utils/` must not import from `src/locator/`, `src/format/`, or `src/resolver/`. `src/format/` may import from `src/locator/` (it uses `pathToLocatorInfo`, `buildFilePath`).
